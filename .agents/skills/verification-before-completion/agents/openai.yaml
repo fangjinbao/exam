@@ -1,5 +1,0 @@
-interface:
-  display_name: "verification-before-completion"
-  short_description: "Use when about to claim work is complete, fixed, or passing, before committing o"
-policy:
-  allow_implicit_invocation: true

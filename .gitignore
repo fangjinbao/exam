@@ -71,3 +71,15 @@ ehthumbs.db
 
 # ===== 锁文件冲突备份 =====
 *.orig
+
+# ===== SDAD / AI 工具配置（本地开发用，不纳入版本库）=====
+.claude/
+.agents/
+.codex/
+.cursor/
+.gemini/
+.kiro/
+.trae/
+.windsurfrules
+CLAUDE.md
+

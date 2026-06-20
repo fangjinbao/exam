@@ -1,0 +1,5 @@
+interface:
+  display_name: "skill-creator"
+  short_description: "Guide for creating effective skills. This skill should be used when users want t"
+policy:
+  allow_implicit_invocation: true

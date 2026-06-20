@@ -1,0 +1,173 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mxfile host="draw.io">
+  <diagram name="炼厂管理用例图" id="refinery-usecase">
+    <mxGraphModel dx="1100" dy="900" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1100" pageHeight="900" math="0" shadow="0">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+        <mxCell id="spacer" value="" style="fillColor=none;strokeColor=none;opacity=0;" vertex="1" parent="1"><mxGeometry x="0" y="0" width="1820" height="1800" as="geometry"/></mxCell>        <mxCell id="boundary" value="炼厂管理系统" style="rounded=1;whiteSpace=wrap;html=1;fillColor=none;strokeColor=#666666;dashed=1;dashPattern=8 4;strokeWidth=2;fontSize=14;fontStyle=1;verticalAlign=top;spacingTop=8;arcSize=5;" vertex="1" parent="1">
+          <mxGeometry x="200" y="30" width="660" height="840" as="geometry"/>
+        </mxCell>
+        <mxCell id="uc1" value="查看炼厂列表" style="ellipse;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="240" y="80" width="150" height="40" as="geometry"/>
+        </mxCell>
+        <mxCell id="uc2" value="新增炼厂" style="ellipse;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="240" y="170" width="150" height="40" as="geometry"/>
+        </mxCell>
+        <mxCell id="uc3" value="编辑炼厂" style="ellipse;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="240" y="260" width="150" height="40" as="geometry"/>
+        </mxCell>
+        <mxCell id="uc4" value="启用/停用炼厂" style="ellipse;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="240" y="350" width="150" height="40" as="geometry"/>
+        </mxCell>
+        <mxCell id="uc5" value="导入炼厂" style="ellipse;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="240" y="440" width="150" height="40" as="geometry"/>
+        </mxCell>
+        <mxCell id="uc6" value="导出炼厂" style="ellipse;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="240" y="530" width="150" height="40" as="geometry"/>
+        </mxCell>
+        <mxCell id="uc7" value="查看炼厂人员" style="ellipse;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="240" y="620" width="150" height="40" as="geometry"/>
+        </mxCell>
+        <mxCell id="uc8" value="新增炼厂人员" style="ellipse;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="560" y="80" width="150" height="40" as="geometry"/>
+        </mxCell>
+        <mxCell id="uc9" value="编辑炼厂人员" style="ellipse;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="560" y="170" width="150" height="40" as="geometry"/>
+        </mxCell>
+        <mxCell id="uc10" value="启用/停用炼厂人员" style="ellipse;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="560" y="260" width="150" height="40" as="geometry"/>
+        </mxCell>
+        <mxCell id="uc11" value="导入炼厂人员" style="ellipse;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="560" y="350" width="150" height="40" as="geometry"/>
+        </mxCell>
+        <mxCell id="uc12" value="导出炼厂人员" style="ellipse;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="560" y="440" width="150" height="40" as="geometry"/>
+        </mxCell>
+        <mxCell id="uc13" value="自动生成炼厂编码" style="ellipse;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="560" y="570" width="150" height="40" as="geometry"/>
+        </mxCell>
+        <mxCell id="uc14" value="校验数据唯一性" style="ellipse;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="560" y="700" width="150" height="40" as="geometry"/>
+        </mxCell>
+        <mxCell id="actor_director" value="油库主任" style="shape=umlActor;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="60" y="300" width="40" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="actor_dispatcher" value="油库调度员" style="shape=umlActor;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="60" y="640" width="40" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="actor_admin" value="系统管理员" style="shape=umlActor;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="960" y="300" width="40" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="actor_system" value="系统" style="shape=umlActor;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="960" y="620" width="40" height="60" as="geometry"/>
+        </mxCell>
+        <!-- 油库主任关联线（UC1-UC7左列） -->
+        <mxCell id="ed1" style="rounded=0;exitX=1;exitY=0.1;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" source="actor_director" target="uc1" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="ed2" style="rounded=0;exitX=1;exitY=0.2;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" source="actor_director" target="uc2" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="ed3" style="rounded=0;exitX=1;exitY=0.3;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" source="actor_director" target="uc3" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="ed4" style="rounded=0;exitX=1;exitY=0.4;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" source="actor_director" target="uc4" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="ed5" style="rounded=0;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" source="actor_director" target="uc5" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="ed6" style="rounded=0;exitX=1;exitY=0.6;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" source="actor_director" target="uc6" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="ed7" style="rounded=0;exitX=1;exitY=0.7;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" source="actor_director" target="uc7" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <!-- 油库主任关联线（UC8-UC12右列） -->
+        <mxCell id="ed8" style="rounded=0;exitX=1;exitY=0.75;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" source="actor_director" target="uc8" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="ed9" style="rounded=0;exitX=1;exitY=0.8;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" source="actor_director" target="uc9" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="ed10" style="rounded=0;exitX=1;exitY=0.85;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" source="actor_director" target="uc10" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="ed11" style="rounded=0;exitX=1;exitY=0.9;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" source="actor_director" target="uc11" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="ed12" style="rounded=0;exitX=1;exitY=0.95;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" source="actor_director" target="uc12" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <!-- 油库调度员关联线（仅UC1, UC7） -->
+        <mxCell id="edd1" style="rounded=0;exitX=1;exitY=0.3;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" source="actor_dispatcher" target="uc1" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="edd2" style="rounded=0;exitX=1;exitY=0.7;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" source="actor_dispatcher" target="uc7" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <!-- 系统管理员关联线（UC1-UC12） -->
+        <mxCell id="ea1" style="rounded=0;exitX=0;exitY=0.1;exitDx=0;exitDy=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;" edge="1" source="actor_admin" target="uc1" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="ea2" style="rounded=0;exitX=0;exitY=0.2;exitDx=0;exitDy=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;" edge="1" source="actor_admin" target="uc2" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="ea3" style="rounded=0;exitX=0;exitY=0.3;exitDx=0;exitDy=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;" edge="1" source="actor_admin" target="uc3" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="ea4" style="rounded=0;exitX=0;exitY=0.4;exitDx=0;exitDy=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;" edge="1" source="actor_admin" target="uc4" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="ea5" style="rounded=0;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;" edge="1" source="actor_admin" target="uc5" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="ea6" style="rounded=0;exitX=0;exitY=0.6;exitDx=0;exitDy=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;" edge="1" source="actor_admin" target="uc6" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="ea7" style="rounded=0;exitX=0;exitY=0.7;exitDx=0;exitDy=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;" edge="1" source="actor_admin" target="uc7" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="ea8" style="rounded=0;exitX=0;exitY=0.75;exitDx=0;exitDy=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;" edge="1" source="actor_admin" target="uc8" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="ea9" style="rounded=0;exitX=0;exitY=0.8;exitDx=0;exitDy=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;" edge="1" source="actor_admin" target="uc9" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="ea10" style="rounded=0;exitX=0;exitY=0.85;exitDx=0;exitDy=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;" edge="1" source="actor_admin" target="uc10" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="ea11" style="rounded=0;exitX=0;exitY=0.9;exitDx=0;exitDy=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;" edge="1" source="actor_admin" target="uc11" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="ea12" style="rounded=0;exitX=0;exitY=0.95;exitDx=0;exitDy=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;" edge="1" source="actor_admin" target="uc12" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <!-- 系统关联线（UC13, UC14） -->
+        <mxCell id="es1" style="rounded=0;exitX=0;exitY=0.3;exitDx=0;exitDy=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;" edge="1" source="actor_system" target="uc13" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="es2" style="rounded=0;exitX=0;exitY=0.7;exitDx=0;exitDy=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;" edge="1" source="actor_system" target="uc14" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <!-- include关系（虚线箭头） -->
+        <mxCell id="ei1" value="&lt;&lt;include&gt;&gt;" style="dashed=1;endArrow=open;endSize=8;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;fontSize=10;fontStyle=2;" edge="1" source="uc2" target="uc13" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="ei2" value="&lt;&lt;include&gt;&gt;" style="dashed=1;endArrow=open;endSize=8;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;fontSize=10;fontStyle=2;" edge="1" source="uc2" target="uc14" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="ei3" value="&lt;&lt;include&gt;&gt;" style="dashed=1;endArrow=open;endSize=8;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;fontSize=10;fontStyle=2;" edge="1" source="uc3" target="uc14" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="ei4" value="&lt;&lt;include&gt;&gt;" style="dashed=1;endArrow=open;endSize=8;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;fontSize=10;fontStyle=2;" edge="1" source="uc8" target="uc14" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="ei5" value="&lt;&lt;include&gt;&gt;" style="dashed=1;endArrow=open;endSize=8;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;fontSize=10;fontStyle=2;" edge="1" source="uc9" target="uc14" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

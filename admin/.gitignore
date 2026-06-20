@@ -1,0 +1,41 @@
+# 依赖
+node_modules/
+.pnpm-store/
+
+# 构建产物
+dist/
+dist-ssr/
+*.local
+
+# 环境变量（含密钥，禁止提交）
+.env
+.env.*
+!.env.example
+
+# 自动生成的类型声明（unplugin）
+auto-imports.d.ts
+components.d.ts
+
+# 缓存
+.vite/
+.cache/
+.eslintcache
+
+# 日志
+*.log
+npm-debug.log*
+pnpm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# 测试覆盖率
+coverage/
+*.lcov
+
+# 系统文件
+.DS_Store
+Thumbs.db
+
+# 编辑器
+.idea/
+*.sw?

@@ -1,0 +1,499 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+// ==================== 基础系统模块 ====================
+
+/// 系统用户
+model SysUser {
+  id           Int      @id @default(autoincrement())
+  /// 所属部门 ID
+  departmentId Int?
+  /// 岗位 ID
+  positionId   Int?
+  /// 用户名（登录账号）
+  username     String   @unique @db.VarChar(100)
+  /// 工号
+  workId       String?  @unique @db.VarChar(30)
+  /// 密码（bcrypt 哈希，不对外返回）
+  password     String
+  /// 密码版本号（改密后旧 token 失效）
+  passwordV    Int      @default(1)
+  /// 姓名
+  name         String?
+  /// 昵称
+  nickName     String?
+  /// 头像 URL
+  headImg      String?
+  /// 手机号
+  phone        String?  @db.VarChar(20)
+  /// 邮箱
+  email        String?
+  /// 备注
+  remark       String?
+  /// 状态 1=启用 0=禁用
+  status       Int      @default(1)
+  /// 在线 socket 连接 ID（内部用，不对外返回）
+  socketId     String?
+  /// 租户 ID
+  tenantId     Int?
+  /// 创建时间
+  createTime   DateTime @default(now())
+  /// 更新时间
+  updateTime   DateTime @updatedAt
+
+  department SysDepartment? @relation(fields: [departmentId], references: [id])
+  position   SysPosition?   @relation(fields: [positionId], references: [id])
+  userRoles  SysUserRole[]
+
+  @@index([departmentId])
+  @@index([positionId])
+  @@index([phone])
+  @@index([tenantId])
+  @@map("base_sys_user")
+}
+
+/// 系统角色
+model SysRole {
+  id         Int      @id @default(autoincrement())
+  /// 角色名称
+  name       String
+  /// 角色标识（唯一）
+  label      String?  @unique
+  /// 备注
+  remark     String?
+  /// 数据权限范围标记
+  relevance  Int      @default(1)
+  /// 状态 1=启用 0=禁用
+  status     Int      @default(1)
+  /// 租户 ID
+  tenantId   Int?
+  /// 创建时间
+  createTime DateTime @default(now())
+  /// 更新时间
+  updateTime DateTime @updatedAt
+
+  userRoles       SysUserRole[]
+  roleMenus       SysRoleMenu[]
+  roleDepartments SysRoleDepartment[]
+
+  @@index([tenantId])
+  @@map("base_sys_role")
+}
+
+/// 系统菜单
+model SysMenu {
+  id         Int      @id @default(autoincrement())
+  /// 父级菜单 ID
+  parentId   Int?
+  /// 菜单名称
+  name       String
+  /// 前端路由路径
+  router     String?
+  /// 权限标识
+  perms      String?
+  /// 类型 0=目录 1=菜单 2=按钮
+  type       Int      @default(0)
+  /// 图标
+  icon       String?
+  /// 排序号
+  orderNum   Int      @default(0)
+  /// 视图组件路径
+  viewPath   String?
+  /// 是否缓存 1=是 0=否
+  keepAlive  Int      @default(1)
+  /// 是否显示 1=是 0=否
+  isShow     Int      @default(1)
+  /// 租户 ID
+  tenantId   Int?
+  /// 创建时间
+  createTime DateTime @default(now())
+  /// 更新时间
+  updateTime DateTime @updatedAt
+
+  roleMenus SysRoleMenu[]
+
+  @@index([parentId])
+  @@index([tenantId])
+  @@map("base_sys_menu")
+}
+
+/// 系统部门
+model SysDepartment {
+  id         Int      @id @default(autoincrement())
+  /// 部门名称
+  name       String
+  /// 父级部门 ID
+  parentId   Int?
+  /// 部门类型
+  type       String?  @db.VarChar(20)
+  /// 负责人
+  leader     String?  @db.VarChar(50)
+  /// 联系电话
+  phone      String?  @db.VarChar(20)
+  /// 排序号
+  orderNum   Int      @default(0)
+  /// 状态 1=启用 0=禁用
+  status     Int      @default(1)
+  /// 租户 ID
+  tenantId   Int?
+  /// 创建时间
+  createTime DateTime @default(now())
+  /// 更新时间
+  updateTime DateTime @updatedAt
+
+  users           SysUser[]
+  roleDepartments SysRoleDepartment[]
+
+  @@index([parentId])
+  @@index([tenantId])
+  @@map("base_sys_department")
+}
+
+/// 用户-角色关联
+model SysUserRole {
+  id     Int @id @default(autoincrement())
+  /// 用户 ID
+  userId Int
+  /// 角色 ID
+  roleId Int
+
+  user SysUser @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role SysRole @relation(fields: [roleId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, roleId])
+  @@map("base_sys_user_role")
+}
+
+/// 角色-菜单关联
+model SysRoleMenu {
+  id     Int @id @default(autoincrement())
+  /// 角色 ID
+  roleId Int
+  /// 菜单 ID
+  menuId Int
+
+  role SysRole @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  menu SysMenu @relation(fields: [menuId], references: [id], onDelete: Cascade)
+
+  @@unique([roleId, menuId])
+  @@map("base_sys_role_menu")
+}
+
+/// 角色-部门关联（数据权限）
+model SysRoleDepartment {
+  id           Int @id @default(autoincrement())
+  /// 角色 ID
+  roleId       Int
+  /// 部门 ID
+  departmentId Int
+
+  role       SysRole       @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  department SysDepartment @relation(fields: [departmentId], references: [id], onDelete: Cascade)
+
+  @@unique([roleId, departmentId])
+  @@map("base_sys_role_department")
+}
+
+/// 系统操作日志
+model SysLog {
+  id         Int      @id @default(autoincrement())
+  /// 操作用户 ID
+  userId     Int?
+  /// 操作动作
+  action     String?
+  /// 请求 IP
+  ip         String?  @db.VarChar(50)
+  /// IP 归属地
+  ipAddr     String?
+  /// 请求参数
+  params     String?  @db.Text
+  /// 租户 ID
+  tenantId   Int?
+  /// 创建时间
+  createTime DateTime @default(now())
+  /// 更新时间
+  updateTime DateTime @updatedAt
+
+  @@index([userId])
+  @@index([tenantId])
+  @@map("base_sys_log")
+}
+
+/// 系统岗位
+model SysPosition {
+  id          Int      @id @default(autoincrement())
+  /// 岗位名称
+  name        String   @unique @db.VarChar(50)
+  /// 岗位描述
+  description String?  @db.VarChar(200)
+  /// 排序号（升序）
+  orderNum    Int      @default(0)
+  /// 状态 1=启用 0=禁用
+  status      Int      @default(1)
+  /// 租户 ID
+  tenantId    Int?
+  /// 创建时间
+  createTime  DateTime @default(now())
+  /// 更新时间
+  updateTime  DateTime @updatedAt
+
+  users SysUser[]
+
+  @@index([tenantId])
+  @@map("base_sys_position")
+}
+
+/// 系统参数（键值对配置）
+model SysParam {
+  id         Int      @id @default(autoincrement())
+  /// 参数键（唯一）
+  keyName    String   @unique
+  /// 参数名称
+  name       String
+  /// 参数值
+  data       String?  @db.Text
+  /// 备注
+  remark     String?
+  /// 租户 ID
+  tenantId   Int?
+  /// 创建时间
+  createTime DateTime @default(now())
+  /// 更新时间
+  updateTime DateTime @updatedAt
+
+  @@index([tenantId])
+  @@map("base_sys_param")
+}
+
+// ==================== 字典模块 ====================
+
+/// 字典类型
+model DictType {
+  id         Int      @id @default(autoincrement())
+  /// 类型名称
+  name       String
+  /// 类型键（唯一）
+  key        String   @unique
+  /// 租户 ID
+  tenantId   Int?
+  /// 创建时间
+  createTime DateTime @default(now())
+  /// 更新时间
+  updateTime DateTime @updatedAt
+
+  items DictInfo[]
+
+  @@index([tenantId])
+  @@map("dict_type")
+}
+
+/// 字典项
+model DictInfo {
+  id         Int      @id @default(autoincrement())
+  /// 所属字典类型 ID
+  typeId     Int
+  /// 字典项名称
+  name       String
+  /// 字典项值
+  value      String
+  /// 排序号
+  orderNum   Int      @default(0)
+  /// 备注
+  remark     String?
+  /// 租户 ID
+  tenantId   Int?
+  /// 创建时间
+  createTime DateTime @default(now())
+  /// 更新时间
+  updateTime DateTime @updatedAt
+
+  type DictType @relation(fields: [typeId], references: [id], onDelete: Cascade)
+
+  @@index([typeId])
+  @@index([tenantId])
+  @@map("dict_info")
+}
+
+// ==================== 任务模块 ====================
+
+/// 定时任务
+model TaskInfo {
+  id              Int       @id @default(autoincrement())
+  /// 任务名称
+  name            String
+  /// cron 表达式
+  cron            String?
+  /// 固定间隔秒数
+  every           Int?
+  /// 执行次数限制
+  limit           Int?
+  /// 处理器标识
+  service         String?
+  /// 任务携带数据（JSON）
+  data            String?
+  /// 备注
+  remark          String?
+  /// 状态 1=运行 0=停止
+  status          Int       @default(1)
+  /// 类型
+  type            Int       @default(0)
+  /// 任务类型 0=cron 1=固定间隔
+  taskType        Int       @default(0)
+  /// 开始时间
+  startDate       DateTime?
+  /// 结束时间
+  endDate         DateTime?
+  /// 下次执行时间
+  nextRunTime     DateTime?
+  /// 上次执行时间
+  lastExecuteTime DateTime?
+  /// 租户 ID
+  tenantId        Int?
+  /// 创建时间
+  createTime      DateTime  @default(now())
+  /// 更新时间
+  updateTime      DateTime  @updatedAt
+
+  logs TaskLog[]
+
+  @@index([tenantId])
+  @@map("task_info")
+}
+
+/// 任务执行日志
+model TaskLog {
+  id         Int      @id @default(autoincrement())
+  /// 所属任务 ID
+  taskId     Int
+  /// 执行状态 1=成功 0=失败
+  status     Int      @default(0)
+  /// 执行详情
+  detail     String?  @db.Text
+  /// 租户 ID
+  tenantId   Int?
+  /// 创建时间
+  createTime DateTime @default(now())
+  /// 更新时间
+  updateTime DateTime @updatedAt
+
+  task TaskInfo @relation(fields: [taskId], references: [id], onDelete: Cascade)
+
+  @@index([taskId])
+  @@index([tenantId])
+  @@map("task_log")
+}
+
+// ==================== 文件模块 ====================
+
+/// 文件信息
+model SpaceInfo {
+  id         Int      @id @default(autoincrement())
+  /// 文件 URL
+  url        String
+  /// 文件类型（MIME）
+  type       String?
+  /// 分类 ID
+  classifyId Int?
+  /// 文件名
+  name       String?
+  /// 文件大小（字节）
+  size       Int?
+  /// 租户 ID
+  tenantId   Int?
+  /// 创建时间
+  createTime DateTime @default(now())
+  /// 更新时间
+  updateTime DateTime @updatedAt
+
+  @@index([classifyId])
+  @@index([tenantId])
+  @@map("space_info")
+}
+
+/// 文件分类
+model SpaceType {
+  id         Int      @id @default(autoincrement())
+  /// 分类名称
+  name       String
+  /// 父分类 ID
+  parentId   Int?
+  /// 租户 ID
+  tenantId   Int?
+  /// 创建时间
+  createTime DateTime @default(now())
+  /// 更新时间
+  updateTime DateTime @updatedAt
+
+  @@index([tenantId])
+  @@map("space_type")
+}
+
+// ==================== 插件模块 ====================
+
+/// 插件信息
+model PluginInfo {
+  id          Int      @id @default(autoincrement())
+  /// 插件名称
+  name        String
+  /// 插件键（唯一）
+  keyName     String   @unique
+  /// 钩子标识
+  hook        String?
+  /// 版本号
+  version     String?
+  /// 描述
+  description String?
+  /// 说明文档
+  readme      String?  @db.Text
+  /// Logo（base64 或 URL）
+  logo        String?  @db.Text
+  /// 作者
+  author      String?
+  /// 状态 1=启用 0=禁用
+  status      Int      @default(0)
+  /// 运行配置（JSON）
+  config      Json?
+  /// 插件元信息（JSON）
+  pluginJson  Json?
+  /// 租户 ID
+  tenantId    Int?
+  /// 创建时间
+  createTime  DateTime @default(now())
+  /// 更新时间
+  updateTime  DateTime @updatedAt
+
+  @@index([tenantId])
+  @@map("plugin_info")
+}
+
+// ==================== 回收站模块 ====================
+
+/// 回收站数据（软删快照）
+model RecycleData {
+  id         Int      @id @default(autoincrement())
+  /// 实体名称
+  entityName String
+  /// 原记录 ID
+  entityId   Int
+  /// 原记录数据快照（JSON）
+  data       Json
+  /// 操作人 ID
+  userId     Int?
+  /// 租户 ID
+  tenantId   Int?
+  /// 创建时间
+  createTime DateTime @default(now())
+  /// 更新时间
+  updateTime DateTime @updatedAt
+
+  @@index([entityName, entityId])
+  @@index([tenantId])
+  @@map("recycle_data")
+}
+

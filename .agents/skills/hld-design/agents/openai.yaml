@@ -1,0 +1,5 @@
+interface:
+  display_name: "hld-design"
+  short_description: "生成概要设计说明书（HLD / High-Level Design）的技能。在需求确定后、详细设计前，从 SRS 需求说明书推导系统总体架构。 Triggers"
+policy:
+  allow_implicit_invocation: true

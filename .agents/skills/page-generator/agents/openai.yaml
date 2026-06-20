@@ -1,0 +1,5 @@
+interface:
+  display_name: "page-generator"
+  short_description: "You MUST use this skill when users ask to create, generate, add pages, or implem"
+policy:
+  allow_implicit_invocation: true

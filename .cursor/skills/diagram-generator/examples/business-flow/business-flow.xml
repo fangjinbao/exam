@@ -1,0 +1,153 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mxfile host="embed.diagrams.net">
+  <diagram id="business-flow-1" name="一次物流业务流程图">
+    <mxGraphModel dx="1200" dy="900" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1600" pageHeight="1200" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <!-- 外层容器：1050×1000 -->
+        <mxCell id="2" parent="1" style="swimlane;whiteSpace=wrap;html=1;fillColor=#cce5ff;strokeColor=#b0b8c0;startSize=30;fontSize=14;fontStyle=1;" value="一次物流业务流程图（炼厂→油库）" vertex="1">
+          <mxGeometry x="30" y="30" width="1050" height="1000" as="geometry" />
+        </mxCell>
+        <!-- 纵向角色泳道：30+200+200+200+200+220=1050, height=970 -->
+        <!-- 左上角填充块 -->
+        <mxCell id="15" parent="2" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#cce5ff;strokeColor=#b0b8c0;fontSize=1;" value="" vertex="1">
+          <mxGeometry x="0" y="30" width="30" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="3" parent="2" style="swimlane;whiteSpace=wrap;html=1;fillColor=#cce5ff;strokeColor=#b0b8c0;startSize=30;fontSize=12;fontStyle=1;" value="承运商/炼厂人员" vertex="1">
+          <mxGeometry x="30" y="30" width="200" height="970" as="geometry" />
+        </mxCell>
+        <mxCell id="4" parent="2" style="swimlane;whiteSpace=wrap;html=1;fillColor=#cce5ff;strokeColor=#b0b8c0;startSize=30;fontSize=12;fontStyle=1;" value="司机" vertex="1">
+          <mxGeometry x="230" y="30" width="200" height="970" as="geometry" />
+        </mxCell>
+        <mxCell id="5" parent="2" style="swimlane;whiteSpace=wrap;html=1;fillColor=#cce5ff;strokeColor=#b0b8c0;startSize=30;fontSize=12;fontStyle=1;" value="油库化验员" vertex="1">
+          <mxGeometry x="430" y="30" width="200" height="970" as="geometry" />
+        </mxCell>
+        <mxCell id="6" parent="2" style="swimlane;whiteSpace=wrap;html=1;fillColor=#cce5ff;strokeColor=#b0b8c0;startSize=30;fontSize=12;fontStyle=1;" value="油库过磅员" vertex="1">
+          <mxGeometry x="630" y="30" width="200" height="970" as="geometry" />
+        </mxCell>
+        <mxCell id="7" parent="2" style="swimlane;whiteSpace=wrap;html=1;fillColor=#cce5ff;strokeColor=#b0b8c0;startSize=30;fontSize=12;fontStyle=1;" value="系统自动" vertex="1">
+          <mxGeometry x="830" y="30" width="220" height="970" as="geometry" />
+        </mxCell>
+        <!-- 横向阶段：160+120+120+120+120+140+160=940, y=60→1000 -->
+        <mxCell id="8" parent="2" style="swimlane;horizontal=0;whiteSpace=wrap;html=1;fillColor=#cce5ff;strokeColor=#b0b8c0;startSize=30;fontSize=11;fontStyle=1;" value="发运" vertex="1">
+          <mxGeometry y="60" width="1050" height="160" as="geometry" />
+        </mxCell>
+        <mxCell id="9" parent="2" style="swimlane;horizontal=0;whiteSpace=wrap;html=1;fillColor=#cce5ff;strokeColor=#b0b8c0;startSize=30;fontSize=11;fontStyle=1;" value="任务分发" vertex="1">
+          <mxGeometry y="220" width="1050" height="120" as="geometry" />
+        </mxCell>
+        <mxCell id="10" parent="2" style="swimlane;horizontal=0;whiteSpace=wrap;html=1;fillColor=#cce5ff;strokeColor=#b0b8c0;startSize=30;fontSize=11;fontStyle=1;" value="在途运输" vertex="1">
+          <mxGeometry y="340" width="1050" height="120" as="geometry" />
+        </mxCell>
+        <mxCell id="11" parent="2" style="swimlane;horizontal=0;whiteSpace=wrap;html=1;fillColor=#cce5ff;strokeColor=#b0b8c0;startSize=30;fontSize=11;fontStyle=1;" value="到库登记" vertex="1">
+          <mxGeometry y="460" width="1050" height="120" as="geometry" />
+        </mxCell>
+        <mxCell id="12" parent="2" style="swimlane;horizontal=0;whiteSpace=wrap;html=1;fillColor=#cce5ff;strokeColor=#b0b8c0;startSize=30;fontSize=11;fontStyle=1;" value="油品化验" vertex="1">
+          <mxGeometry y="580" width="1050" height="120" as="geometry" />
+        </mxCell>
+        <mxCell id="13" parent="2" style="swimlane;horizontal=0;whiteSpace=wrap;html=1;fillColor=#cce5ff;strokeColor=#b0b8c0;startSize=30;fontSize=11;fontStyle=1;" value="公路收油" vertex="1">
+          <mxGeometry y="700" width="1050" height="140" as="geometry" />
+        </mxCell>
+        <mxCell id="14" parent="2" style="swimlane;horizontal=0;whiteSpace=wrap;html=1;fillColor=#cce5ff;strokeColor=#b0b8c0;startSize=30;fontSize=11;fontStyle=1;" value="运单完成" vertex="1">
+          <mxGeometry y="840" width="1050" height="160" as="geometry" />
+        </mxCell>
+        <!-- 节点 -->
+        <!-- 发运 y=60~220 -->
+        <mxCell id="20" parent="2" style="ellipse;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=12;" value="开始" vertex="1">
+          <mxGeometry x="105" y="80" width="50" height="35" as="geometry" />
+        </mxCell>
+        <mxCell id="21" parent="2" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#999999;fontSize=11;fontStyle=2;" value="出厂过磅（线下）" vertex="1">
+          <mxGeometry x="72" y="130" width="116" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="22" parent="2" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=12;" value="创建电子运单" vertex="1">
+          <mxGeometry x="75" y="175" width="110" height="36" as="geometry" />
+        </mxCell>
+        <!-- 任务分发 y=220~340 -->
+        <mxCell id="30" parent="2" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=12;" value="接收发运任务" vertex="1">
+          <mxGeometry x="280" y="265" width="100" height="36" as="geometry" />
+        </mxCell>
+        <mxCell id="31" parent="2" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=12;" value="推送任务到油库" vertex="1">
+          <mxGeometry x="885" y="265" width="100" height="36" as="geometry" />
+        </mxCell>
+        <!-- 在途运输 y=340~460 -->
+        <mxCell id="40" parent="2" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=12;" value="GPS位置上报" vertex="1">
+          <mxGeometry x="285" y="390" width="90" height="36" as="geometry" />
+        </mxCell>
+        <mxCell id="41" parent="2" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=12;" value="在途监控" vertex="1">
+          <mxGeometry x="895" y="390" width="90" height="36" as="geometry" />
+        </mxCell>
+        <!-- 到库登记 y=460~580 -->
+        <mxCell id="50" parent="2" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=12;" value="到库签到排队" vertex="1">
+          <mxGeometry x="280" y="505" width="100" height="36" as="geometry" />
+        </mxCell>
+        <!-- 油品化验 y=580~700 -->
+        <mxCell id="60" parent="2" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=12;" value="油品化验" vertex="1">
+          <mxGeometry x="490" y="630" width="80" height="36" as="geometry" />
+        </mxCell>
+        <!-- 公路收油 y=700~840 -->
+        <mxCell id="70" parent="2" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=12;" value="卸前过磅" vertex="1">
+          <mxGeometry x="690" y="720" width="80" height="36" as="geometry" />
+        </mxCell>
+        <mxCell id="71" parent="2" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=12;" value="卸后过磅" vertex="1">
+          <mxGeometry x="690" y="775" width="80" height="36" as="geometry" />
+        </mxCell>
+        <!-- 运单完成 y=840~1000 -->
+        <mxCell id="80" parent="2" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=12;" value="运单自动完结" vertex="1">
+          <mxGeometry x="895" y="895" width="90" height="36" as="geometry" />
+        </mxCell>
+        <mxCell id="81" parent="2" style="ellipse;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=12;" value="结束" vertex="1">
+          <mxGeometry x="910" y="955" width="60" height="30" as="geometry" />
+        </mxCell>
+        <!-- 连线 -->
+        <!-- 开始 → 出厂过磅（垂直向下） -->
+        <mxCell id="90" edge="1" parent="2" source="20" target="21" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <!-- 出厂过磅 → 创建电子运单（垂直向下） -->
+        <mxCell id="91" edge="1" parent="2" source="21" target="22" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <!-- 创建电子运单 → 接收发运任务（向右下） -->
+        <mxCell id="92" edge="1" parent="2" source="22" target="30" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <!-- 接收发运任务 → 推送任务到油库（向右，同步动作） -->
+        <mxCell id="93" edge="1" parent="2" source="30" target="31" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <!-- 接收发运任务 → GPS位置上报（垂直向下） -->
+        <mxCell id="94" edge="1" parent="2" source="30" target="40" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <!-- GPS位置上报 → 在途监控（向右） -->
+        <mxCell id="95" edge="1" parent="2" source="40" target="41" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <!-- GPS位置上报 → 到库签到排队（垂直向下） -->
+        <mxCell id="96" edge="1" parent="2" source="40" target="50" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <!-- 到库签到排队 → 油品化验（向右下） -->
+        <mxCell id="97" edge="1" parent="2" source="50" target="60" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <!-- 油品化验 → 卸前过磅（向右下） -->
+        <mxCell id="99" edge="1" parent="2" source="60" target="70" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <!-- 卸前过磅 → 卸后过磅（垂直向下） -->
+        <mxCell id="100" edge="1" parent="2" source="70" target="71" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <!-- 卸后过磅 → 运单自动完结（向右） -->
+        <mxCell id="101" edge="1" parent="2" source="71" target="80" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <!-- 运单自动完结 → 结束（垂直向下） -->
+        <mxCell id="102" edge="1" parent="2" source="80" target="81" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

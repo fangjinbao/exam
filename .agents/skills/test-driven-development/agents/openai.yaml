@@ -1,0 +1,5 @@
+interface:
+  display_name: "test-driven-development"
+  short_description: "Use when implementing any feature or bugfix, before writing implementation code"
+policy:
+  allow_implicit_invocation: true

@@ -1,0 +1,105 @@
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "id": "session-start:bootstrap",
+            "description": "会话启动时清理状态并注入强制执行清单",
+            "type": "command",
+            "command": "node -e \"let d='';process.stdin.setEncoding('utf8');process.stdin.on('data',c=>d+=c);process.stdin.on('end',()=>{const p=require('path'),fs=require('fs');let r=process.cwd();while(!fs.existsSync(p.join(r,'.claude','hooks','run.cjs'))){const n=p.dirname(r);if(n===r)process.exit(0);r=n;}const h=require(p.join(r,'.claude','hooks',process.argv[1]+'.cjs'));let i={};try{i=JSON.parse(d)}catch{}const o=h.run(i);if(o)process.stdout.write(JSON.stringify(o))})\" session-start",
+            "timeout": 10000
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Edit|Write|MultiEdit",
+        "hooks": [
+          {
+            "id": "pre:edit:config-protection",
+            "description": "阻止修改 linter/formatter/tsconfig 配置文件",
+            "type": "command",
+            "command": "node -e \"let d='';process.stdin.setEncoding('utf8');process.stdin.on('data',c=>d+=c);process.stdin.on('end',()=>{const p=require('path'),fs=require('fs');let r=process.cwd();while(!fs.existsSync(p.join(r,'.claude','hooks','run.cjs'))){const n=p.dirname(r);if(n===r)process.exit(0);r=n;}const h=require(p.join(r,'.claude','hooks',process.argv[1]+'.cjs'));let i={};try{i=JSON.parse(d)}catch{}const o=h.run(i);if(o)process.stdout.write(JSON.stringify(o))})\" config-protection",
+            "timeout": 5000
+          },
+          {
+            "id": "pre:edit:gateguard",
+            "description": "首次编辑文件前检查是否已 Read 过",
+            "type": "command",
+            "command": "node -e \"let d='';process.stdin.setEncoding('utf8');process.stdin.on('data',c=>d+=c);process.stdin.on('end',()=>{const p=require('path'),fs=require('fs');let r=process.cwd();while(!fs.existsSync(p.join(r,'.claude','hooks','run.cjs'))){const n=p.dirname(r);if(n===r)process.exit(0);r=n;}const h=require(p.join(r,'.claude','hooks',process.argv[1]+'.cjs'));let i={};try{i=JSON.parse(d)}catch{}const o=h.run(i);if(o)process.stdout.write(JSON.stringify(o))})\" gateguard",
+            "timeout": 5000
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write|MultiEdit",
+        "hooks": [
+          {
+            "id": "post:edit:review-reminder",
+            "description": "代码修改后注入 code-reviewer 强制提醒",
+            "type": "command",
+            "command": "node -e \"let d='';process.stdin.setEncoding('utf8');process.stdin.on('data',c=>d+=c);process.stdin.on('end',()=>{const p=require('path'),fs=require('fs');let r=process.cwd();while(!fs.existsSync(p.join(r,'.claude','hooks','run.cjs'))){const n=p.dirname(r);if(n===r)process.exit(0);r=n;}const h=require(p.join(r,'.claude','hooks',process.argv[1]+'.cjs'));let i={};try{i=JSON.parse(d)}catch{}const o=h.run(i);if(o)process.stdout.write(JSON.stringify(o))})\" review-reminder",
+            "timeout": 5000
+          }
+        ]
+      },
+      {
+        "matcher": "Read",
+        "hooks": [
+          {
+            "id": "post:read:gateguard-record",
+            "description": "记录已 Read 的文件供 GateGuard 检查",
+            "type": "command",
+            "command": "node -e \"let d='';process.stdin.setEncoding('utf8');process.stdin.on('data',c=>d+=c);process.stdin.on('end',()=>{const p=require('path'),fs=require('fs');let r=process.cwd();while(!fs.existsSync(p.join(r,'.claude','hooks','run.cjs'))){const n=p.dirname(r);if(n===r)process.exit(0);r=n;}const h=require(p.join(r,'.claude','hooks',process.argv[1]+'.cjs'));let i={};try{i=JSON.parse(d)}catch{}const o=h.run(i);if(o)process.stdout.write(JSON.stringify(o))})\" gateguard",
+            "timeout": 5000
+          }
+        ]
+      },
+      {
+        "matcher": "Agent",
+        "hooks": [
+          {
+            "id": "post:agent:review-tracker",
+            "description": "追踪 code-reviewer 调用",
+            "type": "command",
+            "command": "node -e \"let d='';process.stdin.setEncoding('utf8');process.stdin.on('data',c=>d+=c);process.stdin.on('end',()=>{const p=require('path'),fs=require('fs');let r=process.cwd();while(!fs.existsSync(p.join(r,'.claude','hooks','run.cjs'))){const n=p.dirname(r);if(n===r)process.exit(0);r=n;}const h=require(p.join(r,'.claude','hooks',process.argv[1]+'.cjs'));let i={};try{i=JSON.parse(d)}catch{}const o=h.run(i);if(o)process.stdout.write(JSON.stringify(o))})\" review-tracker",
+            "timeout": 5000
+          }
+        ]
+      }
+    ],
+    "PreCompact": [
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "id": "pre-compact:save-state",
+            "description": "上下文压缩前保存工作状态快照",
+            "type": "command",
+            "command": "node -e \"let d='';process.stdin.setEncoding('utf8');process.stdin.on('data',c=>d+=c);process.stdin.on('end',()=>{const p=require('path'),fs=require('fs');let r=process.cwd();while(!fs.existsSync(p.join(r,'.claude','hooks','run.cjs'))){const n=p.dirname(r);if(n===r)process.exit(0);r=n;}const h=require(p.join(r,'.claude','hooks',process.argv[1]+'.cjs'));let i={};try{i=JSON.parse(d)}catch{}const o=h.run(i);if(o)process.stdout.write(JSON.stringify(o))})\" pre-compact",
+            "timeout": 10000
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "id": "stop:quality-gate",
+            "description": "回复结束时检查 console.log 残留和 review 调用",
+            "type": "command",
+            "command": "node -e \"let d='';process.stdin.setEncoding('utf8');process.stdin.on('data',c=>d+=c);process.stdin.on('end',()=>{const p=require('path'),fs=require('fs');let r=process.cwd();while(!fs.existsSync(p.join(r,'.claude','hooks','run.cjs'))){const n=p.dirname(r);if(n===r)process.exit(0);r=n;}const h=require(p.join(r,'.claude','hooks',process.argv[1]+'.cjs'));let i={};try{i=JSON.parse(d)}catch{}const o=h.run(i);if(o)process.stdout.write(JSON.stringify(o))})\" stop-quality-gate",
+            "timeout": 30000
+          }
+        ]
+      }
+    ]
+  }
+}

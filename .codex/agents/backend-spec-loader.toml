@@ -1,0 +1,3 @@
+# backend-spec-loader
+description = "Loads backend project specs and plans modules for backend code generation. Invoked by the backend-generator skill in Step 2 to detect the backend framework/stack, load matching framework references (or infer from existing project code when none preset), and plan modules/endpoints. Framework-agnostic, mirrors page-spec-loader. Do not invoke directly — use via backend-generator skill."
+sandbox_mode = "workspace-write"

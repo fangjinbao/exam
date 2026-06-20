@@ -1,0 +1,3 @@
+# design-analyzer
+description = "设计分析师，在生成概要设计（HLD）/详细设计（LLD）说明书前深度分析项目上下文（SRS需求说明书、设计方案、已有代码、已有设计文档），输出结构化的设计信息摘要供 design-writer 使用。由 hld-design / lld-design skill 调用，通过 DOC_TYPE 区分架构级与实现级提取深度。"
+sandbox_mode = "workspace-write"

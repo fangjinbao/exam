@@ -1,0 +1,5 @@
+interface:
+  display_name: "feature-list"
+  short_description: "从 SRS 需求规格说明书和可行性研究报告中提取并生成功能清单文档，支持导出 xlsx 或 Word 格式。 触发场景：(1) \"生成功能清单\" \"导出功能清单"
+policy:
+  allow_implicit_invocation: true

@@ -1,0 +1,41 @@
+<mxGraphModel>
+  <root>
+    <mxCell id="0"/>
+    <mxCell id="1" parent="0"/>
+        <mxCell id="spacer" value="" style="fillColor=none;strokeColor=none;opacity=0;" vertex="1" parent="1"><mxGeometry x="0" y="0" width="640" height="370" as="geometry"/></mxCell>    <mxCell id="2" value="总经理" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=14;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="220" y="40" width="120" height="50" as="geometry"/>
+    </mxCell>
+    <mxCell id="3" value="技术总监" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=13;" vertex="1" parent="1">
+      <mxGeometry x="60" y="150" width="120" height="50" as="geometry"/>
+    </mxCell>
+    <mxCell id="4" value="产品总监" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=13;" vertex="1" parent="1">
+      <mxGeometry x="220" y="150" width="120" height="50" as="geometry"/>
+    </mxCell>
+    <mxCell id="5" value="运营总监" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=13;" vertex="1" parent="1">
+      <mxGeometry x="380" y="150" width="120" height="50" as="geometry"/>
+    </mxCell>
+    <mxCell id="6" value="前端组" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=12;" vertex="1" parent="1">
+      <mxGeometry x="20" y="260" width="90" height="40" as="geometry"/>
+    </mxCell>
+    <mxCell id="7" value="后端组" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=12;" vertex="1" parent="1">
+      <mxGeometry x="120" y="260" width="90" height="40" as="geometry"/>
+    </mxCell>
+    <mxCell id="8" value="产品组" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=12;" vertex="1" parent="1">
+      <mxGeometry x="235" y="260" width="90" height="40" as="geometry"/>
+    </mxCell>
+    <mxCell id="9" value="市场组" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=12;" vertex="1" parent="1">
+      <mxGeometry x="360" y="260" width="90" height="40" as="geometry"/>
+    </mxCell>
+    <mxCell id="10" value="客服组" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=12;" vertex="1" parent="1">
+      <mxGeometry x="460" y="260" width="90" height="40" as="geometry"/>
+    </mxCell>
+    <mxCell id="20" style="edgeStyle=orthogonalEdgeStyle;rounded=0;" edge="1" source="2" target="3" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+    <mxCell id="21" style="edgeStyle=orthogonalEdgeStyle;rounded=0;" edge="1" source="2" target="4" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+    <mxCell id="22" style="edgeStyle=orthogonalEdgeStyle;rounded=0;" edge="1" source="2" target="5" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+    <mxCell id="23" style="edgeStyle=orthogonalEdgeStyle;rounded=0;" edge="1" source="3" target="6" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+    <mxCell id="24" style="edgeStyle=orthogonalEdgeStyle;rounded=0;" edge="1" source="3" target="7" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+    <mxCell id="25" style="edgeStyle=orthogonalEdgeStyle;rounded=0;" edge="1" source="4" target="8" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+    <mxCell id="26" style="edgeStyle=orthogonalEdgeStyle;rounded=0;" edge="1" source="5" target="9" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+    <mxCell id="27" style="edgeStyle=orthogonalEdgeStyle;rounded=0;" edge="1" source="5" target="10" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+  </root>
+</mxGraphModel>

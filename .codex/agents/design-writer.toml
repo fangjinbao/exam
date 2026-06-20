@@ -1,0 +1,3 @@
+# design-writer
+description = "设计文档撰写者，根据 design-analyzer 输出的设计摘要和模板规范，撰写概要设计（HLD）/详细设计（LLD）说明书的章节内容。由 hld-design / lld-design skill 调用。与需求文档不同，设计文档允许且必须包含技术实现细节。"
+sandbox_mode = "workspace-write"

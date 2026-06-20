@@ -1,0 +1,3 @@
+# page-spec-loader
+description = "Loads project specs and plans components for page generation. Invoked by the page-generator skill in Step 2 to detect the tech stack, load only the relevant UI library references, and plan which components are needed for a specific feature. Do not invoke directly — use via page-generator skill."
+sandbox_mode = "workspace-write"

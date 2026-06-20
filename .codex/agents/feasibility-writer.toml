@@ -1,0 +1,3 @@
+# feasibility-writer
+description = "可行性研究报告撰写者，根据 feasibility-analyzer 输出的项目信息摘要和模板规范，撰写符合可研报告语言规范的章节内容。由 feasibility-report skill 在生成模式中调用。"
+sandbox_mode = "workspace-write"

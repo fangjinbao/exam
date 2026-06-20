@@ -1,0 +1,21 @@
+<mxGraphModel>
+  <root>
+    <mxCell id="0"/>
+    <mxCell id="1" parent="0"/>
+        <mxCell id="spacer" value="" style="fillColor=none;strokeColor=none;opacity=0;" vertex="1" parent="1"><mxGeometry x="0" y="0" width="580" height="520" as="geometry"/></mxCell>    <mxCell id="2" value="&lt;b&gt;User&lt;/b&gt;&lt;hr size=&quot;1&quot;/&gt;- id: Long&lt;br&gt;- username: String&lt;br&gt;- email: String&lt;br&gt;- status: Integer&lt;hr size=&quot;1&quot;/&gt;+ login(): Boolean&lt;br&gt;+ logout(): void&lt;br&gt;+ updateProfile(): void" style="text;strokeColor=#6c8ebf;fillColor=#dae8fc;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontFamily=Courier New;fontSize=12;html=1;whiteSpace=wrap;" vertex="1" parent="1">
+      <mxGeometry x="40" y="40" width="200" height="180" as="geometry"/>
+    </mxCell>
+    <mxCell id="3" value="&lt;b&gt;Role&lt;/b&gt;&lt;hr size=&quot;1&quot;/&gt;- id: Long&lt;br&gt;- name: String&lt;br&gt;- permissions: List&lt;hr size=&quot;1&quot;/&gt;+ hasPermission(): Boolean&lt;br&gt;+ addPermission(): void" style="text;strokeColor=#9673a6;fillColor=#e1d5e7;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontFamily=Courier New;fontSize=12;html=1;whiteSpace=wrap;" vertex="1" parent="1">
+      <mxGeometry x="320" y="40" width="200" height="160" as="geometry"/>
+    </mxCell>
+    <mxCell id="4" value="&lt;b&gt;Department&lt;/b&gt;&lt;hr size=&quot;1&quot;/&gt;- id: Long&lt;br&gt;- name: String&lt;br&gt;- parentId: Long&lt;hr size=&quot;1&quot;/&gt;+ getChildren(): List&lt;br&gt;+ getPath(): String" style="text;strokeColor=#d6b656;fillColor=#fff2cc;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontFamily=Courier New;fontSize=12;html=1;whiteSpace=wrap;" vertex="1" parent="1">
+      <mxGeometry x="40" y="280" width="200" height="160" as="geometry"/>
+    </mxCell>
+    <mxCell id="10" value="1..*" style="endArrow=diamondThin;endFill=1;html=1;rounded=0;fontSize=11;exitX=1;exitY=0.5;exitDx=0;exitDy=0;" edge="1" source="2" target="3" parent="1">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="11" value="N:1" style="endArrow=diamondThin;endFill=0;html=1;rounded=0;fontSize=11;exitX=0.5;exitY=1;exitDx=0;exitDy=0;" edge="1" source="2" target="4" parent="1">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+  </root>
+</mxGraphModel>

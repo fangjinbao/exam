@@ -1,0 +1,3 @@
+# design-advisor
+description = "页面设计顾问，在生成页面代码前查询 ui-ux-pro-max 数据库，输出适合当前页面类型的设计决策（风格、UX规则、移动端规范）。由 page-generator skill 在步骤 3 中调用。"
+sandbox_mode = "workspace-write"

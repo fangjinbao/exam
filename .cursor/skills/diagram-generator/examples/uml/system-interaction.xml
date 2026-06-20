@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mxfile host="draw.io">
+  <diagram name="系统交互时序图-示例" id="seq-example">
+    <mxGraphModel dx="900" dy="700" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="900" pageHeight="700" math="0" shadow="0">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+
+        <!-- 透明占位 -->
+        <mxCell id="spacer" value="" style="fillColor=none;strokeColor=none;opacity=0;" vertex="1" parent="1">
+          <mxGeometry x="0" y="0" width="820" height="660" as="geometry"/>
+        </mxCell>
+
+        <!-- 参与者框（顶部） -->
+        <mxCell id="p1" value="用户" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=12;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="60" y="40" width="100" height="36" as="geometry"/>
+        </mxCell>
+        <mxCell id="p2" value="前端页面" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=12;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="240" y="40" width="120" height="36" as="geometry"/>
+        </mxCell>
+        <mxCell id="p3" value="后端服务" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=12;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="440" y="40" width="120" height="36" as="geometry"/>
+        </mxCell>
+        <mxCell id="p4" value="数据库" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=12;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="650" y="40" width="100" height="36" as="geometry"/>
+        </mxCell>
+
+        <!-- 生命线 -->
+        <mxCell id="life1" style="endArrow=none;dashed=1;strokeColor=#999999;dashPattern=4 4;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="110" y="76" as="sourcePoint"/>
+            <mxPoint x="110" y="580" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="life2" style="endArrow=none;dashed=1;strokeColor=#999999;dashPattern=4 4;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="300" y="76" as="sourcePoint"/>
+            <mxPoint x="300" y="580" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="life3" style="endArrow=none;dashed=1;strokeColor=#999999;dashPattern=4 4;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="500" y="76" as="sourcePoint"/>
+            <mxPoint x="500" y="580" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="life4" style="endArrow=none;dashed=1;strokeColor=#999999;dashPattern=4 4;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="700" y="76" as="sourcePoint"/>
+            <mxPoint x="700" y="580" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+
+        <!-- 分组标题 -->
+        <mxCell id="g1" value="查询数据" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f0f0f0;strokeColor=#333333;fontSize=12;fontStyle=1;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="40" y="100" width="730" height="28" as="geometry"/>
+        </mxCell>
+
+        <!-- 消息 -->
+        <mxCell id="m1" value="输入查询条件，点击搜索" style="endArrow=block;endFill=1;html=1;fontSize=11;verticalAlign=bottom;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="110" y="160" as="sourcePoint"/>
+            <mxPoint x="300" y="160" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="m2" value="发送查询请求（含分页参数）" style="endArrow=block;endFill=1;html=1;fontSize=11;verticalAlign=bottom;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="300" y="200" as="sourcePoint"/>
+            <mxPoint x="500" y="200" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="m3" value="按条件查询数据表" style="endArrow=block;endFill=1;html=1;fontSize=11;verticalAlign=bottom;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="500" y="240" as="sourcePoint"/>
+            <mxPoint x="700" y="240" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="m4" value="返回结果集" style="endArrow=open;endFill=0;dashed=1;html=1;fontSize=11;verticalAlign=bottom;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="700" y="280" as="sourcePoint"/>
+            <mxPoint x="500" y="280" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="m5" value="返回列表数据（分页、总数）" style="endArrow=open;endFill=0;dashed=1;html=1;fontSize=11;verticalAlign=bottom;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="500" y="320" as="sourcePoint"/>
+            <mxPoint x="300" y="320" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="m6" value="展示查询结果列表" style="endArrow=open;endFill=0;dashed=1;html=1;fontSize=11;verticalAlign=bottom;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="300" y="360" as="sourcePoint"/>
+            <mxPoint x="110" y="360" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+
+        <!-- 参与者框（底部镜像） -->
+        <mxCell id="pb1" value="用户" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=12;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="60" y="590" width="100" height="36" as="geometry"/>
+        </mxCell>
+        <mxCell id="pb2" value="前端页面" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=12;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="240" y="590" width="120" height="36" as="geometry"/>
+        </mxCell>
+        <mxCell id="pb3" value="后端服务" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=12;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="440" y="590" width="120" height="36" as="geometry"/>
+        </mxCell>
+        <mxCell id="pb4" value="数据库" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=12;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="650" y="590" width="100" height="36" as="geometry"/>
+        </mxCell>
+
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

@@ -1,0 +1,5 @@
+interface:
+  display_name: "finishing-branch"
+  short_description: "开发分支完成后的结构化收尾流程 — 验证测试、检测环境、提供 merge/PR/保留/丢弃 四选项"
+policy:
+  allow_implicit_invocation: true

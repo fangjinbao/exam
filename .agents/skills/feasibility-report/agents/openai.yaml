@@ -1,0 +1,5 @@
+interface:
+  display_name: "feasibility-report"
+  short_description: "生成应用系统类项目可行性研究报告（可研报告）的技能。 触发场景：(1) \"写可研报告\" \"生成可行性研究报告\" \"做可研\" \"项目可行性分析\", (2) \"写项"
+policy:
+  allow_implicit_invocation: true

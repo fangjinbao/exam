@@ -1,0 +1,27 @@
+#!/bin/bash
+# Universal hook dispatcher for Claude Code project-level hooks.
+# Resolves project root regardless of CWD, then executes the target hook.
+# Usage in settings.json: "command": ".claude/run <hook-name.sh>"
+#
+# Why: Claude Code hooks inherit the shell CWD, which may change during
+# a session (e.g., `cd admin && npx vue-tsc`). Relative paths like
+# `.claude/hooks/xxx.sh` break when CWD != project root.
+# This script walks up from CWD to find the .claude directory.
+
+HOOK_NAME="$1"
+shift
+
+# Walk up from CWD to find project root (where .claude/hooks lives)
+D="$PWD"
+while [ "$D" != "/" ] && [ ! -d "$D/.claude/hooks" ]; do
+  D=$(dirname "$D")
+done
+
+TARGET="$D/.claude/hooks/$HOOK_NAME"
+
+if [ ! -f "$TARGET" ]; then
+  # Hook script not found — exit silently (non-blocking)
+  exit 0
+fi
+
+exec "$TARGET" "$@"

@@ -1,0 +1,5 @@
+interface:
+  display_name: "delivery-plan"
+  short_description: "项目交付链路规划技能。分析需求说明书，生成从前端原型到上线的完整交付计划，支持进度追踪和下一步推荐。 Triggers: (1) \"生成交付计划\" \"规划实现链"
+policy:
+  allow_implicit_invocation: true

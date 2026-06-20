@@ -1,0 +1,5 @@
+interface:
+  display_name: "pm-operation-manual"
+  short_description: "Use this skill to generate, write, or create operation manuals or user guides. T"
+policy:
+  allow_implicit_invocation: true

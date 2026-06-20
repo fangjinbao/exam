@@ -1,0 +1,5 @@
+interface:
+  display_name: "systematic-debugging"
+  short_description: "Use when encountering any bug, test failure, or unexpected behavior, before prop"
+policy:
+  allow_implicit_invocation: true

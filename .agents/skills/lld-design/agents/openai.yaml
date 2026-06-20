@@ -1,0 +1,5 @@
+interface:
+  display_name: "lld-design"
+  short_description: "生成详细设计说明书（LLD / Low-Level Design）的技能，一份文档涵盖「模块详细设计 + 数据库物理设计 + API详细设计」三大维度。在概要设"
+policy:
+  allow_implicit_invocation: true

@@ -1,0 +1,19 @@
+© 2026 AgentPM. All rights reserved.
+
+LICENSE: Use of these materials (including all code, prompts, assets, files,
+and other components of this Skill) is governed by your agreement with
+AgentPM regarding use of AgentPM's services. For more information, visit:
+https://www.axuremart.com
+
+ADDITIONAL RESTRICTIONS: Notwithstanding anything in the agreement to the
+contrary, users may not:
+
+- Extract these materials from the Services or retain copies of these
+  materials outside the Services
+- Reproduce or copy these materials, except for temporary copies created
+  automatically during authorized use of the Services
+- Create derivative works based on these materials
+- Distribute, sublicense, or transfer these materials to any third party
+
+AgentPM retains all right, title, and interest in these materials,
+including all copyrights and other intellectual property rights.

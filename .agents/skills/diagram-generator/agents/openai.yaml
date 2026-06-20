@@ -1,0 +1,5 @@
+interface:
+  display_name: "diagram-generator"
+  short_description: "You MUST use this skill when users ask to generate, create, draw, or insert ANY "
+policy:
+  allow_implicit_invocation: true

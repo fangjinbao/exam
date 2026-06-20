@@ -1,0 +1,5 @@
+interface:
+  display_name: "brainstorming"
+  short_description: "You MUST use this before any creative work - creating features, building compone"
+policy:
+  allow_implicit_invocation: true

@@ -1,0 +1,3 @@
+# diagram-drawer
+description = "图表绘制子 agent。接收图表需求，强制读取绘图规范后生成 draw.io XML。 由 diagram-generator skill 在生成 XML 时调用。"
+sandbox_mode = "workspace-write"

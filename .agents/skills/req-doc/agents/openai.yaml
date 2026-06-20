@@ -1,0 +1,5 @@
+interface:
+  display_name: "req-doc"
+  short_description: "Use this skill to generate, write, create, refine, review, or reverse-sync SRS r"
+policy:
+  allow_implicit_invocation: true

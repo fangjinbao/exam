@@ -7,10 +7,13 @@ dist/
 dist-ssr/
 *.local
 
-# 环境变量（含密钥，禁止提交）
-.env
-.env.*
-!.env.example
+# 环境变量：仅放行 CI 生产构建需要的 .env 和 .env.production（VITE_ 变量本就打包进客户端，非服务端密钥）
+# .env.development 含高德安全密钥等本地开发配置，不纳入版本库（生产构建 vite build 不加载它）
+!.env
+!.env.production
+.env.development
+.env.local
+.env.*.local
 
 # 自动生成的类型声明（unplugin）
 auto-imports.d.ts

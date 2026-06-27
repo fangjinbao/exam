@@ -1,6 +1,8 @@
 <template>
   <ElConfigProvider size="default" :locale="locales[language]" :z-index="3000">
     <RouterView></RouterView>
+    <!-- 原型标注层：仅用于需求标注展示与编辑 -->
+    <AnnotationOverlay />
   </ElConfigProvider>
 </template>
 
@@ -14,6 +16,7 @@
 
   import { setThemeTransitionClass } from './utils/theme/animation'
   import { checkStorageCompatibility } from './utils/storage'
+  import AnnotationOverlay from './components/Annotation/AnnotationOverlay.vue'
 
   const userStore = useUserStore()
   const settingStore = useSettingStore()

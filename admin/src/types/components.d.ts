@@ -11,6 +11,10 @@ export {}
 /* prettier-ignore */
 declare module 'vue' {
   export interface GlobalComponents {
+    AnnotationDot: typeof import('./../components/Annotation/AnnotationDot.vue')['default']
+    AnnotationEditor: typeof import('./../components/Annotation/AnnotationEditor.vue')['default']
+    AnnotationOverlay: typeof import('./../components/Annotation/AnnotationOverlay.vue')['default']
+    AnnotationPanel: typeof import('./../components/Annotation/AnnotationPanel.vue')['default']
     ArtBarChart: typeof import('./../components/core/charts/art-bar-chart/index.vue')['default']
     ArtBreadcrumb: typeof import('./../components/core/layouts/art-breadcrumb/index.vue')['default']
     ArtDualBarCompareChart: typeof import('./../components/core/charts/art-dual-bar-compare-chart/index.vue')['default']
@@ -46,6 +50,7 @@ declare module 'vue' {
     CommentItem: typeof import('./../components/custom/comment-widget/widget/CommentItem.vue')['default']
     CommentWidget: typeof import('./../components/custom/comment-widget/index.vue')['default']
     ContainerSettings: typeof import('./../components/core/layouts/art-settings-panel/widget/ContainerSettings.vue')['default']
+    ElAlert: typeof import('element-plus/es')['ElAlert']
     ElButton: typeof import('element-plus/es')['ElButton']
     ElCard: typeof import('element-plus/es')['ElCard']
     ElCheckbox: typeof import('element-plus/es')['ElCheckbox']
@@ -55,6 +60,7 @@ declare module 'vue' {
     ElDropdown: typeof import('element-plus/es')['ElDropdown']
     ElDropdownItem: typeof import('element-plus/es')['ElDropdownItem']
     ElDropdownMenu: typeof import('element-plus/es')['ElDropdownMenu']
+    ElEmpty: typeof import('element-plus/es')['ElEmpty']
     ElForm: typeof import('element-plus/es')['ElForm']
     ElFormItem: typeof import('element-plus/es')['ElFormItem']
     ElIcon: typeof import('element-plus/es')['ElIcon']

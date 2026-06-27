@@ -223,6 +223,11 @@
     "gohome": "Go Home"
   },
   "menus": {
+    "equipment": {
+      "title": "Equipment",
+      "category": "Category",
+      "vendor": "Vendor"
+    },
     "organizationTemplate": {
       "title": "Organization",
       "user": "Personnel",
@@ -236,7 +241,8 @@
     },
     "system": {
       "title": "System Config",
-      "baseConfig": "Base Config"
+      "baseConfig": "Base Config",
+      "issueType": "Issue Type"
     }
   },
   "table": {

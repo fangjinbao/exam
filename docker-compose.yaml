@@ -10,14 +10,16 @@ services:
       MYSQL_DATABASE: "${MYSQL_DATABASE:-agentpm}"
       MYSQL_USER: "${MYSQL_USER:-agentpm}"
       MYSQL_PASSWORD: "${MYSQL_PASSWORD}"
-    ports:
-      - "${MYSQL_PORT:-3306}:3306"
+    # 不对公网暴露端口，仅容器内网互通（如需本机调试可临时加 ports）
+    expose:
+      - "3306"
     volumes:
       - mysql_data:/var/lib/mysql
     networks:
       - agentpm
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${MYSQL_ROOT_PASSWORD}"]
+      # 用 MYSQL_PWD 环境变量传密码，避免密码出现在容器进程列表（$$ 是 compose 对 $ 的转义）
+      test: ["CMD-SHELL", "MYSQL_PWD=$$MYSQL_ROOT_PASSWORD mysqladmin ping -h localhost -u root"]
       interval: 10s
       timeout: 10s
       retries: 10
@@ -34,8 +36,8 @@ services:
     restart: unless-stopped
     environment:
       TZ: "Asia/Shanghai"
-    ports:
-      - "${REDIS_PORT:-6379}:6379"
+    expose:
+      - "6379"
     volumes:
       - redis_data:/data
     command: >
@@ -55,12 +57,10 @@ services:
       resources:
         limits:
           memory: 512m
-
-  # ==================== Backend ====================
+  # ==================== Backend（拉取 GHCR 镜像） ====================
   backend:
     container_name: agentpm-backend
-    # 拉取 GitHub Actions 构建好的后端镜像（在 .env 配置 BACKEND_IMAGE）
-    image: ${BACKEND_IMAGE}
+    image: ghcr.io/${IMAGE_OWNER:-fangjinbao}/inspection-server:${IMAGE_TAG:-latest}
     restart: unless-stopped
     environment:
       TZ: "Asia/Shanghai"
@@ -74,10 +74,9 @@ services:
       JWT_SECRET: "${JWT_SECRET}"
       JWT_ACCESS_EXPIRE: "7200"
       JWT_REFRESH_EXPIRE: "1296000"
-    ports:
-      - "${BACKEND_PORT:-9001}:9001"
+    expose:
+      - "9001"
     volumes:
-      # 上传文件持久化（镜像内 /app/uploads 已授权给运行用户，首次挂载继承其属主）
       - backend_uploads:/app/uploads
     depends_on:
       mysql:
@@ -98,23 +97,40 @@ services:
           memory: 1g
           cpus: "1.0"
 
-  # ==================== Nginx ====================
-  nginx:
-    container_name: agentpm-nginx
-    # 前端镜像（nginx + 已 baked 的静态产物与配置，在 .env 配置 FRONTEND_IMAGE）
-    image: ${FRONTEND_IMAGE}
+  # ==================== Admin 前端（PC 管理后台，拉取 GHCR 镜像） ====================
+  admin-nginx:
+    container_name: agentpm-admin-nginx
+    image: ghcr.io/${IMAGE_OWNER:-fangjinbao}/inspection-admin:${IMAGE_TAG:-latest}
     restart: unless-stopped
     environment:
       TZ: "Asia/Shanghai"
     ports:
-      - "${HTTP_PORT:-80}:80"
-      - "${HTTPS_PORT:-443}:443"
-    volumes:
-      # 静态产物与 nginx.conf 已打进镜像；仅保留证书目录挂载供 HTTPS 使用
-      - ./nginx/ssl:/etc/nginx/ssl:ro
+      # 仅绑本机回环：给宝塔 Nginx 反代用，不对公网暴露。宝塔站点 admin.xxx → 反代到此端口
+      - "127.0.0.1:${ADMIN_HTTP_PORT:-8080}:80"
     depends_on:
       backend:
-        condition: service_started
+        # 等后端健康（含 prisma 迁移完成）再起 nginx，避免首次部署反代到未就绪后端导致 502
+        condition: service_healthy
+    networks:
+      - agentpm
+    deploy:
+      resources:
+        limits:
+          memory: 256m
+
+  # ==================== Mobile 前端（移动端 H5，拉取 GHCR 镜像） ====================
+  mobile-nginx:
+    container_name: agentpm-mobile-nginx
+    image: ghcr.io/${IMAGE_OWNER:-fangjinbao}/inspection-mobile:${IMAGE_TAG:-latest}
+    restart: unless-stopped
+    environment:
+      TZ: "Asia/Shanghai"
+    ports:
+      # 仅绑本机回环：给宝塔 Nginx 反代用，不对公网暴露。宝塔站点 m.xxx → 反代到此端口
+      - "127.0.0.1:${MOBILE_HTTP_PORT:-8081}:80"
+    depends_on:
+      backend:
+        condition: service_healthy
     networks:
       - agentpm
     deploy:

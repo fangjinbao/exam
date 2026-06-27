@@ -1,0 +1,107 @@
+name: CI
+
+# push 到 main 或 PR 时，验证前后端能否构建通过
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'admin/**'
+      - 'mobile/**'
+      - 'server/**'
+      - '.github/workflows/ci.yml'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'admin/**'
+      - 'mobile/**'
+      - 'server/**'
+      - '.github/workflows/ci.yml'
+
+# 最小权限：CI 仅需读取代码，不依赖仓库级默认权限
+permissions:
+  contents: read
+
+jobs:
+  admin:
+    name: 前端 admin 构建校验
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: admin
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: 安装 pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 11
+
+      - name: 配置 Node 与 pnpm 缓存
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+          cache-dependency-path: admin/pnpm-lock.yaml
+
+      - name: 安装依赖
+        run: pnpm install --frozen-lockfile
+        env:
+          HUSKY: 0 # CI 环境跳过 husky git hooks 安装
+
+      # build 脚本已含 vue-tsc --noEmit 类型检查 + vite build
+      - name: 构建（含类型检查）
+        run: pnpm build
+
+  server:
+    name: 后端 server 构建校验
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: server
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: 安装 pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 11
+
+      - name: 配置 Node 与 pnpm 缓存
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+          cache-dependency-path: server/pnpm-lock.yaml
+
+      - name: 安装依赖
+        run: pnpm install --frozen-lockfile
+
+      # Prisma Client 是构建期依赖，需先生成才能通过 nest build 的类型检查
+      - name: 生成 Prisma Client
+        run: pnpm prisma generate
+
+      - name: 构建
+        run: pnpm build
+
+  mobile:
+    name: 移动端 mobile 构建校验
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: mobile
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: 配置 Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      # mobile 暂无 lock 文件，用 npm install 容错安装（与 mobile/Dockerfile 一致）
+      - name: 安装依赖
+        run: npm install --no-audit --no-fund
+        env:
+          HUSKY: 0
+
+      - name: 构建
+        run: npx vite build

@@ -133,3 +133,73 @@ import { getBaseConfigMock, updateBaseConfigMock } from './system'
 mockRoute('GET', '/admin/sys/base-config', () => getBaseConfigMock())
 mockRoute('PUT', '/admin/sys/base-config', ({ data }) => updateBaseConfigMock(data))
 
+// ==================== 系统配置：问题类型 ====================
+import {
+  getIssueTypeListMock,
+  addIssueTypeMock,
+  updateIssueTypeMock,
+  deleteIssueTypeMock,
+  updateIssueTypeStatusMock,
+  getIssueTypeAuditorsMock
+} from './issue-type'
+
+mockRoute('GET', '/admin/sys/issue-type/list', ({ params }) => getIssueTypeListMock(params))
+mockRoute('GET', '/admin/sys/issue-type/auditors', () => getIssueTypeAuditorsMock())
+mockRoute('POST', '/admin/sys/issue-type/add', ({ data }) => addIssueTypeMock(data))
+mockRoute('PUT', '/admin/sys/issue-type/update', ({ data }) => updateIssueTypeMock(data.id, data))
+mockRoute('PUT', '/admin/sys/issue-type/update-status', ({ data }) =>
+  updateIssueTypeStatusMock(data.id, data.status)
+)
+mockRoute('DELETE', '/admin/sys/issue-type/delete/:id', ({ url }) => {
+  deleteIssueTypeMock(extractId(url))
+  return {}
+})
+
+// ==================== 设备管理：设备分类 ====================
+import {
+  getCategoryTreeMock,
+  getChecklistOptionsMock,
+  addCategoryMock,
+  updateCategoryMock,
+  deleteCategoryMock,
+  bindChecklistMock,
+  importCategoriesMock,
+  getCategoryExportDataMock
+} from './equipment-category'
+
+mockRoute('GET', '/admin/equipment/category/tree', ({ params }) => getCategoryTreeMock(params))
+mockRoute('GET', '/admin/equipment/category/checklist-options', () => getChecklistOptionsMock())
+mockRoute('GET', '/admin/equipment/category/export-data', () => getCategoryExportDataMock())
+mockRoute('POST', '/admin/equipment/category/add', ({ data }) => addCategoryMock(data))
+mockRoute('POST', '/admin/equipment/category/import', ({ data }) => importCategoriesMock(data?.rows))
+mockRoute('PUT', '/admin/equipment/category/update', ({ data }) => updateCategoryMock(data.id, data))
+mockRoute('PUT', '/admin/equipment/category/bind-checklist', ({ data }) =>
+  bindChecklistMock(data.id, data.checklistId)
+)
+mockRoute('DELETE', '/admin/equipment/category/delete/:id', ({ url }) => {
+  deleteCategoryMock(extractId(url))
+  return {}
+})
+
+// ==================== 设备管理：厂商信息 ====================
+import {
+  getVendorListMock,
+  addVendorMock,
+  updateVendorMock,
+  deleteVendorMock,
+  batchDeleteVendorsMock,
+  importVendorsMock,
+  getVendorExportDataMock
+} from './equipment-vendor'
+
+mockRoute('GET', '/admin/equipment/vendor/list', ({ params }) => getVendorListMock(params))
+mockRoute('GET', '/admin/equipment/vendor/export-data', ({ params }) => getVendorExportDataMock(params))
+mockRoute('POST', '/admin/equipment/vendor/add', ({ data }) => addVendorMock(data))
+mockRoute('POST', '/admin/equipment/vendor/batch-delete', ({ data }) => batchDeleteVendorsMock(data?.ids))
+mockRoute('POST', '/admin/equipment/vendor/import', ({ data }) => importVendorsMock(data?.rows))
+mockRoute('PUT', '/admin/equipment/vendor/update', ({ data }) => updateVendorMock(data.id, data))
+mockRoute('DELETE', '/admin/equipment/vendor/delete/:id', ({ url }) => {
+  deleteVendorMock(extractId(url))
+  return {}
+})
+

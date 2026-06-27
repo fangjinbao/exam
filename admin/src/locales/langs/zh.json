@@ -223,6 +223,11 @@
     "gohome": "返回首页"
   },
   "menus": {
+    "equipment": {
+      "title": "设备管理",
+      "category": "设备分类",
+      "vendor": "厂商信息"
+    },
     "organizationTemplate": {
       "title": "组织管理",
       "user": "人员管理",
@@ -236,7 +241,8 @@
     },
     "system": {
       "title": "系统配置",
-      "baseConfig": "基础配置"
+      "baseConfig": "基础配置",
+      "issueType": "问题类型"
     }
   },
   "table": {

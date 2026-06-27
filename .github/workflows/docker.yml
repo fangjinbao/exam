@@ -1,0 +1,72 @@
+name: Docker
+
+# 仅在 push 到 main 时构建并推送镜像到 GitHub Container Registry (GHCR)
+# PR 不推送镜像，避免污染镜像库
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'admin/**'
+      - 'mobile/**'
+      - 'server/**'
+      - '.github/workflows/docker.yml'
+
+env:
+  REGISTRY: ghcr.io
+
+jobs:
+  build-and-push:
+    name: 构建并推送镜像
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: admin
+            context: admin
+          - name: mobile
+            context: mobile
+          - name: server
+            context: server
+    steps:
+      - uses: actions/checkout@v4
+
+      # 镜像名固定小写：ghcr.io/<owner>/inspection-<admin|server>（用 tr 转小写，兼容所有 shell）
+      - name: 生成镜像名（owner 转小写）
+        id: image
+        run: |
+          owner=$(echo "${GITHUB_REPOSITORY_OWNER}" | tr '[:upper:]' '[:lower:]')
+          echo "name=${REGISTRY}/${owner}/inspection-${{ matrix.name }}" >> "$GITHUB_OUTPUT"
+
+      - name: 提取镜像标签
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ steps.image.outputs.name }}
+          tags: |
+            type=raw,value=latest
+            type=sha,format=short
+
+      - name: 登录 GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: 设置 Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: 构建并推送
+        uses: docker/build-push-action@v6
+        with:
+          context: ./${{ matrix.context }}
+          file: ./${{ matrix.context }}/Dockerfile
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha,scope=${{ matrix.name }}
+          cache-to: type=gha,mode=max,scope=${{ matrix.name }}

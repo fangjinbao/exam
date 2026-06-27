@@ -2,7 +2,7 @@ import { AppRouteRecord } from '@/types/router'
 
 /**
  * 系统配置路由
- * 包含：基础配置（后续扩展：问题类型、视频监控、通知公告、制度文档）
+ * 包含：基础配置、问题类型（后续扩展：视频监控、通知公告、制度文档）
  */
 export const systemRoutes: AppRouteRecord = {
   path: '/system',
@@ -29,6 +29,15 @@ export const systemRoutes: AppRouteRecord = {
       component: () => import('@/views/system/base-config/index.vue'),
       meta: {
         title: 'menus.system.baseConfig',
+        keepAlive: true
+      }
+    },
+    {
+      path: 'issue-type',
+      name: 'SystemIssueType',
+      component: () => import('@/views/system/issue-type/index.vue'),
+      meta: {
+        title: 'menus.system.issueType',
         keepAlive: true
       }
     }

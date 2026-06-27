@@ -1,0 +1,264 @@
+{
+  "page": "system-issue-type",
+  "title": "系统配置-问题类型",
+  "updatedAt": "2026-06-27",
+  "annotations": [
+    {
+      "id": "annot-issuetype-filter-name-search",
+      "type": "selector",
+      "selector": ".annot-issuetype-filter-name-search",
+      "position": {
+        "x": 0,
+        "y": 0
+      },
+      "title": "搜索栏 — 类型名称模糊搜索",
+      "content": "提供类型名称文本输入框，支持按类型名称模糊搜索，输入后触发列表过滤。",
+      "category": "查询/筛选",
+      "source": "SRS 3.5.9.2 查询/筛选功能",
+      "createdAt": "2026-06-27"
+    },
+    {
+      "id": "annot-issuetype-add-open-btn",
+      "type": "selector",
+      "selector": ".annot-issuetype-add-open-btn",
+      "position": {
+        "x": 0,
+        "y": 0
+      },
+      "title": "新增 — 打开新增窗口",
+      "content": "点击\"新增\"按钮，弹出新增窗口，表单字段为空，状态默认启用。",
+      "category": "新增/编辑",
+      "source": "SRS 3.5.9.2 新增/编辑功能",
+      "createdAt": "2026-06-27"
+    },
+    {
+      "id": "annot-issuetype-list-col-name",
+      "type": "selector",
+      "selector": ".annot-issuetype-list-col-name",
+      "position": {
+        "x": 0,
+        "y": 0
+      },
+      "title": "列表 — 类型名称列",
+      "content": "展示问题类型名称，文本类型。",
+      "category": "列表展示",
+      "source": "SRS 3.5.9.2 列表功能",
+      "createdAt": "2026-06-27"
+    },
+    {
+      "id": "annot-issuetype-list-col-auditor",
+      "type": "selector",
+      "selector": ".annot-issuetype-list-col-auditor",
+      "position": {
+        "x": 0,
+        "y": 0
+      },
+      "title": "列表 — 默认审核人列",
+      "content": "展示该问题类型配置的默认审核人姓名，文本类型，未配置时为空。",
+      "category": "列表展示",
+      "source": "SRS 3.5.9.2 列表功能",
+      "createdAt": "2026-06-27"
+    },
+    {
+      "id": "annot-issuetype-list-col-order",
+      "type": "selector",
+      "selector": ".annot-issuetype-list-col-order",
+      "position": {
+        "x": 0,
+        "y": 0
+      },
+      "title": "列表 — 排序列",
+      "content": "展示排序数值，数字类型，数字越小在下拉选择中显示越靠前。",
+      "category": "列表展示",
+      "source": "SRS 3.5.9.2 列表功能",
+      "createdAt": "2026-06-27"
+    },
+    {
+      "id": "annot-issuetype-list-status-switch",
+      "type": "selector",
+      "selector": ".annot-issuetype-list-status-switch",
+      "position": {
+        "x": 0,
+        "y": 0
+      },
+      "title": "列表 — 状态开关",
+      "content": "展示启用/停用状态，支持在列表中直接切换，切换立即生效，成功后提示\"状态更新成功\"。停用状态的问题类型在整改工单提交时不可选择。",
+      "category": "列表展示/状态切换",
+      "source": "SRS 3.5.9.2 列表功能 + 状态切换 + 业务规则",
+      "createdAt": "2026-06-27"
+    },
+    {
+      "id": "annot-issuetype-list-col-createtime",
+      "type": "selector",
+      "selector": ".annot-issuetype-list-col-createtime",
+      "position": {
+        "x": 0,
+        "y": 0
+      },
+      "title": "列表 — 创建时间列",
+      "content": "展示记录创建时间，日期时间格式。",
+      "category": "列表展示",
+      "source": "SRS 3.5.9.2 列表功能",
+      "createdAt": "2026-06-27"
+    },
+    {
+      "id": "annot-issuetype-list-col-actions",
+      "type": "selector",
+      "selector": ".annot-issuetype-list-col-actions",
+      "position": {
+        "x": 0,
+        "y": 0
+      },
+      "title": "列表 — 操作列（编辑/删除）",
+      "content": "每行提供\"编辑\"和\"删除\"两个操作入口。",
+      "category": "列表展示",
+      "source": "SRS 3.3 页面功能清单（系统配置-问题类型）",
+      "createdAt": "2026-06-27"
+    },
+    {
+      "id": "annot-issuetype-list-pagination",
+      "type": "selector",
+      "selector": ".annot-issuetype-list-pagination",
+      "position": {
+        "x": 0,
+        "y": 0
+      },
+      "title": "列表 — 分页",
+      "content": "列表分页展示，默认每页10条，支持切换每页条数与页码跳转。",
+      "category": "列表展示",
+      "source": "SRS 3.5.9.2 列表功能",
+      "createdAt": "2026-06-27"
+    },
+    {
+      "id": "annot-issuetype-list-empty",
+      "type": "selector",
+      "selector": ".annot-issuetype-list-empty",
+      "position": {
+        "x": 0,
+        "y": 0
+      },
+      "title": "列表 — 空数据状态",
+      "content": "列表无数据时展示\"暂无问题类型\"提示。",
+      "category": "边界与异常",
+      "source": "SRS 3.5.9.2 边界与异常",
+      "createdAt": "2026-06-27"
+    },
+    {
+      "id": "annot-issuetype-edit-open-btn",
+      "type": "selector",
+      "selector": ".annot-issuetype-edit-open-btn",
+      "position": {
+        "x": 0,
+        "y": 0
+      },
+      "title": "编辑 — 打开编辑窗口",
+      "content": "点击列表行的\"编辑\"按钮，弹出编辑窗口，自动填入当前记录的所有字段数据。",
+      "category": "新增/编辑",
+      "source": "SRS 3.5.9.2 新增/编辑功能",
+      "createdAt": "2026-06-27"
+    },
+    {
+      "id": "annot-issuetype-delete-btn",
+      "type": "selector",
+      "selector": ".annot-issuetype-delete-btn",
+      "position": {
+        "x": 0,
+        "y": 0
+      },
+      "title": "删除 — 二次确认与反馈",
+      "content": "点击\"删除\"按钮，弹出确认提示\"确定要删除该问题类型吗？\"，用户确认后执行删除；删除成功后列表刷新并提示\"删除成功\"。",
+      "category": "删除",
+      "source": "SRS 3.5.9.2 删除功能",
+      "createdAt": "2026-06-27"
+    },
+    {
+      "id": "annot-issuetype-form-field-name",
+      "type": "selector",
+      "selector": ".annot-issuetype-form-field-name",
+      "position": {
+        "x": 0,
+        "y": 0
+      },
+      "title": "新增/编辑 — 类型名称字段",
+      "content": "必填字段，文本输入，最多50字，为问题类型命名。",
+      "category": "表单字段",
+      "source": "SRS 3.5.9.2 新增/编辑功能",
+      "container": "modal",
+      "createdAt": "2026-06-27"
+    },
+    {
+      "id": "annot-issuetype-form-field-auditor",
+      "type": "selector",
+      "selector": ".annot-issuetype-form-field-auditor",
+      "position": {
+        "x": 0,
+        "y": 0
+      },
+      "title": "新增/编辑 — 默认审核人字段",
+      "content": "选填字段，下拉选择，候选人来源于组织管理中具有业务主管角色的人员。",
+      "category": "表单字段",
+      "source": "SRS 3.5.9.2 新增/编辑功能",
+      "container": "modal",
+      "createdAt": "2026-06-27"
+    },
+    {
+      "id": "annot-issuetype-form-field-order",
+      "type": "selector",
+      "selector": ".annot-issuetype-form-field-order",
+      "position": {
+        "x": 0,
+        "y": 0
+      },
+      "title": "新增/编辑 — 排序字段",
+      "content": "选填字段，数字输入，默认值为0，数字越小在问题类型下拉列表中排列越靠前。",
+      "category": "表单字段",
+      "source": "SRS 3.5.9.2 新增/编辑功能",
+      "container": "modal",
+      "createdAt": "2026-06-27"
+    },
+    {
+      "id": "annot-issuetype-form-field-status",
+      "type": "selector",
+      "selector": ".annot-issuetype-form-field-status",
+      "position": {
+        "x": 0,
+        "y": 0
+      },
+      "title": "新增/编辑 — 状态字段",
+      "content": "选填字段，启用/停用，默认启用。",
+      "category": "表单字段",
+      "source": "SRS 3.5.9.2 新增/编辑功能",
+      "container": "modal",
+      "createdAt": "2026-06-27"
+    },
+    {
+      "id": "annot-issuetype-form-submit-btn",
+      "type": "selector",
+      "selector": ".annot-issuetype-form-submit-btn",
+      "position": {
+        "x": 0,
+        "y": 0
+      },
+      "title": "新增/编辑 — 提交确定",
+      "content": "点击\"确定\"提交表单：新增成功提示\"新增成功\"，编辑成功提示\"更新成功\"；提交成功后窗口关闭、列表刷新。",
+      "category": "新增/编辑",
+      "source": "SRS 3.5.9.2 新增/编辑功能",
+      "container": "modal",
+      "createdAt": "2026-06-27"
+    },
+    {
+      "id": "ann-1782566504904-1",
+      "type": "position",
+      "selector": "",
+      "position": {
+        "x": 503,
+        "y": 202
+      },
+      "title": "222",
+      "content": "<p>22</p>",
+      "category": "custom",
+      "source": "",
+      "createdAt": "2026-06-27"
+    }
+  ]
+}

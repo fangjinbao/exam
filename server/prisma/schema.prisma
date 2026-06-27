@@ -497,3 +497,28 @@ model RecycleData {
   @@map("recycle_data")
 }
 
+// ==================== 系统配置 - 业务基础数据 ====================
+
+/// 问题类型（整改工单问题分类，SRS 3.5.9.2 / LLD 4.3.16）
+model IssueType {
+  id         Int      @id @default(autoincrement())
+  /// 类型名称
+  name       String   @db.VarChar(50)
+  /// 默认审核人 ID（关联 base_sys_user.id，可空）
+  auditorId  Int?
+  /// 排序号（升序，数字越小越靠前）
+  orderNum   Int      @default(0)
+  /// 状态 1=启用 0=停用（停用后工单提交不可选）
+  status     Int      @default(1)
+  /// 租户 ID
+  tenantId   Int?
+  /// 创建时间
+  createTime DateTime @default(now())
+  /// 更新时间
+  updateTime DateTime @updatedAt
+
+  @@index([auditorId])
+  @@index([tenantId])
+  @@map("biz_issue_type")
+}
+

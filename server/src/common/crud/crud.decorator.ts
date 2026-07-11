@@ -10,7 +10,17 @@ export interface CrudOptions {
   /** 路由前缀，等价于 @Controller(prefix) */
   prefix?: string;
   /** 开放的 CRUD 接口集合，缺省开放全部 */
-  api?: ('add' | 'delete' | 'update' | 'info' | 'list' | 'page')[];
+  api?: (
+    | 'add'
+    | 'delete'
+    | 'update'
+    | 'update-status'
+    | 'info'
+    | 'detail'
+    | 'list'
+    | 'page'
+    | 'batch-delete'
+  )[];
   /** 分页/列表查询配置 */
   pageQueryOp?: {
     /** 关键字模糊匹配的字段（命中任一即返回） */

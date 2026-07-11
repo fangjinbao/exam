@@ -11,7 +11,7 @@ import { headerBarConfig } from './headerBar'
 const appConfig: SystemConfig = {
   // 系统信息
   systemInfo: {
-    name: '一次物流信息管理模块' // 系统名称
+    name: '智能ai系统' // 系统名称
   },
   // 系统主题
   systemThemeStyles: {

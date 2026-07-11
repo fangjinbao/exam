@@ -223,11 +223,6 @@
     "gohome": "返回首页"
   },
   "menus": {
-    "equipment": {
-      "title": "设备管理",
-      "category": "设备分类",
-      "vendor": "厂商信息"
-    },
     "organizationTemplate": {
       "title": "组织管理",
       "user": "人员管理",
@@ -239,10 +234,18 @@
       "role": "角色管理",
       "menu": "菜单管理"
     },
+    "externalCandidate": {
+      "title": "外部考生管理"
+    },
+    "examSite": {
+      "title": "考点管理"
+    },
     "system": {
-      "title": "系统配置",
-      "baseConfig": "基础配置",
-      "issueType": "问题类型"
+      "title": "系统管理",
+      "paramConfig": "参数配置",
+      "aiModel": "AI模型配置",
+      "dataDict": "数据字典",
+      "operationLog": "操作日志"
     }
   },
   "table": {

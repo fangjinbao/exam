@@ -304,6 +304,10 @@ model DictInfo {
   value      String
   /// 排序号
   orderNum   Int      @default(0)
+  /// 状态 1=启用 0=停用
+  status     Int      @default(1)
+  /// 是否被业务引用（true 时禁止删除；原型阶段以字段标记，后续可改为按外键统计）
+  referenced Boolean  @default(false)
   /// 备注
   remark     String?
   /// 租户 ID
@@ -520,5 +524,155 @@ model IssueType {
   @@index([auditorId])
   @@index([tenantId])
   @@map("biz_issue_type")
+}
+
+// ==================== 系统管理模块 ====================
+
+/// 系统参数配置（业务可调参数，区别于 base_sys_param 的系统级 KV 配置）
+model SysParamConfig {
+  id          Int      @id @default(autoincrement())
+  /// 参数名称
+  name        String   @db.VarChar(100)
+  /// 参数值（统一以字符串存储，按 valueType 解释）
+  value       String   @db.Text
+  /// 参数说明
+  description String?  @db.VarChar(500)
+  /// 参数值类型，如 int
+  valueType   String   @default("int") @db.VarChar(20)
+  /// 允许最小值（int 类型时生效，可空）
+  minValue    Int?
+  /// 允许最大值（int 类型时生效，可空）
+  maxValue    Int?
+  /// 租户 ID
+  tenantId    Int?
+  /// 创建时间
+  createTime  DateTime @default(now())
+  /// 更新时间
+  updateTime  DateTime @updatedAt
+
+  @@index([tenantId])
+  @@map("sys_param_config")
+}
+
+/// AI 模型配置（apiKey 为敏感字段，接口下发时脱敏，不返回完整密钥）
+model SysAiModel {
+  id             Int      @id @default(autoincrement())
+  /// 配置名称（全局唯一）
+  name           String   @unique @db.VarChar(100)
+  /// 模型服务商：通义千问/DeepSeek/智谱/OpenAI/其他
+  provider       String   @db.VarChar(50)
+  /// 模型名称
+  model          String   @db.VarChar(100)
+  /// 接口地址
+  apiUrl         String   @db.VarChar(500)
+  /// 接口密钥（敏感，仅存储，不下发完整值）
+  apiKey         String   @db.VarChar(500)
+  /// 最大并发数（可空）
+  maxConcurrency Int?
+  /// 超时时间（秒，可空）
+  timeout        Int?
+  /// 启用状态 1=启用 0=停用（全局仅一项启用）
+  status         Int      @default(0)
+  /// 连接状态：normal 正常 / error 异常 / unknown 未测试
+  connStatus     String   @default("unknown") @db.VarChar(20)
+  /// 租户 ID
+  tenantId       Int?
+  /// 创建时间
+  createTime     DateTime @default(now())
+  /// 更新时间
+  updateTime     DateTime @updatedAt
+
+  @@index([tenantId])
+  @@map("sys_ai_model")
+}
+
+/// 系统操作日志（仅查看，记录操作人行为审计）
+model SysOperationLog {
+  id          Int      @id @default(autoincrement())
+  /// 操作人姓名
+  operator    String   @db.VarChar(50)
+  /// 操作类型：新增/编辑/删除/登录/其他
+  type        String   @db.VarChar(20)
+  /// 操作对象（如"题目管理"）
+  target      String   @db.VarChar(100)
+  /// 操作内容描述
+  content     String   @db.VarChar(500)
+  /// 来源网络地址
+  sourceIp    String   @db.VarChar(50)
+  /// 操作时间
+  operateTime DateTime @default(now())
+  /// 租户 ID
+  tenantId    Int?
+  /// 创建时间
+  createTime  DateTime @default(now())
+  /// 更新时间
+  updateTime  DateTime @updatedAt
+
+  @@index([operator])
+  @@index([type])
+  @@index([operateTime])
+  @@index([tenantId])
+  @@map("sys_operation_log")
+}
+
+// ==================== 考试域模块 ====================
+
+/// 外部考生（外部单位参加考试人员，由系统生成考试账号；password/passwordV 为敏感字段，不对外返回）
+model ExternalCandidate {
+  id           Int      @id @default(autoincrement())
+  /// 姓名
+  name         String   @db.VarChar(50)
+  /// 准考证号（考试账号登录名，系统内全局唯一）
+  admissionNo  String   @unique @db.VarChar(30)
+  /// 所属单位（可空）
+  company      String?  @db.VarChar(50)
+  /// 证件号（用于身份核验，可空）
+  idCard       String?  @db.VarChar(30)
+  /// 联系电话（手机号）
+  phone        String   @db.VarChar(20)
+  /// 电子邮箱（可空）
+  email        String?  @db.VarChar(50)
+  /// 考试账号密码（bcrypt 哈希，敏感，不对外返回）
+  password     String
+  /// 密码版本号（重置密码后自增，使旧登录态失效，敏感，不对外返回）
+  passwordV    Int      @default(1)
+  /// 账号状态 1=启用 0=停用（停用后不可登录考生端）
+  status       Int      @default(1)
+  /// 租户 ID
+  tenantId     Int?
+  /// 创建时间
+  createTime   DateTime @default(now())
+  /// 更新时间
+  updateTime   DateTime @updatedAt
+
+  @@index([phone])
+  @@index([tenantId])
+  @@map("exam_external_candidate")
+}
+
+/// 考点（考试场地基础信息，供考试管理进行考点安排；被考试引用时不可删除）
+model ExamSite {
+  id         Int      @id @default(autoincrement())
+  /// 考点名称（系统内唯一）
+  name       String   @unique @db.VarChar(50)
+  /// 考点地址
+  address    String   @db.VarChar(200)
+  /// 容纳人数（可空，正整数）
+  capacity   Int?
+  /// 联系人（可空）
+  contact    String?  @db.VarChar(50)
+  /// 联系电话（可空，11 位手机号）
+  phone      String?  @db.VarChar(11)
+  /// 状态 1=启用 0=停用
+  status     Int      @default(1)
+  /// 租户 ID
+  tenantId   Int?
+  /// 创建时间
+  createTime DateTime @default(now())
+  /// 更新时间
+  updateTime DateTime @updatedAt
+
+  @@index([tenantId])
+  @@map("exam_site")
 }
 

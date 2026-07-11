@@ -7,6 +7,12 @@ dist/
 dist-ssr/
 *.local
 
+# TS/Vue 编译产物（源码为 .ts/.vue，编译出的 .js/.js.map 不入库；放行手写的 iconfont.js）
+src/**/*.js
+src/**/*.js.map
+!src/assets/icons/system/iconfont.js
+*.tsbuildinfo
+
 # 环境变量：仅放行 CI 生产构建需要的 .env 和 .env.production（VITE_ 变量本就打包进客户端，非服务端密钥）
 # .env.development 含高德安全密钥等本地开发配置，不纳入版本库（生产构建 vite build 不加载它）
 !.env

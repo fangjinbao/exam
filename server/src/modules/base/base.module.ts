@@ -6,7 +6,6 @@ import { MenuController } from './controllers/menu.controller';
 import { DepartmentController } from './controllers/department.controller';
 import { PositionController } from './controllers/position.controller';
 import { LogController } from './controllers/log.controller';
-import { SysConfigController } from './controllers/sys-config.controller';
 import { AuthService } from './services/auth.service';
 import { UserService } from './services/user.service';
 import { RoleService } from './services/role.service';
@@ -30,7 +29,6 @@ import { SysConfigService } from './services/sys-config.service';
     DepartmentController,
     PositionController,
     LogController,
-    SysConfigController,
   ],
   providers: [
     AuthService,

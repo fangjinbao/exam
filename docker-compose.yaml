@@ -57,10 +57,14 @@ services:
       resources:
         limits:
           memory: 512m
-  # ==================== Backend（拉取 GHCR 镜像） ====================
+  # ==================== Backend ====================
+  # 两种方式共用：docker compose pull → 拉 image 现成镜像；docker compose up -d --build → 用本地源码构建（不联网、不碰 GHCR）
   backend:
     container_name: agentpm-backend
     image: ghcr.io/${IMAGE_OWNER:-fangjinbao}/inspection-server:${IMAGE_TAG:-latest}
+    build:
+      context: ./server
+      dockerfile: Dockerfile
     restart: unless-stopped
     environment:
       TZ: "Asia/Shanghai"
@@ -97,10 +101,13 @@ services:
           memory: 1g
           cpus: "1.0"
 
-  # ==================== Admin 前端（PC 管理后台，拉取 GHCR 镜像） ====================
+  # ==================== Admin 前端（PC 管理后台）====================
   admin-nginx:
     container_name: agentpm-admin-nginx
     image: ghcr.io/${IMAGE_OWNER:-fangjinbao}/inspection-admin:${IMAGE_TAG:-latest}
+    build:
+      context: ./admin
+      dockerfile: Dockerfile
     restart: unless-stopped
     environment:
       TZ: "Asia/Shanghai"
@@ -118,10 +125,13 @@ services:
         limits:
           memory: 256m
 
-  # ==================== Mobile 前端（移动端 H5，拉取 GHCR 镜像） ====================
+  # ==================== Mobile 前端（移动端 H5）====================
   mobile-nginx:
     container_name: agentpm-mobile-nginx
     image: ghcr.io/${IMAGE_OWNER:-fangjinbao}/inspection-mobile:${IMAGE_TAG:-latest}
+    build:
+      context: ./mobile
+      dockerfile: Dockerfile
     restart: unless-stopped
     environment:
       TZ: "Asia/Shanghai"

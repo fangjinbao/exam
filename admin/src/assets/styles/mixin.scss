@@ -166,8 +166,11 @@
   display: flex;
   flex-wrap: wrap;
   align-items: center;
+  // 换行时行与行之间的垂直间距（单行布局不触发，故不影响未换行的筛选页）
+  row-gap: 16px;
 
   :deep(.el-form-item) {
+    // 垂直间距统一交给容器 row-gap，避免与 margin 叠加
     margin-bottom: 0;
   }
 
@@ -185,11 +188,8 @@
     :deep(.el-form-item) {
       display: flex;
       width: 100%;
-      margin-bottom: 12px;
-
-      &:last-child {
-        margin-bottom: 0;
-      }
+      // 每项占满一行，行间距由容器 row-gap 统一控制
+      margin-bottom: 0;
 
       .el-form-item__content {
         flex: 1;

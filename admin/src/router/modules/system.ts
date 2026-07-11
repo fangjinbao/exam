@@ -1,8 +1,9 @@
 import { AppRouteRecord } from '@/types/router'
 
 /**
- * 系统配置路由
- * 包含：基础配置、问题类型（后续扩展：视频监控、通知公告、制度文档）
+ * 系统管理路由
+ * 包含：参数配置、AI模型配置、数据字典、操作日志
+ * 仅系统管理员可访问，其他角色菜单入口隐藏（原型阶段不做权限拦截）
  */
 export const systemRoutes: AppRouteRecord = {
   path: '/system',
@@ -17,27 +18,46 @@ export const systemRoutes: AppRouteRecord = {
     {
       path: '',
       name: 'SystemIndex',
-      redirect: '/system/base-config',
+      component: () => import('@/views/system/param-config/index.vue'),
       meta: {
         title: 'menus.system.title',
+        keepAlive: true,
         isHide: true
       }
     },
     {
-      path: 'base-config',
-      name: 'SystemBaseConfig',
-      component: () => import('@/views/system/base-config/index.vue'),
+      path: 'param-config',
+      name: 'SystemParamConfig',
+      component: () => import('@/views/system/param-config/index.vue'),
       meta: {
-        title: 'menus.system.baseConfig',
+        title: 'menus.system.paramConfig',
         keepAlive: true
       }
     },
     {
-      path: 'issue-type',
-      name: 'SystemIssueType',
-      component: () => import('@/views/system/issue-type/index.vue'),
+      path: 'ai-model',
+      name: 'SystemAiModel',
+      component: () => import('@/views/system/ai-model/index.vue'),
       meta: {
-        title: 'menus.system.issueType',
+        title: 'menus.system.aiModel',
+        keepAlive: true
+      }
+    },
+    {
+      path: 'data-dict',
+      name: 'SystemDataDict',
+      component: () => import('@/views/system/data-dict/index.vue'),
+      meta: {
+        title: 'menus.system.dataDict',
+        keepAlive: true
+      }
+    },
+    {
+      path: 'operation-log',
+      name: 'SystemOperationLog',
+      component: () => import('@/views/system/operation-log/index.vue'),
+      meta: {
+        title: 'menus.system.operationLog',
         keepAlive: true
       }
     }

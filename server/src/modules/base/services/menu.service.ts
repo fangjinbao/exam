@@ -122,14 +122,15 @@ export class MenuService extends BaseService {
         const router: string = item.router || '';
         // 路径：目录(顶级)用完整 router 作根（/organization）；菜单(子级)用末段相对片段（department），
         // 前端 menuDataToRouter 会与父路径拼接还原成完整路径，避免重复拼接。
+        // - 目录(type0)：用完整 router 作根（/organization）
+        // - 子菜单(type1 有父)：用末段相对片段（department），由前端与父路径拼接
+        // - 一级单页菜单(type1 无父)：保留带前导斜杠的完整 router（/external-candidate），
+        //   前端 handleLayoutRoute 取 path.split('/')[1] 派生为一级菜单并套 Layout，
+        //   若在此处 pop 掉前导斜杠会被误判成根路由 '/'，导致单页菜单无法渲染。
         const path =
-          item.type === 0 ? router : router.split('/').filter(Boolean).pop() || router;
-        // 孤立菜单（type1 无父目录）以末段作根路由会与完整 router 不一致，告警便于排查菜单树配置
-        if (item.type === 1 && parentId === null) {
-          this.logger.warn(
-            `孤立菜单 id=${item.id} router=${router} 派生 path=${path}，无父目录，将以末段片段作为根路由，请检查菜单树结构`,
-          );
-        }
+          item.type === 0 || parentId === null
+            ? router
+            : router.split('/').filter(Boolean).pop() || router;
         // 组件：目录套 Layout（/index/index）；菜单用带前导斜杠的完整 router，
         // 前端 loadComponent 拼 ../../views{component}.vue / {component}/index.vue 命中页面。
         const component = item.type === 0 ? '/index/index' : router;

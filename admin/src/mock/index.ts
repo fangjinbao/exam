@@ -50,12 +50,32 @@ import {
   deletePositionMock
 } from './position'
 
+import {
+  getExamSiteListMock,
+  addExamSiteMock,
+  updateExamSiteMock,
+  updateExamSiteStatusMock,
+  deleteExamSiteMock
+} from './examSite'
+
+import {
+  getExternalCandidateListMock,
+  addExternalCandidateMock,
+  updateExternalCandidateMock,
+  updateExternalCandidateStatusMock,
+  resetExternalCandidatePasswordMock,
+  deleteExternalCandidateMock,
+  importExternalCandidatesMock
+} from './externalCandidate'
+
 // 部门
 mockRoute('GET', '/admin/sys/department/tree', ({ params }) => getDepartmentTreeMock(params))
 mockRoute('GET', '/admin/sys/department/list', ({ params }) => getDepartmentListMock(params))
 mockRoute('POST', '/admin/sys/department/add', ({ data }) => addDepartmentMock(data))
 mockRoute('PUT', '/admin/sys/department/update', ({ data }) => updateDepartmentMock(data.id, data))
-mockRoute('PUT', '/admin/sys/department/update-status', ({ data }) => updateDepartmentStatusMock(data.id, data.status))
+mockRoute('PUT', '/admin/sys/department/update-status', ({ data }) =>
+  updateDepartmentStatusMock(data.id, data.status)
+)
 mockRoute('DELETE', '/admin/sys/department/delete/:id', ({ url }) => {
   deleteDepartmentMock(extractId(url))
   return {}
@@ -66,9 +86,13 @@ mockRoute('GET', '/admin/sys/user/list', ({ params }) => getUserListMock(params)
 mockRoute('GET', '/admin/sys/user/detail/:id', ({ url }) => getUserDetailMock(extractId(url)))
 mockRoute('POST', '/admin/sys/user/add', ({ data }) => addUserMock(data))
 mockRoute('PUT', '/admin/sys/user/update', ({ data }) => updateUserMock(data.id, data))
-mockRoute('PUT', '/admin/sys/user/update-status', ({ data }) => updateUserStatusMock(data.id, data.status))
+mockRoute('PUT', '/admin/sys/user/update-status', ({ data }) =>
+  updateUserStatusMock(data.id, data.status)
+)
 mockRoute('POST', '/admin/sys/user/batch-delete', ({ data }) => batchDeleteUsersMock(data?.ids))
-mockRoute('POST', '/admin/sys/user/move', ({ data }) => moveUserMock(data.userId, data.departmentId))
+mockRoute('POST', '/admin/sys/user/move', ({ data }) =>
+  moveUserMock(data.userId, data.departmentId)
+)
 mockRoute('DELETE', '/admin/sys/user/delete/:id', ({ url }) => {
   deleteUserMock(extractId(url))
   return {}
@@ -80,6 +104,40 @@ mockRoute('POST', '/admin/sys/position/add', ({ data }) => addPositionMock(data)
 mockRoute('PUT', '/admin/sys/position/update', ({ data }) => updatePositionMock(data.id, data))
 mockRoute('DELETE', '/admin/sys/position/delete/:id', ({ url }) => {
   deletePositionMock(extractId(url))
+  return {}
+})
+
+// 考点
+mockRoute('GET', '/admin/sys/exam-site/list', ({ params }) => getExamSiteListMock(params))
+mockRoute('POST', '/admin/sys/exam-site/add', ({ data }) => addExamSiteMock(data))
+mockRoute('PUT', '/admin/sys/exam-site/update', ({ data }) => updateExamSiteMock(data.id, data))
+mockRoute('PUT', '/admin/sys/exam-site/update-status', ({ data }) =>
+  updateExamSiteStatusMock(data.id, data.status)
+)
+mockRoute('DELETE', '/admin/sys/exam-site/delete/:id', ({ url }) => {
+  deleteExamSiteMock(extractId(url))
+  return {}
+})
+
+// 外部考生
+mockRoute('GET', '/admin/exam/external-candidate/list', ({ params }) =>
+  getExternalCandidateListMock(params)
+)
+mockRoute('POST', '/admin/exam/external-candidate/add', ({ data }) =>
+  addExternalCandidateMock(data)
+)
+mockRoute('PUT', '/admin/exam/external-candidate/update', ({ data }) =>
+  updateExternalCandidateMock(data.id, data)
+)
+mockRoute('PUT', '/admin/exam/external-candidate/update-status', ({ data }) =>
+  updateExternalCandidateStatusMock(data.id, data.status)
+)
+mockRoute('PUT', '/admin/exam/external-candidate/reset-password', ({ data }) =>
+  resetExternalCandidatePasswordMock(data.id)
+)
+mockRoute('POST', '/admin/exam/external-candidate/import', () => importExternalCandidatesMock())
+mockRoute('DELETE', '/admin/exam/external-candidate/delete/:id', ({ url }) => {
+  deleteExternalCandidateMock(extractId(url))
   return {}
 })
 
@@ -107,10 +165,14 @@ mockRoute('GET', '/admin/sys/role/list', ({ params }) => getRoleListMock(params)
 mockRoute('GET', '/admin/sys/role/detail/:id', ({ url }) => getRoleDetailMock(extractId(url)))
 mockRoute('POST', '/admin/sys/role/add', ({ data }) => addRoleMock(data))
 mockRoute('PUT', '/admin/sys/role/update', ({ data }) => updateRoleMock(data.id, data))
-mockRoute('PUT', '/admin/sys/role/update-status', ({ data }) => updateRoleStatusMock(data.id, data.status))
+mockRoute('PUT', '/admin/sys/role/update-status', ({ data }) =>
+  updateRoleStatusMock(data.id, data.status)
+)
 mockRoute('POST', '/admin/sys/role/batch-delete', ({ data }) => batchDeleteRolesMock(data?.ids))
 mockRoute('GET', '/admin/sys/role/getMenus/:id', ({ url }) => getRoleMenusMock(extractId(url)))
-mockRoute('POST', '/admin/sys/role/setMenus', ({ data }) => setRoleMenusMock(data.roleId, data.menuIds))
+mockRoute('POST', '/admin/sys/role/setMenus', ({ data }) =>
+  setRoleMenusMock(data.roleId, data.menuIds)
+)
 mockRoute('DELETE', '/admin/sys/role/delete/:id', ({ url }) => {
   deleteRoleMock(extractId(url))
   return {}
@@ -121,85 +183,59 @@ mockRoute('GET', '/admin/sys/menu/tree', () => getMenuTreeMock())
 mockRoute('GET', '/admin/sys/menu/list', () => getMenuListMock())
 mockRoute('POST', '/admin/sys/menu/add', ({ data }) => addMenuMock(data))
 mockRoute('PUT', '/admin/sys/menu/update', ({ data }) => updateMenuMock(data.id, data))
-mockRoute('PUT', '/admin/sys/menu/update-status', ({ data }) => updateMenuStatusMock(data.id, data.status))
+mockRoute('PUT', '/admin/sys/menu/update-status', ({ data }) =>
+  updateMenuStatusMock(data.id, data.status)
+)
 mockRoute('DELETE', '/admin/sys/menu/delete/:id', ({ url }) => {
   deleteMenuMock(extractId(url))
   return {}
 })
 
-// ==================== 系统配置：基础配置 ====================
-import { getBaseConfigMock, updateBaseConfigMock } from './system'
-
-mockRoute('GET', '/admin/sys/base-config', () => getBaseConfigMock())
-mockRoute('PUT', '/admin/sys/base-config', ({ data }) => updateBaseConfigMock(data))
-
-// ==================== 系统配置：问题类型 ====================
+// ==================== 系统管理：参数配置 / AI模型配置 / 数据字典 / 操作日志 ====================
+import { getParamConfigListMock, updateParamConfigMock } from './paramConfig'
 import {
-  getIssueTypeListMock,
-  addIssueTypeMock,
-  updateIssueTypeMock,
-  deleteIssueTypeMock,
-  updateIssueTypeStatusMock,
-  getIssueTypeAuditorsMock
-} from './issue-type'
+  getAiModelListMock,
+  addAiModelMock,
+  updateAiModelMock,
+  deleteAiModelMock,
+  enableAiModelMock,
+  testAiModelMock
+} from './aiModel'
+import {
+  getDictTypeListMock,
+  getDictItemListMock,
+  addDictItemMock,
+  updateDictItemMock,
+  deleteDictItemMock
+} from './dataDict'
+import { getOperationLogListMock } from './operationLog'
 
-mockRoute('GET', '/admin/sys/issue-type/list', ({ params }) => getIssueTypeListMock(params))
-mockRoute('GET', '/admin/sys/issue-type/auditors', () => getIssueTypeAuditorsMock())
-mockRoute('POST', '/admin/sys/issue-type/add', ({ data }) => addIssueTypeMock(data))
-mockRoute('PUT', '/admin/sys/issue-type/update', ({ data }) => updateIssueTypeMock(data.id, data))
-mockRoute('PUT', '/admin/sys/issue-type/update-status', ({ data }) =>
-  updateIssueTypeStatusMock(data.id, data.status)
+// 参数配置
+mockRoute('GET', '/admin/sys/param-config/list', ({ params }) => getParamConfigListMock(params))
+mockRoute('PUT', '/admin/sys/param-config/update', ({ data }) =>
+  updateParamConfigMock(data.id, data.value)
 )
-mockRoute('DELETE', '/admin/sys/issue-type/delete/:id', ({ url }) => {
-  deleteIssueTypeMock(extractId(url))
+
+// AI模型配置
+mockRoute('GET', '/admin/sys/ai-model/list', ({ params }) => getAiModelListMock(params))
+mockRoute('POST', '/admin/sys/ai-model/add', ({ data }) => addAiModelMock(data))
+mockRoute('PUT', '/admin/sys/ai-model/update', ({ data }) => updateAiModelMock(data.id, data))
+mockRoute('PUT', '/admin/sys/ai-model/enable', ({ data }) => enableAiModelMock(data.id))
+mockRoute('POST', '/admin/sys/ai-model/test', ({ data }) => testAiModelMock(data.id))
+mockRoute('DELETE', '/admin/sys/ai-model/delete/:id', ({ url }) => {
+  deleteAiModelMock(extractId(url))
   return {}
 })
 
-// ==================== 设备管理：设备分类 ====================
-import {
-  getCategoryTreeMock,
-  getChecklistOptionsMock,
-  addCategoryMock,
-  updateCategoryMock,
-  deleteCategoryMock,
-  bindChecklistMock,
-  importCategoriesMock,
-  getCategoryExportDataMock
-} from './equipment-category'
-
-mockRoute('GET', '/admin/equipment/category/tree', ({ params }) => getCategoryTreeMock(params))
-mockRoute('GET', '/admin/equipment/category/checklist-options', () => getChecklistOptionsMock())
-mockRoute('GET', '/admin/equipment/category/export-data', () => getCategoryExportDataMock())
-mockRoute('POST', '/admin/equipment/category/add', ({ data }) => addCategoryMock(data))
-mockRoute('POST', '/admin/equipment/category/import', ({ data }) => importCategoriesMock(data?.rows))
-mockRoute('PUT', '/admin/equipment/category/update', ({ data }) => updateCategoryMock(data.id, data))
-mockRoute('PUT', '/admin/equipment/category/bind-checklist', ({ data }) =>
-  bindChecklistMock(data.id, data.checklistId)
-)
-mockRoute('DELETE', '/admin/equipment/category/delete/:id', ({ url }) => {
-  deleteCategoryMock(extractId(url))
+// 数据字典
+mockRoute('GET', '/admin/sys/dict/type/list', ({ params }) => getDictTypeListMock(params))
+mockRoute('GET', '/admin/sys/dict/item/list', ({ params }) => getDictItemListMock(params))
+mockRoute('POST', '/admin/sys/dict/item/add', ({ data }) => addDictItemMock(data))
+mockRoute('PUT', '/admin/sys/dict/item/update', ({ data }) => updateDictItemMock(data.id, data))
+mockRoute('DELETE', '/admin/sys/dict/item/delete/:id', ({ url }) => {
+  deleteDictItemMock(extractId(url))
   return {}
 })
 
-// ==================== 设备管理：厂商信息 ====================
-import {
-  getVendorListMock,
-  addVendorMock,
-  updateVendorMock,
-  deleteVendorMock,
-  batchDeleteVendorsMock,
-  importVendorsMock,
-  getVendorExportDataMock
-} from './equipment-vendor'
-
-mockRoute('GET', '/admin/equipment/vendor/list', ({ params }) => getVendorListMock(params))
-mockRoute('GET', '/admin/equipment/vendor/export-data', ({ params }) => getVendorExportDataMock(params))
-mockRoute('POST', '/admin/equipment/vendor/add', ({ data }) => addVendorMock(data))
-mockRoute('POST', '/admin/equipment/vendor/batch-delete', ({ data }) => batchDeleteVendorsMock(data?.ids))
-mockRoute('POST', '/admin/equipment/vendor/import', ({ data }) => importVendorsMock(data?.rows))
-mockRoute('PUT', '/admin/equipment/vendor/update', ({ data }) => updateVendorMock(data.id, data))
-mockRoute('DELETE', '/admin/equipment/vendor/delete/:id', ({ url }) => {
-  deleteVendorMock(extractId(url))
-  return {}
-})
-
+// 操作日志
+mockRoute('GET', '/admin/sys/operation-log/list', ({ params }) => getOperationLogListMock(params))

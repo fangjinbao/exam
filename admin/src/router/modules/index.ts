@@ -1,11 +1,13 @@
 import { AppRouteRecord } from '@/types/router'
-import { equipmentRoutes } from './equipment'
 import { organizationTemplateRoutes } from './organization-template'
 import { permissionTemplateRoutes } from './permission-template'
+import { externalCandidateRoutes } from './external-candidate'
+import { examSiteRoutes } from './exam-site'
 import { systemRoutes } from './system'
 export const routeModules: AppRouteRecord[] = [
-  equipmentRoutes,
+  externalCandidateRoutes,
   organizationTemplateRoutes,
+  examSiteRoutes,
   permissionTemplateRoutes,
-  systemRoutes,
+  systemRoutes
 ]

@@ -223,11 +223,6 @@
     "gohome": "Go Home"
   },
   "menus": {
-    "equipment": {
-      "title": "Equipment",
-      "category": "Category",
-      "vendor": "Vendor"
-    },
     "organizationTemplate": {
       "title": "Organization",
       "user": "Personnel",
@@ -239,10 +234,18 @@
       "role": "Role Management",
       "menu": "Menu Management"
     },
+    "externalCandidate": {
+      "title": "External Candidates"
+    },
+    "examSite": {
+      "title": "Exam Site"
+    },
     "system": {
-      "title": "System Config",
-      "baseConfig": "Base Config",
-      "issueType": "Issue Type"
+      "title": "System",
+      "paramConfig": "Parameter Config",
+      "aiModel": "AI Model Config",
+      "dataDict": "Data Dictionary",
+      "operationLog": "Operation Log"
     }
   },
   "table": {

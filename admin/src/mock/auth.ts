@@ -60,7 +60,15 @@ export const MOCK_USERS = [
           isSystem: 1
         }
       ],
-      buttons: ['user:add', 'user:edit', 'user:delete', 'role:add', 'role:edit', 'role:delete']
+      buttons: [
+        'user:add',
+        'user:edit',
+        'user:delete',
+        'role:add',
+        'role:edit',
+        'role:delete',
+        'externalCandidate:manage'
+      ]
     }
   },
   {

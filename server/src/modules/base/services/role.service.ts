@@ -18,13 +18,18 @@ export class RoleService extends BaseService {
    * @param roleId 角色 ID
    * @param menuIds 该角色最终应拥有的菜单 ID 列表
    */
-  async setMenus(roleId: number, menuIds: number[]) {
+  async setMenus(roleId: number, menuIds: number[]): Promise<{ roleName: string }> {
+    const role = await this.prisma.sysRole.findUnique({
+      where: { id: roleId },
+      select: { name: true },
+    });
     await this.prisma.$transaction([
       this.prisma.sysRoleMenu.deleteMany({ where: { roleId } }),
       this.prisma.sysRoleMenu.createMany({
         data: menuIds.map((menuId) => ({ roleId, menuId })),
       }),
     ]);
+    return { roleName: role?.name || `角色${roleId}` };
   }
 
   /**

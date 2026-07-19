@@ -13,7 +13,6 @@ import { MenuService } from './services/menu.service';
 import { DepartmentService } from './services/department.service';
 import { PositionService } from './services/position.service';
 import { LogService } from './services/log.service';
-import { SysConfigService } from './services/sys-config.service';
 
 /**
  * 基础模块（base）
@@ -38,7 +37,6 @@ import { SysConfigService } from './services/sys-config.service';
     DepartmentService,
     PositionService,
     LogService,
-    SysConfigService,
   ],
   exports: [AuthService, LogService],
 })

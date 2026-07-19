@@ -2,7 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { DiscoveryService, MetadataScanner } from '@nestjs/core';
 import { PATH_METADATA } from '@nestjs/common/constants';
 import { PrismaService } from './prisma.service';
-import { PERMS_ACTION_KEY, derivePerm } from './decorators/perms.decorator';
+import { PERMS_ACTION_KEY, derivePerm, cleanPrefix } from './decorators/perms.decorator';
 import { getCrudOptions } from './crud/crud.decorator';
 
 /** action → 按钮中文名（用于自动登记的菜单按钮节点显示名） */
@@ -16,6 +16,8 @@ const ACTION_LABELS: Record<string, string> = {
   'batch-delete': '批量删除',
   move: '移动',
   clear: '清空',
+  import: '导入',
+  export: '导出',
   setMenus: '分配权限',
   getMenus: '读取权限',
 };
@@ -24,6 +26,7 @@ const ACTION_LABELS: Record<string, string> = {
 interface DiscoveredPerm {
   perm: string; // 完整权限点，如 sys:role:add
   group: string; // 所属分组（去掉末段），如 sys:role
+  module: string; // controller 模块前缀（清洗后的 prefix），如 sys:dict
   action: string; // 动作，如 add
 }
 
@@ -76,7 +79,10 @@ export class PermsSyncService {
         // 取末段冒号前作为分组；无冒号（无前缀的退化情况）时分组为空，后续按 orphan 处理
         const colonIdx = perm.lastIndexOf(':');
         const group = colonIdx > 0 ? perm.slice(0, colonIdx) : '';
-        result.push({ perm, group, action });
+        // controller 模块前缀：同一 controller 的多资源动作（如 sys:dict 下的 type:*/item:*）
+        // 分组会分裂成 sys:dict:type / sys:dict:item，靠 module 兜底归到同一菜单
+        const module = cleanPrefix(prefix as string);
+        result.push({ perm, group, module, action });
       }
     }
     return result;
@@ -99,22 +105,42 @@ export class PermsSyncService {
     // 取所有菜单，建立 group(perms 去末段) → 菜单节点 的索引
     const menus = await this.prisma.sysMenu.findMany();
     const menuByGroup = new Map<string, (typeof menus)[number]>();
-    for (const m of menus) {
-      if (m.type === 1 && m.perms) {
-        menuByGroup.set(m.perms.slice(0, m.perms.lastIndexOf(':')), m);
-      }
+    // 参与兜底匹配的菜单（type=1 且有 perms），供分组对不上时按模块前缀查找
+    const menuList = menus.filter((m) => m.type === 1 && m.perms);
+    for (const m of menuList) {
+      menuByGroup.set(m.perms!.slice(0, m.perms!.lastIndexOf(':')), m);
     }
+    /**
+     * 模块前缀兜底：找 perms 以 `module:` 开头的菜单（同一 controller 多资源场景，
+     * 如按钮 sys:dict:item:add 的 module=sys:dict，命中菜单 sys:dict:type:list）。
+     * 多个命中时取 perms 最短的（最贴近模块根），避免误挂到更深的兄弟菜单。
+     */
+    const findMenuByModule = (module: string) => {
+      if (!module) return undefined;
+      const prefix = `${module}:`;
+      const candidates = menuList.filter((m) => m.perms!.startsWith(prefix));
+      if (!candidates.length) return undefined;
+      // 取 perms 最短者（最贴近模块根）；多候选时选择依据与语义无关，打日志便于排查错挂
+      candidates.sort((a, b) => a.perms!.length - b.perms!.length);
+      if (candidates.length > 1) {
+        this.logger.warn(
+          `模块 ${module} 存在多个候选菜单 [${candidates.map((c) => c.perms).join(', ')}]，按最短选中 ${candidates[0].perms}`,
+        );
+      }
+      return candidates[0];
+    };
     // 已存在的按钮权限点集合，用于幂等判断
     const existingPerms = new Set(menus.filter((m) => m.type === 2 && m.perms).map((m) => m.perms!));
 
     let created = 0;
     const orphans: string[] = [];
     for (const d of discovered) {
-      // 菜单节点自身承载的查看权限（list）不再建按钮
-      if (d.action === 'list') continue;
+      // 菜单节点自身承载的查看权限（list / 多资源的 type:list、item:list）不再建按钮
+      if (d.action === 'list' || d.action.endsWith(':list')) continue;
       if (existingPerms.has(d.perm)) continue;
 
-      const parent = menuByGroup.get(d.group);
+      // 优先按分组精确匹配；对不上再按 controller 模块前缀兜底（如 sys:dict:item:* → sys:dict 菜单）
+      const parent = menuByGroup.get(d.group) ?? findMenuByModule(d.module);
       if (!parent) {
         // 找不到匹配菜单（如该模块尚无 type=1 菜单），记录但不建，避免产生悬空按钮
         orphans.push(d.perm);

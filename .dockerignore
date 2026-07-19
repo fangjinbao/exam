@@ -1,0 +1,28 @@
+# 根构建上下文精简（gateway/server 均以根目录为构建上下文）
+# 依赖与产物
+**/node_modules
+**/dist
+**/.output
+**/.vite
+
+# 版本控制与 IDE
+.git
+.github
+.vscode
+.idea
+
+# 开发数据库/缓存卷（server/docker/data 约 125M，绝不能进构建上下文）
+server/docker/data
+
+# 移动端原生工程（如存在）
+mobile/ios
+mobile/android
+
+# 文档与 AI 记忆
+docs
+.claude
+
+# 环境与日志
+**/*.log
+**/.env.local
+**/.DS_Store

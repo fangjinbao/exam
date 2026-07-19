@@ -357,11 +357,6 @@ export const useSettingStore = defineStore(
       dualMenuShowText.value = show
     }
 
-    /** 设置系统名称（来自后端基础配置） */
-    const setSystemName = (name: string) => {
-      if (name) systemName.value = name
-    }
-
     // 初始化主题样式
     const initThemeStyles = () => {
       setElementThemeColor(systemThemeColor.value)
@@ -443,7 +438,6 @@ export const useSettingStore = defineStore(
       setShowFestivalText,
       setFestivalDate,
       setDualMenuShowText,
-      setSystemName,
       switchFramework
     }
   },
@@ -451,7 +445,7 @@ export const useSettingStore = defineStore(
     persist: {
       key: 'setting',
       storage: localStorage,
-      // systemName 不持久化：每次启动从本地默认值起步，再由后端基础配置刷新，避免缓存旧名称
+      // systemName 不持久化：写死于本地配置，每次启动直接取默认值，避免缓存旧名称
       omit: ['systemName']
     }
   }

@@ -61,10 +61,10 @@ services:
   # 两种方式共用：docker compose pull → 拉 image 现成镜像；docker compose up -d --build → 用本地源码构建（不联网、不碰 GHCR）
   backend:
     container_name: agentpm-backend
-    image: ghcr.io/${IMAGE_OWNER:-fangjinbao}/inspection-server:${IMAGE_TAG:-latest}
+    image: ghcr.io/${IMAGE_OWNER:-fangjinbao}/agentpm-server:${IMAGE_TAG:-latest}
     build:
-      context: ./server
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: docker/server.Dockerfile
     restart: unless-stopped
     environment:
       TZ: "Asia/Shanghai"
@@ -101,45 +101,28 @@ services:
           memory: 1g
           cpus: "1.0"
 
-  # ==================== Admin 前端（PC 管理后台）====================
-  admin-nginx:
-    container_name: agentpm-admin-nginx
-    image: ghcr.io/${IMAGE_OWNER:-fangjinbao}/inspection-admin:${IMAGE_TAG:-latest}
+  # ==================== 前端网关（单容器托管所有前端）====================
+  # 一次构建 docker/frontends.json 里所有前端，按子域名（server_name）分流。
+  # 新增前端：frontends.json 加一行 + 下面 environment 加一个 <NAME>_DOMAIN 即可，无需加服务。
+  gateway:
+    container_name: agentpm-gateway
+    image: ghcr.io/${IMAGE_OWNER:-fangjinbao}/agentpm-gateway:${IMAGE_TAG:-latest}
     build:
-      context: ./admin
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: docker/gateway.Dockerfile
     restart: unless-stopped
     environment:
       TZ: "Asia/Shanghai"
+      # 各前端对外域名（供启动时渲染 nginx server_name）。宝塔各子域名均反代到本容器端口。
+      ADMIN_DOMAIN: "${ADMIN_DOMAIN}"
+      MOBILE_DOMAIN: "${MOBILE_DOMAIN}"
     ports:
-      # 仅绑本机回环：给宝塔 Nginx 反代用，不对公网暴露。宝塔站点 admin.xxx → 反代到此端口
-      - "127.0.0.1:${ADMIN_HTTP_PORT:-8080}:80"
+      # 仅绑本机回环：给宝塔 Nginx 反代用，不对公网暴露。
+      # 宝塔各子域名（admin.xxx / m.xxx）统一反代到此端口，网关按 Host 分流。
+      - "127.0.0.1:${GATEWAY_HTTP_PORT:-8080}:80"
     depends_on:
       backend:
-        # 等后端健康（含 prisma 迁移完成）再起 nginx，避免首次部署反代到未就绪后端导致 502
-        condition: service_healthy
-    networks:
-      - agentpm
-    deploy:
-      resources:
-        limits:
-          memory: 256m
-
-  # ==================== Mobile 前端（移动端 H5）====================
-  mobile-nginx:
-    container_name: agentpm-mobile-nginx
-    image: ghcr.io/${IMAGE_OWNER:-fangjinbao}/inspection-mobile:${IMAGE_TAG:-latest}
-    build:
-      context: ./mobile
-      dockerfile: Dockerfile
-    restart: unless-stopped
-    environment:
-      TZ: "Asia/Shanghai"
-    ports:
-      # 仅绑本机回环：给宝塔 Nginx 反代用，不对公网暴露。宝塔站点 m.xxx → 反代到此端口
-      - "127.0.0.1:${MOBILE_HTTP_PORT:-8081}:80"
-    depends_on:
-      backend:
+        # 等后端健康（含 prisma 迁移完成）再起网关，避免首次部署反代到未就绪后端导致 502
         condition: service_healthy
     networks:
       - agentpm

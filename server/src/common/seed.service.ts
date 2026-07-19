@@ -54,33 +54,13 @@ export class SeedService {
     await this.seedMenus();
     await this.seedNavMenus();
     await this.seedPositions();
-    await this.seedBaseConfig();
     await this.seedParamConfig();
     await this.seedAiModel();
     await this.seedDict();
-    await this.seedOperationLog();
 
     this.logger.log('种子数据初始化完成，请登录后立即修改默认管理员密码');
   }
   // PART_2
-
-  /** 初始化基础配置参数（base.config.* 键值对）；已存在则跳过，幂等 */
-  private async seedBaseConfig(): Promise<void> {
-    const configs = [
-      { keyName: 'base.config.sysName', name: '系统名称', data: '智能ai系统' },
-      { keyName: 'base.config.sysLogo', name: '系统Logo', data: '' },
-      { keyName: 'base.config.sysDesc', name: '系统描述', data: '' },
-      { keyName: 'base.config.timezone', name: '默认时区', data: '(UTC+08:00) 北京' },
-      { keyName: 'base.config.dateFormat', name: '日期格式', data: 'YYYY-MM-DD' },
-    ];
-    for (const cfg of configs) {
-      await this.prisma.sysParam.upsert({
-        where: { keyName: cfg.keyName },
-        update: {},
-        create: cfg,
-      });
-    }
-  }
 
   /** 初始化系统菜单（type: 0=目录 1=菜单 2=权限按钮）；已存在则跳过 */
   private async seedMenus(): Promise<void> {
@@ -145,7 +125,16 @@ export class SeedService {
       if (found) {
         return this.prisma.sysMenu.update({
           where: { id: found.id },
-          data: { name: data.name, type: data.type, perms: data.perms, icon: data.icon, orderNum: data.orderNum, parentId: data.parentId },
+          // 「声明即状态」幂等：未传的 icon/perms/parentId 显式回落 null，清除旧记录残留
+          // （如子菜单由一级菜单降级而来时，需清掉原一级菜单的 icon）
+          data: {
+            name: data.name,
+            type: data.type,
+            perms: data.perms ?? null,
+            icon: data.icon ?? null,
+            orderNum: data.orderNum,
+            parentId: data.parentId ?? null,
+          },
         });
       }
       return this.prisma.sysMenu.create({ data });
@@ -157,11 +146,23 @@ export class SeedService {
     await ensure({ name: '数据字典', type: 1, router: '/system/data-dict', perms: 'sys:dict:type:list', orderNum: 3, parentId: sysDir.id });
     await ensure({ name: '操作日志', type: 1, router: '/system/operation-log', perms: 'sys:operation-log:list', orderNum: 4, parentId: sysDir.id });
 
-    // 3) 外部考生管理、考点管理：单页一级菜单（type1 无父目录，视图为顶层单页）
-    await ensure({ name: '外部考生管理', type: 1, router: '/external-candidate', perms: 'exam:external-candidate:list', icon: 'User', orderNum: 4 });
+    // 3) 外部考生管理：目录 + 「外部单位」「外部考生」两个子菜单
+    //    历史上 /external-candidate 曾是一级单页菜单（type1 无父），此处改造为目录下子菜单：
+    //    - 新建目录 /external（type0，套 Layout），承载两个子页
+    //    - 子菜单 router 与前端 views 目录一致：/external-org → views/external-org，/external-candidate → views/external-candidate
+    //    ensure 按 router 幂等：旧 /external-candidate 记录会被回填 parentId 并挂到目录下，其下按钮权限随父菜单 id 保留
+    const externalDir = await ensure({ name: '外部考生管理', type: 0, router: '/external', icon: 'User', orderNum: 4 });
+    await ensure({ name: '外部单位管理', type: 1, router: '/external-org', perms: 'exam:external-org:list', orderNum: 1, parentId: externalDir.id });
+    await ensure({ name: '外部考生管理', type: 1, router: '/external-candidate', perms: 'exam:external-candidate:list', orderNum: 2, parentId: externalDir.id });
+
+    // 4) 考点管理：单页一级菜单（type1 无父目录，视图为顶层单页）
     await ensure({ name: '考点管理', type: 1, router: '/exam-site', perms: 'sys:exam-site:list', icon: 'Location', orderNum: 5 });
 
-    this.logger.log('导航菜单（系统管理/外部考生/考点）已初始化');
+    // 5) 题库管理：目录 + 「知识点分类」子菜单（router 与前端 views/question-bank 层级一致）
+    const questionBankDir = await ensure({ name: '题库管理', type: 0, router: '/question-bank', icon: 'Collection', orderNum: 2 });
+    await ensure({ name: '知识点分类', type: 1, router: '/question-bank/knowledge-point', perms: 'exam:knowledge-point:list', orderNum: 1, parentId: questionBankDir.id });
+
+    this.logger.log('导航菜单（系统管理/外部考生/考点/题库）已初始化');
   }
 
   /** 初始化默认岗位数据（巡检员/维修工等）；已存在则跳过 */
@@ -213,9 +214,8 @@ export class SeedService {
     }
     await this.prisma.sysAiModel.createMany({
       data: [
-        { name: '通义千问-生产', provider: '通义千问', model: 'qwen-max', apiUrl: 'https://dashscope.aliyuncs.com/api/v1', apiKey: 'sk-qwen1234567890abcdef', maxConcurrency: 10, timeout: 60, status: 1, connStatus: 'normal' },
-        { name: 'DeepSeek-备用', provider: 'DeepSeek', model: 'deepseek-chat', apiUrl: 'https://api.deepseek.com/v1', apiKey: 'sk-deepseek0987654321zyxw', maxConcurrency: 5, timeout: 30, status: 0, connStatus: 'normal' },
-        { name: '智谱-测试', provider: '智谱', model: 'glm-4', apiUrl: 'https://open.bigmodel.cn/api/paas/v4', apiKey: 'sk-zhipuabcd1234efgh5678', maxConcurrency: null, timeout: null, status: 0, connStatus: 'error' },
+        { name: 'OpenAI-示例', provider: 'OpenAI', model: 'gpt-4o', apiUrl: 'https://api.openai.com/v1', apiKey: '', status: 0, connStatus: 'unknown' },
+        { name: 'Anthropic-示例', provider: 'Anthropic', model: 'claude-sonnet-4-20250514', apiUrl: 'https://api.anthropic.com/v1', apiKey: '', status: 0, connStatus: 'unknown' },
       ],
     });
     this.logger.log('AI 模型配置已初始化');
@@ -265,31 +265,5 @@ export class SeedService {
       data: items.map(({ key, ...rest }) => ({ ...rest, typeId: keyToId[key] })),
     });
     this.logger.log('数据字典已初始化');
-  }
-
-  /** 初始化操作日志样例数据；已存在则跳过 */
-  private async seedOperationLog(): Promise<void> {
-    const existing = await this.prisma.sysOperationLog.count();
-    if (existing > 0) {
-      this.logger.log('操作日志已存在，跳过初始化');
-      return;
-    }
-    await this.prisma.sysOperationLog.createMany({
-      data: [
-        { operator: '张伟', type: '登录', target: '系统', content: '登录管理后台', operateTime: new Date('2026-07-10T08:30:15'), sourceIp: '192.168.1.101' },
-        { operator: '李娜', type: '新增', target: '题目管理', content: '新增单选题《安全生产基础知识》', operateTime: new Date('2026-07-10T09:12:40'), sourceIp: '192.168.1.102' },
-        { operator: '王强', type: '编辑', target: '试卷管理', content: '编辑固定试卷《2026年度安全考核卷》', operateTime: new Date('2026-07-10T10:05:22'), sourceIp: '192.168.1.103' },
-        { operator: '张伟', type: '删除', target: '知识点分类', content: '删除知识点分类《已废弃分类》', operateTime: new Date('2026-07-10T11:20:08'), sourceIp: '192.168.1.101' },
-        { operator: '刘洋', type: '编辑', target: 'AI模型配置', content: '切换启用模型为「通义千问-生产」', operateTime: new Date('2026-07-10T14:33:51'), sourceIp: '192.168.1.104' },
-        { operator: '李娜', type: '其他', target: '阅卷中心', content: '发起AI阅卷任务，试卷《期中测评》', operateTime: new Date('2026-07-10T15:48:19'), sourceIp: '192.168.1.102' },
-        { operator: '赵敏', type: '登录', target: '系统', content: '登录管理后台', operateTime: new Date('2026-07-11T08:15:03'), sourceIp: '192.168.1.105' },
-        { operator: '王强', type: '新增', target: '考试管理', content: '创建考试《七月安全月度考试》', operateTime: new Date('2026-07-11T09:40:27'), sourceIp: '192.168.1.103' },
-        { operator: '张伟', type: '编辑', target: '参数配置', content: '修改「录像保留期限(天)」为 60', operateTime: new Date('2026-07-11T10:22:44'), sourceIp: '192.168.1.101' },
-        { operator: '刘洋', type: '删除', target: '用户管理', content: '删除离职用户账号「test001」', operateTime: new Date('2026-07-11T11:05:16'), sourceIp: '192.168.1.104' },
-        { operator: '赵敏', type: '其他', target: '证书管理', content: '批量发放证书 32 份', operateTime: new Date('2026-07-11T13:50:38'), sourceIp: '192.168.1.105' },
-        { operator: '李娜', type: '编辑', target: '角色管理', content: '调整「考务人员」角色权限', operateTime: new Date('2026-07-11T14:28:09'), sourceIp: '192.168.1.102' },
-      ],
-    });
-    this.logger.log('操作日志样例数据已初始化');
   }
 }

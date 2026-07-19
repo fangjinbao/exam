@@ -1,7 +1,7 @@
-import { Controller, Get, Post, Put, Delete, Body, Query, Param, ParseIntPipe } from '@nestjs/common';
+import { Controller, Get, Post, Put, Delete, Body, Query, Param, ParseIntPipe, Req } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiQuery, ApiParam } from '@nestjs/swagger';
 import { BaseController } from '@/common/crud';
-import { ApiPageResult, ApiResult, ApiOkVoid, Perms } from '@/common/decorators';
+import { ApiPageResult, ApiResult, ApiOkVoid, Perms, OperationLog } from '@/common/decorators';
 import { AiModelService } from '../services/ai-model.service';
 import { AiModelVo, AiModelTestVo } from '../vo/ai-model.vo';
 import { AddAiModelDto, UpdateAiModelDto, AiModelIdDto } from '../dto/ai-model.dto';
@@ -36,6 +36,7 @@ export class AiModelController extends BaseController {
   @Post('add')
   @Perms('add')
   @ApiOperation({ summary: '新增 AI 模型配置' })
+  @OperationLog({ content: ({ result, body }) => `新增AI模型配置「${result?.name || body?.name || ''}」` })
   @ApiResult(AiModelVo)
   async add(@Body() dto: AddAiModelDto) {
     const res = await this.aiModelService.create(dto);
@@ -47,6 +48,7 @@ export class AiModelController extends BaseController {
   @Put('update')
   @Perms('update')
   @ApiOperation({ summary: '更新 AI 模型配置' })
+  @OperationLog({ content: ({ result, body }) => `编辑AI模型配置「${result?.name || body?.name || ''}」` })
   @ApiResult(AiModelVo)
   async update(@Body() dto: UpdateAiModelDto) {
     const res = await this.aiModelService.modify(dto.id, dto);
@@ -58,6 +60,7 @@ export class AiModelController extends BaseController {
   @Delete('delete/:id')
   @Perms('delete')
   @ApiOperation({ summary: '删除 AI 模型配置' })
+  @OperationLog({ target: 'AI模型配置', type: '删除' })
   @ApiParam({ name: 'id', description: '配置 ID', type: Number })
   @ApiOkVoid()
   async remove(@Param('id', ParseIntPipe) id: number) {
@@ -70,14 +73,19 @@ export class AiModelController extends BaseController {
   @Put('enable')
   @Perms('enable')
   @ApiOperation({ summary: '启用 AI 模型配置（全局互斥）' })
+  @OperationLog({
+    type: '编辑',
+    content: ({ request }) => `切换启用模型为「${request.operationLogExtra?.name || ''}」`,
+  })
   @ApiOkVoid()
-  async enable(@Body() dto: AiModelIdDto) {
+  async enable(@Body() dto: AiModelIdDto, @Req() req: any) {
     const res = await this.aiModelService.enable(dto.id);
     if (!res.ok) return this.fail(res.message);
+    req.operationLogExtra = { name: res.data?.name };
     return this.ok();
   }
 
-  /** 连接测试 */
+  /** 连接测试（向服务商官方接口发最小对话请求） */
   @Post('test')
   @Perms('test')
   @ApiOperation({ summary: 'AI 模型连接测试' })

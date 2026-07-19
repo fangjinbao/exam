@@ -29,17 +29,26 @@
           <!-- 操作按钮：无权限角色不渲染（原型阶段默认有权限） -->
           <ElTableColumn label="操作" width="280" align="center" fixed="right">
             <template #default="{ row }">
-              <ElButton link type="primary" @click="handleEdit(row)">编辑</ElButton>
+              <ElButton v-auth="'update'" link type="primary" @click="handleEdit(row)">编辑</ElButton>
               <ElButton
                 v-if="row.status !== 1"
+                v-auth="'enable'"
                 link
                 type="success"
                 @click="handleEnable(row)"
               >
                 启用
               </ElButton>
-              <ElButton link type="primary" @click="handleTest(row)">连接测试</ElButton>
-              <ElButton link type="danger" @click="handleDelete(row)">删除</ElButton>
+              <ElButton
+                v-auth="'test'"
+                link
+                type="primary"
+                :loading="testingIds.has(row.id)"
+                @click="handleTest(row)"
+              >
+                连接测试
+              </ElButton>
+              <ElButton v-auth="'delete'" link type="danger" @click="handleDelete(row)">删除</ElButton>
             </template>
           </ElTableColumn>
           <template #empty>暂无AI模型配置数据</template>
@@ -138,18 +147,27 @@
     }
   }
 
-  /** 连接测试：更新连接状态列 */
+  /** 正在测试的配置 id 集合：防止同一行连点触发并发请求 */
+  const testingIds = ref<Set<number>>(new Set())
+
+  /** 连接测试：向服务商发真实请求，展示后端返回的具体结果 */
   async function handleTest(row: AiModel) {
+    if (testingIds.value.has(row.id)) return
+    testingIds.value.add(row.id)
+    const loadingMsg = ElMessage({ message: '正在连接测试...', type: 'info', duration: 0 })
     try {
       const { data } = await aiModelApi.test(row.id)
       if (data.success) {
-        ElMessage.success('连接测试成功')
+        ElMessage.success(data.message || '连接测试成功')
       } else {
-        ElMessage.error('连接测试失败，请检查配置')
+        ElMessage.error(data.message || '连接测试失败，请检查配置')
       }
       loadAiModelList()
     } catch (error: any) {
       ElMessage.error(error.message || '连接测试失败，请检查配置')
+    } finally {
+      loadingMsg.close()
+      testingIds.value.delete(row.id)
     }
   }
 

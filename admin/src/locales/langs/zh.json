@@ -235,10 +235,16 @@
       "menu": "菜单管理"
     },
     "externalCandidate": {
-      "title": "外部考生管理"
+      "title": "外部考生管理",
+      "org": "外部单位",
+      "candidate": "外部考生"
     },
     "examSite": {
       "title": "考点管理"
+    },
+    "questionBank": {
+      "title": "题库管理",
+      "knowledgePoint": "知识点分类"
     },
     "system": {
       "title": "系统管理",

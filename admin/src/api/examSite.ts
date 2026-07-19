@@ -84,11 +84,21 @@ export function deleteExamSite(id: number) {
   })
 }
 
+/** 批量删除考点（任一被考试引用时后端整体阻止） */
+export function batchDeleteExamSites(ids: number[]) {
+  return request.post({
+    url: '/admin/sys/exam-site/batch-delete',
+    data: { ids },
+    showErrorMessage: false
+  })
+}
+
 /** 考点 API 聚合导出 */
 export const examSiteApi = {
   getList: getExamSiteList,
   add: addExamSite,
   update: updateExamSite,
   updateStatus: updateExamSiteStatus,
-  delete: deleteExamSite
+  delete: deleteExamSite,
+  batchDelete: batchDeleteExamSites
 }

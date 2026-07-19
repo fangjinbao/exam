@@ -9,6 +9,7 @@ on:
       - 'admin/**'
       - 'mobile/**'
       - 'server/**'
+      - 'docker/**'
       - '.github/workflows/docker.yml'
 
 env:
@@ -25,21 +26,20 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - name: admin
-            context: admin
-          - name: mobile
-            context: mobile
+          # 网关：一个镜像含所有前端（前端列表由 docker/frontends.json 驱动，新增前端无需改此处）
+          - name: gateway
+            dockerfile: docker/gateway.Dockerfile
           - name: server
-            context: server
+            dockerfile: docker/server.Dockerfile
     steps:
       - uses: actions/checkout@v4
 
-      # 镜像名固定小写：ghcr.io/<owner>/inspection-<admin|server>（用 tr 转小写，兼容所有 shell）
+      # 镜像名固定小写：ghcr.io/<owner>/agentpm-<gateway|server>（用 tr 转小写，兼容所有 shell）
       - name: 生成镜像名（owner 转小写）
         id: image
         run: |
           owner=$(echo "${GITHUB_REPOSITORY_OWNER}" | tr '[:upper:]' '[:lower:]')
-          echo "name=${REGISTRY}/${owner}/inspection-${{ matrix.name }}" >> "$GITHUB_OUTPUT"
+          echo "name=${REGISTRY}/${owner}/agentpm-${{ matrix.name }}" >> "$GITHUB_OUTPUT"
 
       - name: 提取镜像标签
         id: meta
@@ -63,8 +63,9 @@ jobs:
       - name: 构建并推送
         uses: docker/build-push-action@v6
         with:
-          context: ./${{ matrix.context }}
-          file: ./${{ matrix.context }}/Dockerfile
+          # 统一以仓库根为构建上下文（gateway 需同时访问各前端源码 + docker/ 配置；server 同理）
+          context: .
+          file: ./${{ matrix.dockerfile }}
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}

@@ -11,11 +11,11 @@ export class ExternalCandidateVo {
   @ApiProperty({ description: '姓名' })
   name: string;
 
-  @ApiProperty({ description: '准考证号（考试账号登录名，系统内唯一）' })
-  admissionNo: string;
+  @ApiProperty({ description: '所属外部单位 ID' })
+  orgId: number;
 
-  @ApiProperty({ description: '所属单位', nullable: true })
-  company: string | null;
+  @ApiProperty({ description: '所属外部单位名称（关联展示）' })
+  orgName: string;
 
   @ApiProperty({ description: '证件号', nullable: true })
   idCard: string | null;
@@ -46,9 +46,27 @@ export class ResetPasswordVo {
 }
 
 /**
+ * 批量导入单行错误明细
+ */
+export class ImportRowErrorVo {
+  @ApiProperty({ description: '出错行号（从 1 开始，对应文件数据行，不含表头）' })
+  row: number;
+
+  @ApiProperty({ description: '跳过原因' })
+  reason: string;
+}
+
+/**
  * 批量导入响应 VO
+ * 逐行导入：成功行入库，失败行跳过并在 errors 中给出行号与原因。
  */
 export class ImportResultVo {
-  @ApiProperty({ description: '成功导入的外部考生数量' })
-  count: number;
+  @ApiProperty({ description: '成功导入数量' })
+  success: number;
+
+  @ApiProperty({ description: '跳过（失败）行数' })
+  failed: number;
+
+  @ApiProperty({ description: '失败行明细', type: [ImportRowErrorVo] })
+  errors: ImportRowErrorVo[];
 }

@@ -5,6 +5,12 @@ import { BaseService, PageOptions } from '@/common/crud';
 /** 业务结果：ok 标识成功，失败时带中文提示 */
 type Result<T = void> = { ok: true; data?: T } | { ok: false; message: string };
 
+/** 支持的模型服务商 */
+type Provider = 'OpenAI' | 'Anthropic';
+
+/** 连接测试 / 拉模型的外部请求默认超时（毫秒） */
+const REQUEST_TIMEOUT_MS = 15000;
+
 /** 密钥脱敏：仅保留首尾各 4 位，中间以 * 代替 */
 function maskApiKey(key?: string | null): string {
   if (!key) return '';
@@ -12,16 +18,14 @@ function maskApiKey(key?: string | null): string {
   return `${key.slice(0, 4)}${'*'.repeat(key.length - 8)}${key.slice(-4)}`;
 }
 
-/** select 白名单：显式排除 apiKey，运行时不从库中取出完整密钥用于下发 */
+/** select 白名单：apiKey 仅用于脱敏计算，转 VO 时剔除 */
 const LIST_SELECT = {
   id: true,
   name: true,
   provider: true,
   model: true,
   apiUrl: true,
-  apiKey: true, // 仅用于脱敏计算，转 VO 时剔除
-  maxConcurrency: true,
-  timeout: true,
+  apiKey: true,
   status: true,
   connStatus: true,
   createTime: true,
@@ -35,9 +39,17 @@ function toVo(row: any) {
   return { ...rest, apiKeyMasked: maskApiKey(apiKey) };
 }
 
+/** 归一 base url：去掉尾部斜杠及误填的端点路径（chat/completions、messages、models） */
+function normalizeBaseUrl(apiUrl: string): string {
+  let base = (apiUrl || '').trim().replace(/\/+$/, '');
+  base = base.replace(/\/(chat\/completions|messages|models)$/i, '');
+  return base;
+}
+
 /**
  * AI 模型配置服务
- * 负责脱敏下发、名称唯一、启用全局互斥、启用项删除保护与连接测试。
+ * 负责脱敏下发、名称唯一、启用全局互斥、启用项删除保护，
+ * 以及按服务商官方标准执行真实连接测试与模型列表拉取。
  */
 @Injectable()
 export class AiModelService extends BaseService {
@@ -72,8 +84,6 @@ export class AiModelService extends BaseService {
         model: dto.model,
         apiUrl: dto.apiUrl,
         apiKey: dto.apiKey || '',
-        maxConcurrency: dto.maxConcurrency ?? null,
-        timeout: dto.timeout ?? null,
         status: 0,
         connStatus: 'unknown',
       },
@@ -96,8 +106,6 @@ export class AiModelService extends BaseService {
         apiUrl: dto.apiUrl,
         // 密钥留空表示不修改，保留原值
         ...(dto.apiKey ? { apiKey: dto.apiKey } : {}),
-        maxConcurrency: dto.maxConcurrency ?? null,
-        timeout: dto.timeout ?? null,
         // 配置信息变更后连接状态失效，重置为未测试
         connStatus: 'unknown',
       },
@@ -115,7 +123,7 @@ export class AiModelService extends BaseService {
   }
 
   /** 启用指定配置，其余自动停用（全局互斥，事务保证一致） */
-  async enable(id: number): Promise<Result> {
+  async enable(id: number): Promise<Result<{ name: string }>> {
     const target = await this.prisma.sysAiModel.findUnique({ where: { id } });
     if (!target) return { ok: false, message: '配置不存在' };
     await this.prisma.$transaction([
@@ -125,21 +133,110 @@ export class AiModelService extends BaseService {
       }),
       this.prisma.sysAiModel.update({ where: { id }, data: { status: 1 } }),
     ]);
-    return { ok: true };
+    return { ok: true, data: { name: target.name } };
   }
 
   /**
-   * 连接测试
-   * 原型阶段按是否填写接口地址判定连通性，并回写连接状态。
+   * 带超时的 fetch：默认 15s，超时或网络错误抛出可读中文错误。
    */
-  async test(id: number): Promise<Result<{ success: boolean }>> {
+  private async fetchWithTimeout(
+    url: string,
+    init: RequestInit,
+  ): Promise<Response> {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
+    try {
+      return await fetch(url, { ...init, signal: controller.signal });
+    } catch (e: any) {
+      if (e?.name === 'AbortError') {
+        throw new Error(`请求超时（>${REQUEST_TIMEOUT_MS / 1000}s），请检查接口地址与网络`);
+      }
+      throw new Error(`无法连接到接口地址：${e?.message || '网络错误'}`);
+    } finally {
+      clearTimeout(timer);
+    }
+  }
+
+  /** 组装鉴权/版本请求头 */
+  private buildHeaders(provider: Provider, apiKey: string): Record<string, string> {
+    if (provider === 'Anthropic') {
+      return {
+        'content-type': 'application/json',
+        'x-api-key': apiKey,
+        'anthropic-version': '2023-06-01',
+      };
+    }
+    // OpenAI
+    return {
+      'content-type': 'application/json',
+      authorization: `Bearer ${apiKey}`,
+    };
+  }
+
+  /** 从响应体尽力提取服务商返回的错误信息 */
+  private async extractErr(res: Response): Promise<string> {
+    let detail = '';
+    try {
+      const body: any = await res.json();
+      detail = body?.error?.message || body?.message || '';
+    } catch {
+      // 忽略非 JSON 响应体
+    }
+    if (res.status === 401 || res.status === 403) {
+      return `密钥无效或无权限（${res.status}）${detail ? '：' + detail : ''}`;
+    }
+    if (res.status === 404) {
+      return `接口地址或模型不存在（404）${detail ? '：' + detail : ''}`;
+    }
+    return `服务商返回错误（${res.status}）${detail ? '：' + detail : ''}`;
+  }
+
+  /**
+   * 连接测试：向服务商官方接口发一条最小对话请求（max_tokens=1），
+   * 验证密钥、接口地址、模型名是否均可用，并回写连接状态。
+   */
+  async test(id: number): Promise<Result<{ success: boolean; message: string }>> {
     const target = await this.prisma.sysAiModel.findUnique({ where: { id } });
     if (!target) return { ok: false, message: '配置不存在' };
-    const success = Boolean(target.apiUrl);
+    const provider = target.provider as Provider;
+    if (provider !== 'OpenAI' && provider !== 'Anthropic') {
+      return { ok: false, message: `暂不支持的服务商「${target.provider}」，请改为 OpenAI 或 Anthropic` };
+    }
+    if (!target.apiKey) {
+      return { ok: false, message: '未配置密钥，无法测试，请先编辑填写密钥' };
+    }
+
+    const base = normalizeBaseUrl(target.apiUrl);
+    const headers = this.buildHeaders(provider, target.apiKey);
+    const url = provider === 'Anthropic' ? `${base}/messages` : `${base}/chat/completions`;
+    // OpenAI 与 Anthropic 的最小对话请求体结构一致（model + max_tokens + messages）
+    const body = {
+      model: target.model,
+      max_tokens: 1,
+      messages: [{ role: 'user', content: 'ping' }],
+    };
+
+    let success = false;
+    let message = '连接测试成功';
+    try {
+      const res = await this.fetchWithTimeout(url, {
+        method: 'POST',
+        headers,
+        body: JSON.stringify(body),
+      });
+      if (res.ok) {
+        success = true;
+      } else {
+        message = await this.extractErr(res);
+      }
+    } catch (e: any) {
+      message = e?.message || '连接测试失败';
+    }
+
     await this.prisma.sysAiModel.update({
       where: { id },
       data: { connStatus: success ? 'normal' : 'error' },
     });
-    return { ok: true, data: { success } };
+    return { ok: true, data: { success, message } };
   }
 }

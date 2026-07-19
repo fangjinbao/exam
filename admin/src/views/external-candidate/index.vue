@@ -13,17 +13,25 @@
           />
         </ElFormItem>
         <ElFormItem label="所属单位">
-          <ElInput
-            v-model="filterForm.company"
-            placeholder="输入所属单位"
+          <ElSelect
+            v-model="filterForm.orgId"
+            placeholder="全部"
             clearable
+            filterable
             class="filter-input"
-          />
+          >
+            <ElOption
+              v-for="item in orgOptions"
+              :key="item.id"
+              :label="item.name"
+              :value="item.id"
+            />
+          </ElSelect>
         </ElFormItem>
-        <ElFormItem label="准考证号">
+        <ElFormItem label="手机号">
           <ElInput
-            v-model="filterForm.admissionNo"
-            placeholder="输入准考证号"
+            v-model="filterForm.phone"
+            placeholder="输入手机号"
             clearable
             class="filter-input"
           />
@@ -44,28 +52,52 @@
     <!-- 表格卡片 -->
     <ElCard shadow="never" class="table-card">
       <div class="table-header">
-        <ElButton v-if="canEdit" type="primary" :icon="Plus" @click="handleAdd">新增</ElButton>
-        <ElButton v-if="canEdit" type="primary" plain :icon="Upload" @click="handleImport">
+        <ElButton v-if="canAdd" type="primary" :icon="Plus" @click="handleAdd">新增</ElButton>
+        <ElButton v-if="canImport" type="primary" plain :icon="Upload" @click="handleImport">
           批量导入
+        </ElButton>
+        <ElButton
+          v-if="canExport"
+          type="primary"
+          plain
+          :icon="Download"
+          :loading="exporting"
+          @click="handleExport"
+        >
+          导出
+        </ElButton>
+        <ElButton
+          v-if="canDelete"
+          type="danger"
+          plain
+          :icon="Delete"
+          :disabled="!selectedIds.length"
+          @click="handleBatchDelete"
+        >
+          批量删除{{ selectedIds.length ? `(${selectedIds.length})` : '' }}
         </ElButton>
       </div>
 
       <div class="table-container">
-        <ElTable v-loading="loading" :data="tableData" height="100%" style="width: 100%">
-          <ElTableColumn prop="name" label="姓名" min-width="110" show-overflow-tooltip />
-          <ElTableColumn
-            prop="admissionNo"
-            label="准考证号"
-            min-width="140"
-            show-overflow-tooltip
-          />
-          <ElTableColumn prop="company" label="所属单位" min-width="180" show-overflow-tooltip>
-            <template #default="{ row }">{{ row.company || '-' }}</template>
+        <ElTable
+          v-loading="loading"
+          :data="tableData"
+          height="100%"
+          style="width: 100%"
+          @selection-change="handleSelectionChange"
+        >
+          <ElTableColumn v-if="canDelete" type="selection" width="50" align="center" fixed="left" />
+          <ElTableColumn prop="name" label="姓名" min-width="110" show-overflow-tooltip fixed="left" />
+          <ElTableColumn prop="phone" label="手机号" min-width="130" />
+          <ElTableColumn prop="orgName" label="所属单位" min-width="180" show-overflow-tooltip>
+            <template #default="{ row }">{{ row.orgName || '-' }}</template>
           </ElTableColumn>
           <ElTableColumn prop="idCard" label="证件号" min-width="180" show-overflow-tooltip>
             <template #default="{ row }">{{ row.idCard || '-' }}</template>
           </ElTableColumn>
-          <ElTableColumn prop="phone" label="联系电话" min-width="130" />
+          <ElTableColumn prop="email" label="电子邮箱" min-width="180" show-overflow-tooltip>
+            <template #default="{ row }">{{ row.email || '-' }}</template>
+          </ElTableColumn>
           <ElTableColumn prop="status" label="账号状态" width="100" align="center">
             <template #default="{ row }">
               <ElTag
@@ -78,18 +110,21 @@
             </template>
           </ElTableColumn>
           <ElTableColumn prop="createTime" label="创建时间" min-width="170" show-overflow-tooltip />
-          <ElTableColumn v-if="canEdit" label="操作" width="240" align="center" fixed="right">
+          <ElTableColumn v-if="canOperate" label="操作" width="240" align="center" fixed="right">
             <template #default="{ row }">
-              <ElButton link type="primary" @click="handleEdit(row)">编辑</ElButton>
+              <ElButton v-if="canUpdate" link type="primary" @click="handleEdit(row)">编辑</ElButton>
               <ElButton
+                v-if="canToggle"
                 link
                 :type="row.status === 1 ? 'warning' : 'success'"
                 @click="handleToggleStatus(row)"
               >
                 {{ row.status === 1 ? '停用' : '启用' }}
               </ElButton>
-              <ElButton link type="primary" @click="handleResetPassword(row)">重置密码</ElButton>
-              <ElButton link type="danger" @click="handleDelete(row)">删除</ElButton>
+              <ElButton v-if="canResetPwd" link type="primary" @click="handleResetPassword(row)">
+                重置密码
+              </ElButton>
+              <ElButton v-if="canDelete" link type="danger" @click="handleDelete(row)">删除</ElButton>
             </template>
           </ElTableColumn>
           <template #empty>暂无外部考生数据</template>
@@ -116,33 +151,41 @@
         <ElFormItem label="姓名" prop="name">
           <ElInput v-model="form.name" placeholder="请输入姓名" maxlength="20" show-word-limit />
         </ElFormItem>
-        <ElFormItem label="准考证号" prop="admissionNo">
-          <ElInput
-            v-model="form.admissionNo"
-            placeholder="请输入准考证号"
-            maxlength="30"
-            show-word-limit
-            :disabled="isEditing"
-          />
+        <ElFormItem label="手机号" prop="phone">
+          <ElInput v-model="form.phone" placeholder="请输入11位手机号（登录账号）" maxlength="11" />
         </ElFormItem>
-        <ElFormItem label="所属单位" prop="company">
-          <ElInput
-            v-model="form.company"
-            placeholder="请输入所属单位"
-            maxlength="50"
-            show-word-limit
-          />
+        <ElFormItem label="所属单位" prop="orgId">
+          <ElSelect
+            v-model="form.orgId"
+            placeholder="请选择所属单位"
+            filterable
+            style="width: 100%"
+          >
+            <ElOption
+              v-for="item in orgOptions"
+              :key="item.id"
+              :label="item.name"
+              :value="item.id"
+            />
+          </ElSelect>
         </ElFormItem>
         <ElFormItem label="证件号" prop="idCard">
           <ElInput
             v-model="form.idCard"
-            placeholder="请输入证件号"
+            placeholder="请输入身份证号"
             maxlength="30"
             show-word-limit
           />
         </ElFormItem>
-        <ElFormItem label="联系电话" prop="phone">
-          <ElInput v-model="form.phone" placeholder="请输入11位手机号" maxlength="11" />
+        <ElFormItem v-if="!isEditing" label="密码" prop="password">
+          <ElInput
+            v-model="form.password"
+            type="password"
+            placeholder="留空则默认使用手机号后 6 位"
+            maxlength="20"
+            show-password
+            autocomplete="new-password"
+          />
         </ElFormItem>
         <ElFormItem label="电子邮箱" prop="email">
           <ElInput v-model="form.email" placeholder="请输入电子邮箱" maxlength="50" />
@@ -162,31 +205,47 @@
 <script setup lang="ts">
   import { ref, reactive, computed, onMounted } from 'vue'
   import { ElMessage, ElMessageBox, type FormInstance, type FormRules } from 'element-plus'
-  import { Search, Plus, Upload } from '@element-plus/icons-vue'
-  import { useAuth } from '@/composables/useAuth'
+  import { Search, Plus, Upload, Download, Delete } from '@element-plus/icons-vue'
   import { validatePhone, validateEmail } from '@/utils/validation/formValidator'
   import { externalCandidateApi, type ExternalCandidate } from '@/api/externalCandidate'
+  import { getExternalOrgOptions, type ExternalOrgOption } from '@/api/externalOrg'
+  import { exportToExcel, type ExcelColumn } from '@/utils/excel'
+  import { useAuth } from '@/composables/useAuth'
   import ImportDialog from './components/ImportDialog.vue'
 
   defineOptions({ name: 'ExternalCandidate' })
 
+  // 按钮级权限：只传动作名，hasAuth 按末段匹配当前模块权限点（exam:external-candidate:*）
   const { hasAuth } = useAuth()
-  // 全部操作按钮受同一权限控制，无权限时完全不渲染
-  const canEdit = computed(() => hasAuth('externalCandidate:manage'))
+  const canAdd = computed(() => hasAuth('add'))
+  const canImport = computed(() => hasAuth('import'))
+  const canExport = computed(() => hasAuth('export'))
+  const canUpdate = computed(() => hasAuth('update'))
+  const canToggle = computed(() => hasAuth('update-status'))
+  const canResetPwd = computed(() => hasAuth('reset-password'))
+  const canDelete = computed(() => hasAuth('delete'))
+  // 操作列：任一行内写操作有权限即显示
+  const canOperate = computed(
+    () => canUpdate.value || canToggle.value || canResetPwd.value || canDelete.value
+  )
 
   const loading = ref(false)
   const tableData = ref<ExternalCandidate[]>([])
+  // 所属单位下拉选项（仅启用单位）
+  const orgOptions = ref<ExternalOrgOption[]>([])
+  // 表格勾选的考生 id（批量删除用）
+  const selectedIds = ref<number[]>([])
 
   // 筛选条件
   const filterForm = reactive<{
     name: string
-    company: string
-    admissionNo: string
+    orgId: number | ''
+    phone: string
     status: number | ''
   }>({
     name: '',
-    company: '',
-    admissionNo: '',
+    orgId: '',
+    phone: '',
     status: ''
   })
 
@@ -198,23 +257,26 @@
   const dialogTitle = computed(() => (isEditing.value ? '编辑外部考生' : '新增外部考生'))
   const submitLoading = ref(false)
   const importVisible = ref(false)
+  const exporting = ref(false)
 
   const formRef = ref<FormInstance>()
-  const createForm = (): Partial<ExternalCandidate> => ({
+  // 表单类型：在考生实体基础上附带仅新增使用的 password 字段
+  type CandidateForm = Partial<ExternalCandidate> & { password?: string }
+  const createForm = (): CandidateForm => ({
     id: undefined,
     name: '',
-    admissionNo: '',
-    company: '',
+    orgId: undefined,
     idCard: '',
     phone: '',
-    email: ''
+    email: '',
+    password: ''
   })
-  const form = reactive<Partial<ExternalCandidate>>(createForm())
+  const form = reactive<CandidateForm>(createForm())
 
-  // 联系电话必填，需符合手机号格式
+  // 手机号必填（登录账号），需符合手机号格式
   const phoneValidator = (_rule: unknown, value: string, callback: (e?: Error) => void) => {
-    if (!value) return callback(new Error('请输入联系电话'))
-    return validatePhone(value) ? callback() : callback(new Error('请输入正确的联系电话'))
+    if (!value) return callback(new Error('请输入手机号'))
+    return validatePhone(value) ? callback() : callback(new Error('请输入正确的手机号'))
   }
 
   // 电子邮箱选填，填写时校验格式
@@ -223,14 +285,24 @@
     return validateEmail(value) ? callback() : callback(new Error('请输入正确的电子邮箱'))
   }
 
+  // 密码选填，填写时校验 6-20 位
+  const passwordValidator = (_rule: unknown, value: string, callback: (e?: Error) => void) => {
+    if (!value) return callback()
+    return value.length >= 6 && value.length <= 20
+      ? callback()
+      : callback(new Error('密码长度为 6-20 位'))
+  }
+
   const formRules: FormRules = {
     name: [
       { required: true, message: '请输入姓名', trigger: 'blur' },
       { min: 2, max: 20, message: '姓名长度为 2-20 字', trigger: 'blur' }
     ],
-    admissionNo: [{ required: true, message: '请输入准考证号', trigger: 'blur' }],
-    phone: [{ validator: phoneValidator, trigger: 'blur' }],
-    email: [{ validator: emailValidator, trigger: 'blur' }]
+    phone: [{ required: true, validator: phoneValidator, trigger: 'blur' }],
+    orgId: [{ required: true, message: '请选择所属单位', trigger: 'change' }],
+    idCard: [{ required: true, message: '请输入身份证号', trigger: 'blur' }],
+    email: [{ validator: emailValidator, trigger: 'blur' }],
+    password: [{ validator: passwordValidator, trigger: 'blur' }]
   }
 
   /** 加载外部考生列表 */
@@ -239,8 +311,8 @@
     try {
       const { data } = await externalCandidateApi.getList({
         name: filterForm.name || undefined,
-        company: filterForm.company || undefined,
-        admissionNo: filterForm.admissionNo || undefined,
+        orgId: filterForm.orgId === '' ? undefined : filterForm.orgId,
+        phone: filterForm.phone || undefined,
         status: filterForm.status === '' ? undefined : filterForm.status,
         page: pagination.page,
         pageSize: pagination.pageSize
@@ -261,11 +333,21 @@
 
   function handleReset() {
     filterForm.name = ''
-    filterForm.company = ''
-    filterForm.admissionNo = ''
+    filterForm.orgId = ''
+    filterForm.phone = ''
     filterForm.status = ''
     pagination.page = 1
     loadCandidateList()
+  }
+
+  /** 加载所属单位下拉选项（仅启用单位） */
+  async function loadOrgOptions() {
+    try {
+      const { data } = await getExternalOrgOptions()
+      orgOptions.value = data
+    } catch (error: any) {
+      ElMessage.error(error.message || '加载所属单位列表失败')
+    }
   }
 
   function handleSizeChange() {
@@ -284,8 +366,7 @@
     Object.assign(form, {
       id: row.id,
       name: row.name,
-      admissionNo: row.admissionNo,
-      company: row.company ?? '',
+      orgId: row.orgId,
       idCard: row.idCard ?? '',
       phone: row.phone ?? '',
       email: row.email ?? ''
@@ -334,14 +415,41 @@
     }
   }
 
+  /** 表格勾选变化，记录选中考生 id */
+  function handleSelectionChange(rows: ExternalCandidate[]) {
+    selectedIds.value = rows.map((r) => r.id)
+  }
+
+  /** 批量删除选中的考生 */
+  async function handleBatchDelete() {
+    if (!selectedIds.value.length) return
+    try {
+      await ElMessageBox.confirm(
+        `确定删除选中的 ${selectedIds.value.length} 名外部考生吗？删除后其考试账号一并失效`,
+        '提示',
+        { type: 'warning' }
+      )
+      const count = selectedIds.value.length
+      await externalCandidateApi.batchDelete(selectedIds.value)
+      ElMessage.success(`已删除 ${count} 名外部考生`)
+      // 删除后当前页可能为空，回退一页
+      if (tableData.value.length === count && pagination.page > 1) {
+        pagination.page -= 1
+      }
+      selectedIds.value = []
+      loadCandidateList()
+    } catch (error: any) {
+      if (error !== 'cancel') ElMessage.error(error.message || '批量删除失败')
+    }
+  }
+
   async function handleSubmit() {
     try {
       await formRef.value?.validate()
       submitLoading.value = true
       const payload = {
         name: form.name!.trim(),
-        admissionNo: form.admissionNo!.trim(),
-        company: form.company?.trim() || '',
+        orgId: form.orgId!,
         idCard: form.idCard?.trim() || '',
         phone: form.phone!.trim(),
         email: form.email?.trim() || ''
@@ -350,7 +458,9 @@
         await externalCandidateApi.update({ id: form.id, ...payload })
         ElMessage.success('编辑外部考生成功')
       } else {
-        await externalCandidateApi.add(payload)
+        // 密码留空则由后端默认取手机号后 6 位
+        const password = form.password?.trim()
+        await externalCandidateApi.add({ ...payload, ...(password ? { password } : {}) })
         ElMessage.success('新增成功，考试账号已生成')
       }
       dialogVisible.value = false
@@ -372,12 +482,53 @@
     loadCandidateList()
   }
 
+  // 导出列定义：表头顺序即导出列顺序（状态转中文文案）
+  const EXPORT_COLUMNS: ExcelColumn<Record<string, any>>[] = [
+    { header: '姓名', field: 'name' },
+    { header: '手机号', field: 'phone' },
+    { header: '所属单位', field: 'orgName' },
+    { header: '证件号', field: 'idCard' },
+    { header: '电子邮箱', field: 'email' },
+    { header: '账号状态', field: 'statusText' },
+    { header: '创建时间', field: 'createTime' }
+  ]
+
+  /** 导出：拉取当前筛选下的全部考生，前端生成 xlsx 下载 */
+  async function handleExport() {
+    exporting.value = true
+    try {
+      const { data } = await externalCandidateApi.export({
+        name: filterForm.name || undefined,
+        orgId: filterForm.orgId === '' ? undefined : filterForm.orgId,
+        phone: filterForm.phone || undefined,
+        status: filterForm.status === '' ? undefined : filterForm.status
+      })
+      if (!data.length) {
+        ElMessage.warning('当前筛选条件下没有可导出的数据')
+        return
+      }
+      const rows = data.map((item) => ({
+        ...item,
+        statusText: item.status === 1 ? '启用' : '停用'
+      }))
+      exportToExcel(EXPORT_COLUMNS, rows, `外部考生_${Date.now()}`, '外部考生')
+      ElMessage.success(`已导出 ${rows.length} 名外部考生`)
+    } catch (error: any) {
+      ElMessage.error(error.message || '导出失败')
+    } finally {
+      exporting.value = false
+    }
+  }
+
   function resetForm() {
     formRef.value?.resetFields()
     Object.assign(form, createForm())
   }
 
-  onMounted(() => loadCandidateList())
+  onMounted(() => {
+    loadOrgOptions()
+    loadCandidateList()
+  })
 </script>
 
 <style lang="scss" scoped>

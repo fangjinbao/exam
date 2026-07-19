@@ -30,7 +30,10 @@ export class ParamConfigService extends BaseService {
    * int 类型校验 [min,max] 范围，越界返回错误信息（由 controller 转 fail）。
    * @returns { ok: true } 成功；{ ok: false, message } 校验失败
    */
-  async updateValue(id: number, value: string): Promise<{ ok: boolean; message?: string }> {
+  async updateValue(
+    id: number,
+    value: string,
+  ): Promise<{ ok: boolean; message?: string; name?: string }> {
     const target = await this.prisma.sysParamConfig.findUnique({ where: { id } });
     if (!target) return { ok: false, message: '参数不存在' };
 
@@ -49,6 +52,6 @@ export class ParamConfigService extends BaseService {
       where: { id },
       data: { value: String(value) },
     });
-    return { ok: true };
+    return { ok: true, name: target.name };
   }
 }

@@ -64,18 +64,3 @@ export function fetchGetMenuList() {
   })
 }
 
-/** 站点公开信息（系统名称/Logo） */
-export interface SiteInfo {
-  sysName: string
-  sysLogo: string
-}
-
-/**
- * 获取站点公开信息（系统名称/Logo）
- * 无需登录，供登录页与全局标题展示
- */
-export function fetchSiteInfo() {
-  return request.get<SiteInfo>({
-    url: '/admin/open/site-info'
-  })
-}

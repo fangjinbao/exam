@@ -559,18 +559,14 @@ model SysAiModel {
   id             Int      @id @default(autoincrement())
   /// 配置名称（全局唯一）
   name           String   @unique @db.VarChar(100)
-  /// 模型服务商：通义千问/DeepSeek/智谱/OpenAI/其他
+  /// 模型服务商：OpenAI / Anthropic
   provider       String   @db.VarChar(50)
   /// 模型名称
   model          String   @db.VarChar(100)
-  /// 接口地址
+  /// 接口地址（base url，如 https://api.openai.com/v1）
   apiUrl         String   @db.VarChar(500)
   /// 接口密钥（敏感，仅存储，不下发完整值）
   apiKey         String   @db.VarChar(500)
-  /// 最大并发数（可空）
-  maxConcurrency Int?
-  /// 超时时间（秒，可空）
-  timeout        Int?
   /// 启用状态 1=启用 0=停用（全局仅一项启用）
   status         Int      @default(0)
   /// 连接状态：normal 正常 / error 异常 / unknown 未测试
@@ -617,19 +613,48 @@ model SysOperationLog {
 
 // ==================== 考试域模块 ====================
 
+/// 外部单位（外部考生的归属组织，为外部考生录入提供可选单位范围；被外部考生引用时不可删除）
+model ExternalOrg {
+  id         Int      @id @default(autoincrement())
+  /// 单位名称（系统内全局唯一）
+  name       String   @unique @db.VarChar(100)
+  /// 单位编码（系统内全局唯一，可空）
+  code       String?  @unique @db.VarChar(30)
+  /// 联系人（可空）
+  contact    String?  @db.VarChar(50)
+  /// 联系电话（手机号，可空）
+  phone      String?  @db.VarChar(20)
+  /// 单位地址（可空）
+  address    String?  @db.VarChar(200)
+  /// 备注（可空）
+  remark     String?  @db.VarChar(200)
+  /// 状态 1=启用 0=停用（停用后不可被外部考生选择）
+  status     Int      @default(1)
+  /// 租户 ID
+  tenantId   Int?
+  /// 创建时间
+  createTime DateTime @default(now())
+  /// 更新时间
+  updateTime DateTime @updatedAt
+
+  /// 归属本单位的外部考生（反向关系）
+  candidates ExternalCandidate[]
+
+  @@index([tenantId])
+  @@map("exam_external_org")
+}
+
 /// 外部考生（外部单位参加考试人员，由系统生成考试账号；password/passwordV 为敏感字段，不对外返回）
 model ExternalCandidate {
   id           Int      @id @default(autoincrement())
   /// 姓名
   name         String   @db.VarChar(50)
-  /// 准考证号（考试账号登录名，系统内全局唯一）
-  admissionNo  String   @unique @db.VarChar(30)
-  /// 所属单位（可空）
-  company      String?  @db.VarChar(50)
+  /// 所属外部单位 ID（必填，指向已启用的 ExternalOrg）
+  orgId        Int
   /// 证件号（用于身份核验，可空）
   idCard       String?  @db.VarChar(30)
-  /// 联系电话（手机号）
-  phone        String   @db.VarChar(20)
+  /// 联系电话（手机号，同时作为考试账号登录名，系统内全局唯一）
+  phone        String   @unique @db.VarChar(20)
   /// 电子邮箱（可空）
   email        String?  @db.VarChar(50)
   /// 考试账号密码（bcrypt 哈希，敏感，不对外返回）
@@ -645,7 +670,10 @@ model ExternalCandidate {
   /// 更新时间
   updateTime   DateTime @updatedAt
 
-  @@index([phone])
+  /// 所属外部单位（多对一）
+  org          ExternalOrg @relation(fields: [orgId], references: [id])
+
+  @@index([orgId])
   @@index([tenantId])
   @@map("exam_external_candidate")
 }
@@ -674,5 +702,72 @@ model ExamSite {
 
   @@index([tenantId])
   @@map("exam_site")
+}
+
+/// 知识点分类（题库分类体系，树形结构；被题目引用或存在子节点时不可删除）
+model KnowledgePoint {
+  id         Int      @id @default(autoincrement())
+  /// 父级知识点 ID（顶级节点为 null）
+  parentId   Int?
+  /// 知识点名称
+  name       String   @db.VarChar(100)
+  /// 排序号（同级内升序）
+  orderNum   Int      @default(0)
+  /// 备注
+  remark     String?  @db.VarChar(200)
+  /// 租户 ID
+  tenantId   Int?
+  /// 创建时间
+  createTime DateTime @default(now())
+  /// 更新时间
+  updateTime DateTime @updatedAt
+
+  /// 关联的题目（一对多）
+  questions  Question[]
+
+  @@index([parentId])
+  @@index([tenantId])
+  @@map("exam_knowledge_point")
+}
+
+/// 题目（题库核心数据；题型/难度存数据字典的 value，知识点关联知识点分类；状态区分正式/待审）
+model Question {
+  id               Int      @id @default(autoincrement())
+  /// 题干（多行文本）
+  stem             String   @db.Text
+  /// 题型（存字典 question_type 的 value：single 单选/multiple 多选/judge 判断/blank 填空/qa 问答/essay 论述）
+  type             String   @db.VarChar(20)
+  /// 选项（多行文本；客观题 single/multiple/judge/blank 必填，主观题 qa/essay 为空）
+  options          String?  @db.Text
+  /// 标准答案
+  answer           String   @db.Text
+  /// 答案解析（可空）
+  analysis         String?  @db.Text
+  /// 难度（存字典 difficulty 的 value：easy 简单/medium 中等/hard 困难）
+  difficulty       String   @db.VarChar(20)
+  /// 所属知识点 ID（指向 KnowledgePoint）
+  knowledgePointId Int
+  /// 分值建议（可空，正整数）
+  suggestedScore   Int?
+  /// 状态：formal 正式 / pending 待审（AI 生成题目审核通过前保持 pending）
+  status           String   @default("formal") @db.VarChar(20)
+  /// 退回原因（审核退回时记录，≤200 字）
+  rejectReason     String?  @db.VarChar(200)
+  /// 租户 ID
+  tenantId         Int?
+  /// 创建时间
+  createTime       DateTime @default(now())
+  /// 更新时间
+  updateTime       DateTime @updatedAt
+
+  /// 所属知识点（多对一）
+  knowledgePoint   KnowledgePoint @relation(fields: [knowledgePointId], references: [id])
+
+  @@index([knowledgePointId])
+  @@index([type])
+  @@index([difficulty])
+  @@index([status])
+  @@index([tenantId])
+  @@map("exam_question")
 }
 

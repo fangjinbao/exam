@@ -27,7 +27,7 @@
     <!-- 表格卡片 -->
     <ElCard shadow="never" class="table-card">
       <div class="table-header">
-        <ElButton type="primary" :icon="Plus" @click="handleAdd()">新增</ElButton>
+        <ElButton v-auth="'add'" type="primary" :icon="Plus" @click="handleAdd()">新增</ElButton>
         <ElButton @click="toggleExpand">{{ isExpanded ? '折叠' : '展开' }}</ElButton>
       </div>
 
@@ -74,9 +74,9 @@
           </ElTableColumn>
           <ElTableColumn label="操作" width="200" align="center" fixed="right">
             <template #default="{ row }">
-              <ElButton link type="primary" @click="handleAdd(row.id)">新增</ElButton>
-              <ElButton link type="primary" @click="handleEdit(row)">编辑</ElButton>
-              <ElButton link type="danger" @click="handleDelete(row)">删除</ElButton>
+              <ElButton v-auth="'add'" link type="primary" @click="handleAdd(row.id)">新增</ElButton>
+              <ElButton v-auth="'update'" link type="primary" @click="handleEdit(row)">编辑</ElButton>
+              <ElButton v-auth="'delete'" link type="danger" @click="handleDelete(row)">删除</ElButton>
             </template>
           </ElTableColumn>
         </ElTable>

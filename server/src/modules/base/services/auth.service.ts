@@ -24,10 +24,11 @@ export class AuthService {
    * 校验用户名密码（bcrypt 比对），签发 access/refresh token 并写入 Redis，同时预热权限缓存。
    * @param username 用户名
    * @param password 明文密码
+   * @param sourceIp 客户端来源 IP（用于操作日志留痕，缺省为「未知」）
    * @returns access token、refresh token 及 access token 过期秒数
    * @throws BadRequestException 用户不存在、已禁用或密码错误
    */
-  async login(username: string, password: string) {
+  async login(username: string, password: string, sourceIp = '未知') {
     const user = await this.prisma.sysUser.findUnique({
       where: { username },
       include: { userRoles: { include: { role: true } } },
@@ -70,6 +71,21 @@ export class AuthService {
     await this.redis.set(`admin:refreshToken:${user.id}`, refreshToken, refreshExpire);
     await this.redis.set(`admin:passwordVersion:${user.id}`, String(user.passwordV), refreshExpire);
     await this.cachePerms(user.id, roleIds);
+
+    // 记录登录操作日志（fire-and-forget，失败不影响登录）
+    const operator = user.name || user.nickName || user.username;
+    this.prisma.sysOperationLog
+      .create({
+        data: {
+          operator,
+          type: '登录',
+          target: '系统',
+          content: '登录管理后台',
+          sourceIp,
+          tenantId: null,
+        },
+      })
+      .catch(() => undefined);
 
     return {
       token: accessToken,

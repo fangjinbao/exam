@@ -19,17 +19,22 @@ function normalizePage(page?: number, pageSize?: number) {
 export class SysDictService {
   constructor(private readonly prisma: PrismaService) {}
 
-  /** 字典类型分页（附带每类型字典项数量 itemCount） */
-  async typePage(page?: number, pageSize?: number) {
+  /** 字典类型分页（附带每类型字典项数量 itemCount；keyword 模糊匹配名称/编码） */
+  async typePage(keyword?: string, page?: number, pageSize?: number) {
     const { p, ps, skip } = normalizePage(page, pageSize);
+    const kw = keyword?.trim();
+    const where = kw
+      ? { OR: [{ name: { contains: kw } }, { key: { contains: kw } }] }
+      : {};
     const [rows, total] = await Promise.all([
       this.prisma.dictType.findMany({
+        where,
         skip,
         take: ps,
         orderBy: { id: 'asc' },
         select: { id: true, name: true, key: true, _count: { select: { items: true } } },
       }),
-      this.prisma.dictType.count(),
+      this.prisma.dictType.count({ where }),
     ]);
     const list = rows.map((t) => ({
       id: t.id,
@@ -40,10 +45,14 @@ export class SysDictService {
     return { list, pagination: { page: p, pageSize: ps, total } };
   }
 
-  /** 指定类型下字典项分页（按 sort 升序） */
-  async itemPage(typeId: number, page?: number, pageSize?: number) {
+  /** 指定类型下字典项分页（按 sort 升序；keyword 模糊匹配名称/值） */
+  async itemPage(typeId: number, keyword?: string, page?: number, pageSize?: number) {
     const { p, ps, skip } = normalizePage(page, pageSize);
-    const where = { typeId };
+    const kw = keyword?.trim();
+    const where = {
+      typeId,
+      ...(kw ? { OR: [{ name: { contains: kw } }, { value: { contains: kw } }] } : {}),
+    };
     const [rows, total] = await Promise.all([
       this.prisma.dictInfo.findMany({
         where,

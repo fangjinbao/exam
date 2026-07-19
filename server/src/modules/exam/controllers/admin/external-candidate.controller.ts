@@ -10,7 +10,13 @@ import {
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiQuery } from '@nestjs/swagger';
 import { CrudController, CrudControllerFactory } from '@/common/crud';
-import { ApiResult, ApiPageResult, ApiOkVoid, Perms } from '@/common/decorators';
+import {
+  ApiResult,
+  ApiPageResult,
+  ApiArrayResult,
+  ApiOkVoid,
+  Perms,
+} from '@/common/decorators';
 import { ExternalCandidateService } from '../../services/external-candidate.service';
 import {
   CreateExternalCandidateDto,
@@ -27,7 +33,7 @@ import {
 /**
  * 外部考生管理控制器
  * 提供外部考生的分页查询、新增（生成考试账号）、编辑、启停、删除、重置密码与批量导入。
- * 列表支持按姓名、所属单位、准考证号模糊筛选（与关系）及账号状态精确筛选；
+ * 列表支持按姓名、手机号模糊筛选（与关系）及所属单位、账号状态精确筛选；
  * 密码相关字段（password/passwordV）均不对外返回。
  * 启停接口（update-status）复用基类默认实现。
  */
@@ -68,29 +74,33 @@ export class ExternalCandidateController extends CrudControllerFactory(
 
   /**
    * 分页查询外部考生
-   * name/company/admissionNo 各自模糊匹配且为"与"关系，status 精确匹配。
+   * name/phone 各自模糊匹配且为"与"关系，orgId/status 精确匹配。
    */
   @Get('list')
   @Perms('list')
-  @ApiOperation({ summary: '分页查询外部考生（姓名/单位/准考证号模糊，状态精确）' })
+  @ApiOperation({ summary: '分页查询外部考生（姓名/手机号模糊，所属单位/状态精确）' })
   @ApiQuery({ name: 'name', required: false, description: '姓名（模糊）' })
-  @ApiQuery({ name: 'company', required: false, description: '所属单位（模糊）' })
-  @ApiQuery({ name: 'admissionNo', required: false, description: '准考证号（模糊）' })
+  @ApiQuery({ name: 'orgId', required: false, description: '所属外部单位 ID（精确）' })
+  @ApiQuery({ name: 'phone', required: false, description: '手机号（模糊）' })
   @ApiQuery({ name: 'status', required: false, description: '账号状态 1=启用 0=停用' })
   @ApiQuery({ name: 'page', required: false, description: '页码，从 1 开始' })
   @ApiQuery({ name: 'pageSize', required: false, description: '每页条数（1-100）' })
   @ApiPageResult(ExternalCandidateVo)
   async list(@Query() query: Record<string, any>) {
-    // query 参数恒为字符串，status 为纯整数字符串时转数字，否则视为未筛选
+    // query 参数恒为字符串，status/orgId 为纯整数字符串时转数字，否则视为未筛选
     const status =
       typeof query.status === 'string' && /^-?\d+$/.test(query.status)
         ? Number(query.status)
         : undefined;
+    const orgId =
+      typeof query.orgId === 'string' && /^\d+$/.test(query.orgId)
+        ? Number(query.orgId)
+        : undefined;
     const result = await this.candidateService.pageList(
       {
         name: query.name,
-        company: query.company,
-        admissionNo: query.admissionNo,
+        orgId,
+        phone: query.phone,
         status,
       },
       query.page ? Number(query.page) : undefined,
@@ -101,15 +111,18 @@ export class ExternalCandidateController extends CrudControllerFactory(
 
   /**
    * 新增外部考生
-   * 校验准考证号唯一后创建记录，并以准考证号为登录名生成考试账号（初始密码）。
+   * 校验手机号（登录账号）唯一后创建记录；密码留空时默认取手机号后 6 位。
    */
   @Post('add')
   @Perms('add')
   @ApiOperation({ summary: '新增外部考生并生成考试账号' })
   @ApiResult(ExternalCandidateVo)
   async add(@Body() dto: CreateExternalCandidateDto) {
-    if (await this.candidateService.isAdmissionNoExists(dto.admissionNo)) {
-      return this.fail(`准考证号【${dto.admissionNo}】已存在，请更换`);
+    if (await this.candidateService.isPhoneExists(dto.phone)) {
+      return this.fail(`手机号【${dto.phone}】已被注册，请更换`);
+    }
+    if (!(await this.candidateService.isOrgSelectable(dto.orgId))) {
+      return this.fail('所属单位不存在或已停用，请重新选择');
     }
     const candidate = await this.candidateService.createWithAccount(dto);
     return this.ok(candidate, '新增成功，考试账号已生成');
@@ -117,21 +130,27 @@ export class ExternalCandidateController extends CrudControllerFactory(
 
   /**
    * 更新外部考生信息
-   * 准考证号不可修改（UpdateExternalCandidateDto 不含该字段，whitelist 校验拒绝传入）。
+   * 手机号作为登录账号可修改，但需校验系统内唯一（排除自身）。
    */
   @Put('update')
   @Perms('update')
-  @ApiOperation({ summary: '更新外部考生信息（准考证号不可修改）' })
+  @ApiOperation({ summary: '更新外部考生信息' })
   @ApiOkVoid()
   async update(@Body() dto: UpdateExternalCandidateDto) {
     const { id, ...data } = dto;
+    if (await this.candidateService.isPhoneExists(data.phone, id)) {
+      return this.fail(`手机号【${data.phone}】已被注册，请更换`);
+    }
+    if (!(await this.candidateService.isOrgSelectable(data.orgId))) {
+      return this.fail('所属单位不存在或已停用，请重新选择');
+    }
     await this.candidateService.updateInfo(id, data);
     return this.ok(null, '编辑外部考生成功');
   }
 
   /**
    * 重置外部考生考试账号密码
-   * 密码重置为系统默认密码，返回明文供管理员一次性告知考生。
+   * 密码重置为手机号后 6 位，返回明文供管理员一次性告知考生。
    */
   @Put('reset-password')
   @Perms('reset-password')
@@ -139,25 +158,54 @@ export class ExternalCandidateController extends CrudControllerFactory(
   @ApiResult(ResetPasswordVo)
   async resetPassword(@Body() dto: ResetPasswordDto) {
     const password = await this.candidateService.resetPassword(dto.id);
+    if (password === null) return this.fail('外部考生不存在');
     return this.ok({ password }, '密码重置成功');
   }
 
   /**
-   * 批量导入外部考生
-   * 按模板解析出的行数据批量导入并生成考试账号，返回成功导入数量。
+   * 批量导入外部考生（逐行校验，有错跳过）
+   * 合法行入库并生成考试账号，非法行跳过，返回成功/失败数量与失败明细。
    */
   @Post('import')
   @Perms('import')
-  @ApiOperation({ summary: '批量导入外部考生并生成账号' })
+  @ApiOperation({ summary: '批量导入外部考生并生成账号（逐行跳过错误行）' })
   @ApiResult(ImportResultVo)
   async import(@Body() dto: ImportExternalCandidateDto) {
-    try {
-      const count = await this.candidateService.importCandidates(dto.rows);
-      return this.ok({ count }, `成功导入 ${count} 名外部考生，账号已生成`);
-    } catch (error) {
-      // 导入校验失败（准考证号重复/冲突）返回友好中文提示
-      return this.fail(error instanceof Error ? error.message : '导入失败');
-    }
+    const result = await this.candidateService.importCandidates(dto.rows);
+    const msg = result.failed
+      ? `成功导入 ${result.success} 名，跳过 ${result.failed} 行`
+      : `成功导入 ${result.success} 名外部考生，账号已生成`;
+    return this.ok(result, msg);
+  }
+
+  /**
+   * 导出外部考生（按当前筛选，全量不分页）
+   * 筛选条件与 list 一致，返回全部匹配记录供前端生成表格文件（脱敏，不含密码）。
+   */
+  @Get('export')
+  @Perms('export')
+  @ApiOperation({ summary: '按筛选条件导出外部考生（全量）' })
+  @ApiQuery({ name: 'name', required: false, description: '姓名（模糊）' })
+  @ApiQuery({ name: 'orgId', required: false, description: '所属外部单位 ID（精确）' })
+  @ApiQuery({ name: 'phone', required: false, description: '手机号（模糊）' })
+  @ApiQuery({ name: 'status', required: false, description: '账号状态 1=启用 0=停用' })
+  @ApiArrayResult(ExternalCandidateVo)
+  async export(@Query() query: Record<string, any>) {
+    const status =
+      typeof query.status === 'string' && /^-?\d+$/.test(query.status)
+        ? Number(query.status)
+        : undefined;
+    const orgId =
+      typeof query.orgId === 'string' && /^\d+$/.test(query.orgId)
+        ? Number(query.orgId)
+        : undefined;
+    const list = await this.candidateService.exportList({
+      name: query.name,
+      orgId,
+      phone: query.phone,
+      status,
+    });
+    return this.ok(list);
   }
 
   /**
@@ -172,5 +220,25 @@ export class ExternalCandidateController extends CrudControllerFactory(
     await this.candidateService.ensureDeletable(id);
     await this.candidateService.delete([id]);
     return this.ok(null, '删除外部考生成功');
+  }
+
+  /**
+   * 批量删除外部考生
+   * 逐个执行删除前关联校验后统一删除；删除后对应考试账号一并失效。
+   * 覆盖基类 batch-delete：基类直删会绕过 ensureDeletable 关联保护。
+   */
+  @Post('batch-delete')
+  @Perms('batch-delete')
+  @ApiOperation({ summary: '批量删除外部考生（body: {ids: number[]}）' })
+  @ApiOkVoid()
+  async batchDelete(@Body() body: { ids: number[] }) {
+    if (!body.ids?.length || !body.ids.every((id) => typeof id === 'number')) {
+      return this.fail('ids 格式不正确');
+    }
+    for (const id of body.ids) {
+      await this.candidateService.ensureDeletable(id);
+    }
+    await this.candidateService.delete(body.ids);
+    return this.ok(null, `已删除 ${body.ids.length} 名外部考生`);
   }
 }

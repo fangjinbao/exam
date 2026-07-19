@@ -13,10 +13,10 @@
             min-width="300"
             show-overflow-tooltip
           />
-          <!-- 编辑按钮：无权限角色不渲染（原型阶段默认有权限） -->
+          <!-- 编辑按钮：无 update 权限的角色不渲染 -->
           <ElTableColumn label="操作" width="100" align="center" fixed="right">
             <template #default="{ row }">
-              <ElButton link type="primary" @click="handleEdit(row)">编辑</ElButton>
+              <ElButton v-auth="'update'" link type="primary" @click="handleEdit(row)">编辑</ElButton>
             </template>
           </ElTableColumn>
           <template #empty>暂无参数配置数据</template>

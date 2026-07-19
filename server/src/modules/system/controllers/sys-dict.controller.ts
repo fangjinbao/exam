@@ -1,7 +1,7 @@
 import { Controller, Get, Post, Put, Delete, Body, Query, Param, ParseIntPipe } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiQuery, ApiParam } from '@nestjs/swagger';
 import { BaseController } from '@/common/crud';
-import { ApiPageResult, ApiOkVoid, Perms } from '@/common/decorators';
+import { ApiPageResult, ApiOkVoid, Perms, OperationLog } from '@/common/decorators';
 import { SysDictService } from '../services/sys-dict.service';
 import { DictTypeVo, DictItemVo } from '../vo/sys-dict.vo';
 import { AddDictItemDto, UpdateDictItemDto } from '../dto/sys-dict.dto';
@@ -21,11 +21,17 @@ export class SysDictController extends BaseController {
   @Get('type/list')
   @Perms('type:list')
   @ApiOperation({ summary: '字典类型分页列表' })
+  @ApiQuery({ name: 'keyword', required: false, description: '关键字（模糊匹配类型名称/编码）' })
   @ApiQuery({ name: 'page', required: false, description: '页码，从 1 开始' })
   @ApiQuery({ name: 'pageSize', required: false, description: '每页条数（1-100）' })
   @ApiPageResult(DictTypeVo)
-  async typeList(@Query('page') page?: string, @Query('pageSize') pageSize?: string) {
+  async typeList(
+    @Query('keyword') keyword?: string,
+    @Query('page') page?: string,
+    @Query('pageSize') pageSize?: string,
+  ) {
     const data = await this.sysDictService.typePage(
+      keyword,
       page ? Number(page) : undefined,
       pageSize ? Number(pageSize) : undefined,
     );
@@ -37,16 +43,19 @@ export class SysDictController extends BaseController {
   @Perms('item:list')
   @ApiOperation({ summary: '字典项分页列表' })
   @ApiQuery({ name: 'typeId', required: true, description: '字典类型 ID' })
+  @ApiQuery({ name: 'keyword', required: false, description: '关键字（模糊匹配字典项名称/值）' })
   @ApiQuery({ name: 'page', required: false, description: '页码，从 1 开始' })
   @ApiQuery({ name: 'pageSize', required: false, description: '每页条数（1-100）' })
   @ApiPageResult(DictItemVo)
   async itemList(
     @Query('typeId') typeId: string,
+    @Query('keyword') keyword?: string,
     @Query('page') page?: string,
     @Query('pageSize') pageSize?: string,
   ) {
     const data = await this.sysDictService.itemPage(
       Number(typeId),
+      keyword,
       page ? Number(page) : undefined,
       pageSize ? Number(pageSize) : undefined,
     );
@@ -57,6 +66,7 @@ export class SysDictController extends BaseController {
   @Post('item/add')
   @Perms('item:add')
   @ApiOperation({ summary: '新增字典项' })
+  @OperationLog({ target: '数据字典', type: '新增', content: ({ body }) => `新增字典项「${body?.name || ''}」` })
   @ApiOkVoid()
   async itemAdd(@Body() dto: AddDictItemDto) {
     const res = await this.sysDictService.addItem(dto);
@@ -68,6 +78,7 @@ export class SysDictController extends BaseController {
   @Put('item/update')
   @Perms('item:update')
   @ApiOperation({ summary: '更新字典项' })
+  @OperationLog({ target: '数据字典', type: '编辑', content: ({ body }) => `编辑字典项「${body?.name || ''}」` })
   @ApiOkVoid()
   async itemUpdate(@Body() dto: UpdateDictItemDto) {
     const res = await this.sysDictService.updateItem(dto.id, dto);
@@ -79,6 +90,7 @@ export class SysDictController extends BaseController {
   @Delete('item/delete/:id')
   @Perms('item:delete')
   @ApiOperation({ summary: '删除字典项' })
+  @OperationLog({ target: '数据字典', type: '删除', content: '删除字典项' })
   @ApiParam({ name: 'id', description: '字典项 ID', type: Number })
   @ApiOkVoid()
   async itemDelete(@Param('id', ParseIntPipe) id: number) {

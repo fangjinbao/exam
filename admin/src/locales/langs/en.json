@@ -235,10 +235,16 @@
       "menu": "Menu Management"
     },
     "externalCandidate": {
-      "title": "External Candidates"
+      "title": "External Candidates",
+      "org": "External Units",
+      "candidate": "Candidates"
     },
     "examSite": {
       "title": "Exam Site"
+    },
+    "questionBank": {
+      "title": "Question Bank",
+      "knowledgePoint": "Knowledge Points"
     },
     "system": {
       "title": "System",

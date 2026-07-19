@@ -208,7 +208,6 @@ import {
   updateDictItemMock,
   deleteDictItemMock
 } from './dataDict'
-import { getOperationLogListMock } from './operationLog'
 
 // 参数配置
 mockRoute('GET', '/admin/sys/param-config/list', ({ params }) => getParamConfigListMock(params))
@@ -237,5 +236,4 @@ mockRoute('DELETE', '/admin/sys/dict/item/delete/:id', ({ url }) => {
   return {}
 })
 
-// 操作日志
-mockRoute('GET', '/admin/sys/operation-log/list', ({ params }) => getOperationLogListMock(params))
+// 操作日志：真实采集，走后端接口，不再提供 mock

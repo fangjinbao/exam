@@ -1,7 +1,7 @@
 // @ts-nocheck
 /**
- * AI模型配置 Mock 数据
- * 字段：name/provider/model/apiUrl/apiKey/maxConcurrency/timeout/status(1启用0停用)/connStatus(normal/error/unknown)
+ * AI模型配置 Mock 数据（仅 OpenAI / Anthropic 官方标准接入）
+ * 字段：name/provider/model/apiUrl/apiKey/status(1启用0停用)/connStatus(normal/error/unknown)
  * 业务规则：
  *  - 全局仅一项 status=1（启用），切换启用时其余自动置 0
  *  - 密钥列表返回脱敏值（maskApiKey），不下发完整密钥
@@ -20,45 +20,27 @@ function maskApiKey(key) {
 export const mockAiModels = [
   {
     id: 1,
-    name: '通义千问-生产',
-    provider: '通义千问',
-    model: 'qwen-max',
-    apiUrl: 'https://dashscope.aliyuncs.com/api/v1',
-    apiKey: 'sk-qwen1234567890abcdef',
-    maxConcurrency: 10,
-    timeout: 60,
-    status: 1,
-    connStatus: 'normal',
+    name: 'OpenAI-示例',
+    provider: 'OpenAI',
+    model: 'gpt-4o',
+    apiUrl: 'https://api.openai.com/v1',
+    apiKey: '',
+    status: 0,
+    connStatus: 'unknown',
     createTime: '2026-05-01 10:00:00',
-    updateTime: '2026-06-01 10:00:00'
+    updateTime: '2026-05-01 10:00:00'
   },
   {
     id: 2,
-    name: 'DeepSeek-备用',
-    provider: 'DeepSeek',
-    model: 'deepseek-chat',
-    apiUrl: 'https://api.deepseek.com/v1',
-    apiKey: 'sk-deepseek0987654321zyxw',
-    maxConcurrency: 5,
-    timeout: 30,
+    name: 'Anthropic-示例',
+    provider: 'Anthropic',
+    model: 'claude-sonnet-4-20250514',
+    apiUrl: 'https://api.anthropic.com/v1',
+    apiKey: '',
     status: 0,
-    connStatus: 'normal',
+    connStatus: 'unknown',
     createTime: '2026-05-02 10:00:00',
     updateTime: '2026-05-02 10:00:00'
-  },
-  {
-    id: 3,
-    name: '智谱-测试',
-    provider: '智谱',
-    model: 'glm-4',
-    apiUrl: 'https://open.bigmodel.cn/api/paas/v4',
-    apiKey: 'sk-zhipuabcd1234efgh5678',
-    maxConcurrency: null,
-    timeout: null,
-    status: 0,
-    connStatus: 'error',
-    createTime: '2026-05-03 10:00:00',
-    updateTime: '2026-05-03 10:00:00'
   }
 ]
 
@@ -100,8 +82,6 @@ export function addAiModelMock(data) {
     model: data.model || '',
     apiUrl: data.apiUrl || '',
     apiKey: data.apiKey || '',
-    maxConcurrency: data.maxConcurrency ?? null,
-    timeout: data.timeout ?? null,
     status: 0,
     connStatus: 'unknown',
     createTime: now,
@@ -123,8 +103,6 @@ export function updateAiModelMock(id, data) {
   target.apiUrl = data.apiUrl ?? target.apiUrl
   // 密钥留空表示不修改，保留原值
   if (data.apiKey) target.apiKey = data.apiKey
-  target.maxConcurrency = data.maxConcurrency ?? null
-  target.timeout = data.timeout ?? null
   // 配置信息变更后连接状态失效，重置为未测试，提示用户重新测试
   target.connStatus = 'unknown'
   target.updateTime = new Date().toLocaleString('zh-CN')
@@ -151,13 +129,12 @@ export function enableAiModelMock(id) {
   return true
 }
 
-/** 连接测试：按配置是否填写接口地址判定连接结果并更新连接状态 */
+/** 连接测试：mock 阶段按是否填写密钥判定（真实连接由后端向服务商发请求） */
 export function testAiModelMock(id) {
   const target = mockAiModels.find((m) => m.id === id)
   if (!target) throw new Error('配置不存在')
-  // 原型阶段模拟连接：按配置是否填写接口地址判定，缺失则异常
-  const ok = Boolean(target.apiUrl)
+  const ok = Boolean(target.apiKey && target.apiUrl)
   target.connStatus = ok ? 'normal' : 'error'
   target.updateTime = new Date().toLocaleString('zh-CN')
-  return { success: ok }
+  return { success: ok, message: ok ? '连接测试成功' : '未配置密钥或接口地址' }
 }

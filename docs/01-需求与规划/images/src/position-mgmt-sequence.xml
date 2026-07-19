@@ -1,0 +1,57 @@
+<mxGraphModel dx="960" dy="1550" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="960" pageHeight="1550" math="0" shadow="0">
+  <root>
+    <mxCell id="0"/>
+    <mxCell id="1" parent="0"/>
+    <mxCell id="spacer" value="" style="fillColor=none;strokeColor=none;opacity=0;" vertex="1" parent="1">
+      <mxGeometry x="0" y="0" width="930" height="1506" as="geometry"/>
+    </mxCell>
+    <mxCell id="p1" value="管理员" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=12;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="60" y="40" width="100" height="36" as="geometry"/>
+    </mxCell>
+    <mxCell id="p2" value="岗位管理页面" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=12;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="280" y="40" width="140" height="36" as="geometry"/>
+    </mxCell>
+    <mxCell id="p3" value="后端服务" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=12;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="560" y="40" width="120" height="36" as="geometry"/>
+    </mxCell>
+    <mxCell id="p4" value="数据库" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=12;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="800" y="40" width="100" height="36" as="geometry"/>
+    </mxCell>
+    <mxCell id="life1" style="endArrow=none;dashed=1;strokeColor=#999999;dashPattern=4 4;" edge="1" parent="1"><mxGeometry relative="1" as="geometry"><mxPoint x="110" y="76" as="sourcePoint"/><mxPoint x="110" y="1430" as="targetPoint"/></mxGeometry></mxCell>
+    <mxCell id="life2" style="endArrow=none;dashed=1;strokeColor=#999999;dashPattern=4 4;" edge="1" parent="1"><mxGeometry relative="1" as="geometry"><mxPoint x="350" y="76" as="sourcePoint"/><mxPoint x="350" y="1430" as="targetPoint"/></mxGeometry></mxCell>
+    <mxCell id="life3" style="endArrow=none;dashed=1;strokeColor=#999999;dashPattern=4 4;" edge="1" parent="1"><mxGeometry relative="1" as="geometry"><mxPoint x="620" y="76" as="sourcePoint"/><mxPoint x="620" y="1430" as="targetPoint"/></mxGeometry></mxCell>
+    <mxCell id="life4" style="endArrow=none;dashed=1;strokeColor=#999999;dashPattern=4 4;" edge="1" parent="1"><mxGeometry relative="1" as="geometry"><mxPoint x="850" y="76" as="sourcePoint"/><mxPoint x="850" y="1430" as="targetPoint"/></mxGeometry></mxCell>
+    <mxCell id="g1title" value="查询岗位列表" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f0f0f0;strokeColor=#333333;fontSize=12;fontStyle=1;verticalAlign=middle;" vertex="1" parent="1"><mxGeometry x="40" y="100" width="890" height="28" as="geometry"/></mxCell>
+    <mxCell id="g1m1" value="打开/搜索岗位" style="endArrow=block;endFill=1;html=1;fontSize=11;verticalAlign=bottom;" edge="1" parent="1"><mxGeometry relative="1" as="geometry"><mxPoint x="110" y="160" as="sourcePoint"/><mxPoint x="350" y="160" as="targetPoint"/></mxGeometry></mxCell>
+    <mxCell id="g1m2" value="请求岗位列表" style="endArrow=block;endFill=1;html=1;fontSize=11;verticalAlign=bottom;" edge="1" parent="1"><mxGeometry relative="1" as="geometry"><mxPoint x="350" y="200" as="sourcePoint"/><mxPoint x="620" y="200" as="targetPoint"/></mxGeometry></mxCell>
+    <mxCell id="g1m3" value="查询岗位数据" style="endArrow=block;endFill=1;html=1;fontSize=11;verticalAlign=bottom;" edge="1" parent="1"><mxGeometry relative="1" as="geometry"><mxPoint x="620" y="240" as="sourcePoint"/><mxPoint x="850" y="240" as="targetPoint"/></mxGeometry></mxCell>
+    <mxCell id="g1m4" value="返回列表" style="endArrow=open;endFill=0;dashed=1;html=1;fontSize=11;verticalAlign=bottom;" edge="1" parent="1"><mxGeometry relative="1" as="geometry"><mxPoint x="850" y="280" as="sourcePoint"/><mxPoint x="620" y="280" as="targetPoint"/></mxGeometry></mxCell>
+    <mxCell id="g1m5" value="返回列表数据" style="endArrow=open;endFill=0;dashed=1;html=1;fontSize=11;verticalAlign=bottom;" edge="1" parent="1"><mxGeometry relative="1" as="geometry"><mxPoint x="620" y="320" as="sourcePoint"/><mxPoint x="350" y="320" as="targetPoint"/></mxGeometry></mxCell>
+    <mxCell id="g1m6" value="页面渲染展示给管理员" style="endArrow=open;endFill=0;dashed=1;html=1;fontSize=11;verticalAlign=bottom;" edge="1" parent="1"><mxGeometry relative="1" as="geometry"><mxPoint x="350" y="360" as="sourcePoint"/><mxPoint x="110" y="360" as="targetPoint"/></mxGeometry></mxCell>
+    <mxCell id="g2title" value="新增岗位" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f0f0f0;strokeColor=#333333;fontSize=12;fontStyle=1;verticalAlign=middle;" vertex="1" parent="1"><mxGeometry x="40" y="440" width="890" height="28" as="geometry"/></mxCell>
+    <mxCell id="g2m1" value="填写岗位名称/描述/排序并提交" style="endArrow=block;endFill=1;html=1;fontSize=11;verticalAlign=bottom;" edge="1" parent="1"><mxGeometry relative="1" as="geometry"><mxPoint x="110" y="500" as="sourcePoint"/><mxPoint x="350" y="500" as="targetPoint"/></mxGeometry></mxCell>
+    <mxCell id="g2m2" value="校验并创建" style="endArrow=block;endFill=1;html=1;fontSize=11;verticalAlign=bottom;" edge="1" parent="1"><mxGeometry relative="1" as="geometry"><mxPoint x="350" y="540" as="sourcePoint"/><mxPoint x="620" y="540" as="targetPoint"/></mxGeometry></mxCell>
+    <mxCell id="g2m3" value="写入岗位记录" style="endArrow=block;endFill=1;html=1;fontSize=11;verticalAlign=bottom;" edge="1" parent="1"><mxGeometry relative="1" as="geometry"><mxPoint x="620" y="580" as="sourcePoint"/><mxPoint x="850" y="580" as="targetPoint"/></mxGeometry></mxCell>
+    <mxCell id="g2m4" value="返回成功" style="endArrow=open;endFill=0;dashed=1;html=1;fontSize=11;verticalAlign=bottom;" edge="1" parent="1"><mxGeometry relative="1" as="geometry"><mxPoint x="850" y="620" as="sourcePoint"/><mxPoint x="620" y="620" as="targetPoint"/></mxGeometry></mxCell>
+    <mxCell id="g2m5" value="返回成功" style="endArrow=open;endFill=0;dashed=1;html=1;fontSize=11;verticalAlign=bottom;" edge="1" parent="1"><mxGeometry relative="1" as="geometry"><mxPoint x="620" y="660" as="sourcePoint"/><mxPoint x="350" y="660" as="targetPoint"/></mxGeometry></mxCell>
+    <mxCell id="g2m6" value="提示&quot;新增成功&quot;" style="endArrow=open;endFill=0;dashed=1;html=1;fontSize=11;verticalAlign=bottom;" edge="1" parent="1"><mxGeometry relative="1" as="geometry"><mxPoint x="350" y="700" as="sourcePoint"/><mxPoint x="110" y="700" as="targetPoint"/></mxGeometry></mxCell>
+    <mxCell id="g3title" value="编辑岗位" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f0f0f0;strokeColor=#333333;fontSize=12;fontStyle=1;verticalAlign=middle;" vertex="1" parent="1"><mxGeometry x="40" y="780" width="890" height="28" as="geometry"/></mxCell>
+    <mxCell id="g3m1" value="修改并提交" style="endArrow=block;endFill=1;html=1;fontSize=11;verticalAlign=bottom;" edge="1" parent="1"><mxGeometry relative="1" as="geometry"><mxPoint x="110" y="840" as="sourcePoint"/><mxPoint x="350" y="840" as="targetPoint"/></mxGeometry></mxCell>
+    <mxCell id="g3m2" value="更新" style="endArrow=block;endFill=1;html=1;fontSize=11;verticalAlign=bottom;" edge="1" parent="1"><mxGeometry relative="1" as="geometry"><mxPoint x="350" y="880" as="sourcePoint"/><mxPoint x="620" y="880" as="targetPoint"/></mxGeometry></mxCell>
+    <mxCell id="g3m3" value="更新记录" style="endArrow=block;endFill=1;html=1;fontSize=11;verticalAlign=bottom;" edge="1" parent="1"><mxGeometry relative="1" as="geometry"><mxPoint x="620" y="920" as="sourcePoint"/><mxPoint x="850" y="920" as="targetPoint"/></mxGeometry></mxCell>
+    <mxCell id="g3m4" value="返回成功" style="endArrow=open;endFill=0;dashed=1;html=1;fontSize=11;verticalAlign=bottom;" edge="1" parent="1"><mxGeometry relative="1" as="geometry"><mxPoint x="850" y="960" as="sourcePoint"/><mxPoint x="620" y="960" as="targetPoint"/></mxGeometry></mxCell>
+    <mxCell id="g3m5" value="返回成功" style="endArrow=open;endFill=0;dashed=1;html=1;fontSize=11;verticalAlign=bottom;" edge="1" parent="1"><mxGeometry relative="1" as="geometry"><mxPoint x="620" y="1000" as="sourcePoint"/><mxPoint x="350" y="1000" as="targetPoint"/></mxGeometry></mxCell>
+    <mxCell id="g3m6" value="提示&quot;更新成功&quot;" style="endArrow=open;endFill=0;dashed=1;html=1;fontSize=11;verticalAlign=bottom;" edge="1" parent="1"><mxGeometry relative="1" as="geometry"><mxPoint x="350" y="1040" as="sourcePoint"/><mxPoint x="110" y="1040" as="targetPoint"/></mxGeometry></mxCell>
+    <mxCell id="g4title" value="删除岗位" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f0f0f0;strokeColor=#333333;fontSize=12;fontStyle=1;verticalAlign=middle;" vertex="1" parent="1"><mxGeometry x="40" y="1120" width="890" height="28" as="geometry"/></mxCell>
+    <mxCell id="g4m1" value="确认删除" style="endArrow=block;endFill=1;html=1;fontSize=11;verticalAlign=bottom;" edge="1" parent="1"><mxGeometry relative="1" as="geometry"><mxPoint x="110" y="1180" as="sourcePoint"/><mxPoint x="350" y="1180" as="targetPoint"/></mxGeometry></mxCell>
+    <mxCell id="g4m2" value="删除" style="endArrow=block;endFill=1;html=1;fontSize=11;verticalAlign=bottom;" edge="1" parent="1"><mxGeometry relative="1" as="geometry"><mxPoint x="350" y="1220" as="sourcePoint"/><mxPoint x="620" y="1220" as="targetPoint"/></mxGeometry></mxCell>
+    <mxCell id="g4m3" value="删除记录" style="endArrow=block;endFill=1;html=1;fontSize=11;verticalAlign=bottom;" edge="1" parent="1"><mxGeometry relative="1" as="geometry"><mxPoint x="620" y="1260" as="sourcePoint"/><mxPoint x="850" y="1260" as="targetPoint"/></mxGeometry></mxCell>
+    <mxCell id="g4m4" value="返回成功" style="endArrow=open;endFill=0;dashed=1;html=1;fontSize=11;verticalAlign=bottom;" edge="1" parent="1"><mxGeometry relative="1" as="geometry"><mxPoint x="850" y="1300" as="sourcePoint"/><mxPoint x="620" y="1300" as="targetPoint"/></mxGeometry></mxCell>
+    <mxCell id="g4m5" value="返回成功" style="endArrow=open;endFill=0;dashed=1;html=1;fontSize=11;verticalAlign=bottom;" edge="1" parent="1"><mxGeometry relative="1" as="geometry"><mxPoint x="620" y="1340" as="sourcePoint"/><mxPoint x="350" y="1340" as="targetPoint"/></mxGeometry></mxCell>
+    <mxCell id="g4m6" value="提示&quot;删除成功&quot;" style="endArrow=open;endFill=0;dashed=1;html=1;fontSize=11;verticalAlign=bottom;" edge="1" parent="1"><mxGeometry relative="1" as="geometry"><mxPoint x="350" y="1380" as="sourcePoint"/><mxPoint x="110" y="1380" as="targetPoint"/></mxGeometry></mxCell>
+    <mxCell id="pb1" value="管理员" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=12;fontStyle=1;" vertex="1" parent="1"><mxGeometry x="60" y="1440" width="100" height="36" as="geometry"/></mxCell>
+    <mxCell id="pb2" value="岗位管理页面" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=12;fontStyle=1;" vertex="1" parent="1"><mxGeometry x="280" y="1440" width="140" height="36" as="geometry"/></mxCell>
+    <mxCell id="pb3" value="后端服务" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=12;fontStyle=1;" vertex="1" parent="1"><mxGeometry x="560" y="1440" width="120" height="36" as="geometry"/></mxCell>
+    <mxCell id="pb4" value="数据库" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=12;fontStyle=1;" vertex="1" parent="1"><mxGeometry x="800" y="1440" width="100" height="36" as="geometry"/></mxCell>
+  </root>
+</mxGraphModel>

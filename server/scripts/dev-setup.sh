@@ -90,7 +90,7 @@ init_seed() {
 
 main() {
     local mode="${1:-init}"
-    log "===== AgentPM 开发环境初始化 ====="
+    log "===== agentPM 开发环境初始化 ====="
     check_deps
     start_containers
     wait_mysql

@@ -55,12 +55,12 @@
         <!-- 表格卡片 -->
         <ElCard shadow="never" class="table-card">
           <div class="table-header">
-            <ElButton type="primary" @click="handleAdd">新增</ElButton>
+            <ElButton v-auth="'add'" type="primary" @click="handleAdd">新增</ElButton>
             <ElButton type="primary" plain @click="handleImport">导入</ElButton>
             <ElButton type="primary" plain @click="handleExport">导出</ElButton>
             <ElButton type="primary" plain :disabled="selectedRows.length === 0" @click="handleBatchSetPosition">设置岗位</ElButton>
             <ElButton type="primary" plain :disabled="selectedRows.length === 0" @click="handleBatchSetRole">设置角色</ElButton>
-            <ElButton type="danger" plain :disabled="selectedRows.length === 0" @click="handleBatchDelete">批量删除</ElButton>
+            <ElButton v-auth="'batch-delete'" type="danger" plain :disabled="selectedRows.length === 0" @click="handleBatchDelete">批量删除</ElButton>
           </div>
 
           <div class="table-container">
@@ -100,8 +100,8 @@
               </ElTableColumn>
               <ElTableColumn label="操作" width="150" align="center" fixed="right">
                 <template #default="{ row }">
-                  <ElButton link type="primary" @click="handleEdit(row)">编辑</ElButton>
-                  <ElButton link type="danger" @click="handleDelete(row)">删除</ElButton>
+                  <ElButton v-auth="'update'" link type="primary" @click="handleEdit(row)">编辑</ElButton>
+                  <ElButton v-auth="'delete'" link type="danger" @click="handleDelete(row)">删除</ElButton>
                 </template>
               </ElTableColumn>
             </ElTable>

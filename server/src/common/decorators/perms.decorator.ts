@@ -26,10 +26,20 @@ export const Perms = (action: string) => SetMetadata(PERMS_ACTION_KEY, action);
  * @returns 权限点字符串（如 'sys:role:delete'）；前缀为空时返回 action 本身
  */
 export function derivePerm(prefix: string, action: string): string {
-  const cleaned = (prefix || '')
-    .replace(/^\/+/, '') // 去开头斜杠
-    .replace(/^admin\//, '') // 去 admin/ 体系前缀
-    .replace(/\/+$/, '') // 去结尾斜杠
-    .replace(/\//g, ':'); // 斜杠转冒号
+  const cleaned = cleanPrefix(prefix);
   return cleaned ? `${cleaned}:${action}` : action;
+}
+
+/**
+ * 清洗 controller 路由前缀为「模块权限段」
+ * 去开头斜杠、去 admin/ 体系前缀、去结尾斜杠、斜杠转冒号。
+ * 如 'admin/sys/dict' → 'sys:dict'，作为该 controller 全部权限点的公共模块前缀。
+ * @param prefix @CrudController/@Controller 的路由前缀
+ */
+export function cleanPrefix(prefix: string): string {
+  return (prefix || '')
+    .replace(/^\/+/, '')
+    .replace(/^admin\//, '')
+    .replace(/\/+$/, '')
+    .replace(/\//g, ':');
 }

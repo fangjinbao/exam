@@ -74,4 +74,24 @@ export class ExamSiteController extends CrudControllerFactory(ExamSiteVo) {
     await this.examSiteService.delete([id]);
     return this.ok(null, '删除考点成功');
   }
+
+  /**
+   * 批量删除考点
+   * 逐个执行删除前引用校验后统一删除。
+   * 覆盖基类 batch-delete：基类直删会绕过 ensureDeletable 引用保护。
+   */
+  @Post('batch-delete')
+  @Perms('batch-delete')
+  @ApiOperation({ summary: '批量删除考点（body: {ids: number[]}）' })
+  @ApiOkVoid()
+  async batchDelete(@Body() body: { ids: number[] }) {
+    if (!body.ids?.length || !body.ids.every((id) => typeof id === 'number')) {
+      return this.fail('ids 格式不正确');
+    }
+    for (const id of body.ids) {
+      await this.examSiteService.ensureDeletable(id);
+    }
+    await this.examSiteService.delete(body.ids);
+    return this.ok(null, `已删除 ${body.ids.length} 个考点`);
+  }
 }

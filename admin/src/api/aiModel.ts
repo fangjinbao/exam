@@ -6,8 +6,8 @@
 
 import request from '@/utils/http'
 
-/** 模型服务商枚举 */
-export type AiModelProvider = '通义千问' | 'DeepSeek' | '智谱' | 'OpenAI' | '其他'
+/** 模型服务商枚举（仅 OpenAI / Anthropic 官方标准接入） */
+export type AiModelProvider = 'OpenAI' | 'Anthropic'
 
 /** 连接状态：正常 / 异常 / 未测试 */
 export type AiModelConnStatus = 'normal' | 'error' | 'unknown'
@@ -25,10 +25,6 @@ export interface AiModel {
   apiUrl: string
   /** 脱敏后的密钥（仅展示，不含完整密钥） */
   apiKeyMasked: string
-  /** 最大并发数 */
-  maxConcurrency?: number | null
-  /** 超时时间（秒） */
-  timeout?: number | null
   /** 启用状态：1 启用 / 0 停用，全局仅一项启用 */
   status: number
   /** 连接状态 */
@@ -44,8 +40,6 @@ export interface AiModelPayload {
   model: string
   apiUrl: string
   apiKey?: string
-  maxConcurrency?: number | null
-  timeout?: number | null
 }
 
 /** AI模型列表分页返回结构 */
@@ -98,9 +92,9 @@ export function enableAiModel(id: number) {
   })
 }
 
-/** 连接测试，返回是否连接成功 */
+/** 连接测试，返回是否连接成功及结果说明 */
 export function testAiModel(id: number) {
-  return request.post<{ success: boolean }>({
+  return request.post<{ success: boolean; message: string }>({
     url: '/admin/sys/ai-model/test',
     data: { id },
     showErrorMessage: false

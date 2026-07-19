@@ -9,7 +9,7 @@ import {
 } from '@nestjs/common';
 import { ApiTags, ApiOperation } from '@nestjs/swagger';
 import { CrudController, CrudControllerFactory } from '@/common/crud';
-import { ApiResult, ApiOkVoid, Perms } from '@/common/decorators';
+import { ApiResult, ApiOkVoid, Perms, OperationLog } from '@/common/decorators';
 import { UserService } from '../services/user.service';
 import { AuthService } from '../services/auth.service';
 import { MoveUserDto, AddUserDto, UpdateUserDto } from '../dto/base.dto';
@@ -66,6 +66,11 @@ export class UserController extends CrudControllerFactory(UserVo) {
   @Post('add')
   @Perms('add')
   @ApiOperation({ summary: '新增用户' })
+  @OperationLog({
+    target: '用户管理',
+    type: '新增',
+    content: ({ body }) => `新增用户「${body?.name || body?.username || ''}」`,
+  })
   @ApiResult(UserVo)
   async add(@Body() dto: AddUserDto) {
     // 角色为关联表数据，需从主表字段中拆出；密码不可明文落库，先做哈希
@@ -91,6 +96,11 @@ export class UserController extends CrudControllerFactory(UserVo) {
   @Put('update')
   @Perms('update')
   @ApiOperation({ summary: '更新用户' })
+  @OperationLog({
+    target: '用户管理',
+    type: '编辑',
+    content: ({ body }) => `编辑用户「${body?.name || body?.username || ''}」`,
+  })
   @ApiOkVoid()
   async update(@Body() dto: UpdateUserDto) {
     // roleIds 是关联表数据，需与用户主表在同一事务内分开处理
@@ -107,6 +117,7 @@ export class UserController extends CrudControllerFactory(UserVo) {
   @Delete('delete/:id')
   @Perms('delete')
   @ApiOperation({ summary: '按 id 删除用户' })
+  @OperationLog({ target: '用户管理', type: '删除', content: '删除用户' })
   @ApiOkVoid()
   async delete(@Param('id', ParseIntPipe) id: number) {
     await this.userService.ensureNoSuperAdmin([id]);
@@ -120,6 +131,11 @@ export class UserController extends CrudControllerFactory(UserVo) {
   @Post('batch-delete')
   @Perms('batch-delete')
   @ApiOperation({ summary: '批量删除用户' })
+  @OperationLog({
+    target: '用户管理',
+    type: '删除',
+    content: ({ body }) => `批量删除用户 ${body?.ids?.length || 0} 个`,
+  })
   @ApiOkVoid()
   async batchDelete(@Body() body: { ids: number[] }) {
     // 仅对合法的数字 ID 做超管校验，格式非法交由基类统一报错
@@ -138,6 +154,7 @@ export class UserController extends CrudControllerFactory(UserVo) {
   @Post('move')
   @Perms('move')
   @ApiOperation({ summary: '移动用户到指定部门' })
+  @OperationLog({ target: '用户管理', type: '编辑', content: '移动用户所属部门' })
   @ApiOkVoid()
   async move(@Body() dto: MoveUserDto) {
     await this.userService.move(dto.userId, dto.departmentId);

@@ -1,7 +1,8 @@
 import { Controller, Get, Put, Body, Query } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiQuery } from '@nestjs/swagger';
 import { BaseController } from '@/common/crud';
-import { ApiPageResult, ApiOkVoid, Perms } from '@/common/decorators';
+import { Req } from '@nestjs/common';
+import { ApiPageResult, ApiOkVoid, Perms, OperationLog } from '@/common/decorators';
 import { ParamConfigService } from '../services/param-config.service';
 import { ParamConfigVo } from '../vo/param-config.vo';
 import { UpdateParamConfigDto } from '../dto/param-config.dto';
@@ -36,10 +37,16 @@ export class ParamConfigController extends BaseController {
   @Put('update')
   @Perms('update')
   @ApiOperation({ summary: '更新参数值' })
+  @OperationLog({
+    type: '编辑',
+    content: ({ body, request }) =>
+      `修改「${request.operationLogExtra?.name || '参数'}」为 ${body?.value}`,
+  })
   @ApiOkVoid()
-  async update(@Body() dto: UpdateParamConfigDto) {
+  async update(@Body() dto: UpdateParamConfigDto, @Req() req: any) {
     const res = await this.paramConfigService.updateValue(dto.id, dto.value);
     if (!res.ok) return this.fail(res.message || '更新失败');
+    req.operationLogExtra = { name: res.name };
     return this.ok();
   }
 }

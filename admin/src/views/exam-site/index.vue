@@ -28,12 +28,35 @@
     <!-- 表格卡片 -->
     <ElCard shadow="never" class="table-card">
       <div class="table-header">
-        <ElButton type="primary" :icon="Plus" @click="handleAdd">新增</ElButton>
+        <ElButton v-auth="'add'" type="primary" :icon="Plus" @click="handleAdd">新增</ElButton>
+        <ElButton
+          v-auth="'batch-delete'"
+          type="danger"
+          plain
+          :icon="Delete"
+          :disabled="!selectedIds.length"
+          @click="handleBatchDelete"
+        >
+          批量删除{{ selectedIds.length ? `(${selectedIds.length})` : '' }}
+        </ElButton>
       </div>
 
       <div class="table-container">
-        <ElTable v-loading="loading" :data="tableData" height="100%" style="width: 100%">
-          <ElTableColumn prop="name" label="考点名称" min-width="180" show-overflow-tooltip />
+        <ElTable
+          v-loading="loading"
+          :data="tableData"
+          height="100%"
+          style="width: 100%"
+          @selection-change="handleSelectionChange"
+        >
+          <ElTableColumn type="selection" width="50" align="center" fixed="left" />
+          <ElTableColumn
+            prop="name"
+            label="考点名称"
+            min-width="180"
+            show-overflow-tooltip
+            fixed="left"
+          />
           <ElTableColumn prop="address" label="考点地址" min-width="220" show-overflow-tooltip>
             <template #default="{ row }">{{ row.address || '-' }}</template>
           </ElTableColumn>
@@ -53,9 +76,10 @@
           </ElTableColumn>
           <ElTableColumn label="操作" width="220" align="center" fixed="right">
             <template #default="{ row }">
-              <ElButton link type="primary" @click="handleEdit(row)">编辑</ElButton>
-              <ElButton link type="danger" @click="handleDelete(row)">删除</ElButton>
+              <ElButton v-auth="'update'" link type="primary" @click="handleEdit(row)">编辑</ElButton>
+              <ElButton v-auth="'delete'" link type="danger" @click="handleDelete(row)">删除</ElButton>
               <ElButton
+                v-auth="'update-status'"
                 link
                 :type="row.status === 1 ? 'warning' : 'success'"
                 @click="handleToggleStatus(row)"
@@ -137,13 +161,15 @@
 <script setup lang="ts">
   import { ref, reactive, computed, onMounted } from 'vue'
   import { ElMessage, ElMessageBox, type FormInstance, type FormRules } from 'element-plus'
-  import { Search, Plus } from '@element-plus/icons-vue'
+  import { Search, Plus, Delete } from '@element-plus/icons-vue'
   import { examSiteApi, type ExamSite } from '@/api/examSite'
 
   defineOptions({ name: 'ExamSite' })
 
   const loading = ref(false)
   const tableData = ref<ExamSite[]>([])
+  // 表格勾选的考点 id（批量删除用）
+  const selectedIds = ref<number[]>([])
 
   // 筛选条件
   const filterForm = reactive<{ keyword: string; status: number | '' }>({
@@ -251,6 +277,34 @@
       loadExamSiteList()
     } catch (error: any) {
       if (error !== 'cancel') ElMessage.error(error.message || '删除失败')
+    }
+  }
+
+  /** 表格勾选变化，记录选中考点 id */
+  function handleSelectionChange(rows: ExamSite[]) {
+    selectedIds.value = rows.map((r) => r.id)
+  }
+
+  /** 批量删除选中的考点 */
+  async function handleBatchDelete() {
+    if (!selectedIds.value.length) return
+    try {
+      await ElMessageBox.confirm(
+        `确定要删除选中的 ${selectedIds.value.length} 个考点吗？删除后不可恢复`,
+        '提示',
+        { type: 'warning' }
+      )
+      const count = selectedIds.value.length
+      await examSiteApi.batchDelete(selectedIds.value)
+      ElMessage.success(`已删除 ${count} 个考点`)
+      // 删除后当前页可能为空，回退一页
+      if (tableData.value.length === count && pagination.page > 1) {
+        pagination.page -= 1
+      }
+      selectedIds.value = []
+      loadExamSiteList()
+    } catch (error: any) {
+      if (error !== 'cancel') ElMessage.error(error.message || '批量删除失败')
     }
   }
 

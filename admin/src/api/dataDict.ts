@@ -56,8 +56,8 @@ export interface DictItemListResult {
   pagination: { page: number; pageSize: number; total: number }
 }
 
-/** 获取字典类型列表（分页） */
-export function getDictTypeList(params?: { page?: number; pageSize?: number }) {
+/** 获取字典类型列表（分页，keyword 模糊匹配名称/编码） */
+export function getDictTypeList(params?: { keyword?: string; page?: number; pageSize?: number }) {
   return request.get<DictTypeListResult>({
     url: '/admin/sys/dict/type/list',
     params,
@@ -65,8 +65,13 @@ export function getDictTypeList(params?: { page?: number; pageSize?: number }) {
   })
 }
 
-/** 获取指定字典类型下的字典项列表（分页） */
-export function getDictItemList(params: { typeId: number; page?: number; pageSize?: number }) {
+/** 获取指定字典类型下的字典项列表（分页，keyword 模糊匹配名称/值） */
+export function getDictItemList(params: {
+  typeId: number
+  keyword?: string
+  page?: number
+  pageSize?: number
+}) {
   return request.get<DictItemListResult>({
     url: '/admin/sys/dict/item/list',
     params,

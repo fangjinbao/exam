@@ -11,7 +11,7 @@ import { headerBarConfig } from './headerBar'
 const appConfig: SystemConfig = {
   // 系统信息
   systemInfo: {
-    name: '智能ai系统' // 系统名称
+    name: 'TS智能AI考试平台' // 系统名称（前端写死，不再从后端获取）
   },
   // 系统主题
   systemThemeStyles: {

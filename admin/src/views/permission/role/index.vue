@@ -26,7 +26,7 @@
     <!-- 表格卡片 -->
     <ElCard shadow="never" class="table-card">
       <div class="table-header">
-        <ElButton type="primary" :icon="Plus" @click="handleAdd">新增</ElButton>
+        <ElButton v-auth="'add'" type="primary" :icon="Plus" @click="handleAdd">新增</ElButton>
       </div>
 
       <div class="table-container">
@@ -38,9 +38,11 @@
           <ElTableColumn prop="createTime" label="创建时间" width="180" />
           <ElTableColumn label="操作" width="250" align="center" fixed="right">
             <template #default="{ row }">
-              <ElButton link type="primary" @click="handleEdit(row)">编辑</ElButton>
-              <ElButton link type="primary" @click="handleAssignPermissions(row)">分配权限</ElButton>
-              <ElButton link type="danger" @click="handleDelete(row)">删除</ElButton>
+              <ElButton v-auth="'update'" link type="primary" @click="handleEdit(row)">编辑</ElButton>
+              <ElButton v-auth="'setMenus'" link type="primary" @click="handleAssignPermissions(row)">
+                分配权限
+              </ElButton>
+              <ElButton v-auth="'delete'" link type="danger" @click="handleDelete(row)">删除</ElButton>
             </template>
           </ElTableColumn>
         </ElTable>

@@ -1,19 +1,18 @@
-import { Controller, Post, Get, Body } from '@nestjs/common';
+import { Controller, Post, Get, Body, Req } from '@nestjs/common';
 import { ApiOperation, ApiTags, ApiOkResponse } from '@nestjs/swagger';
 import { Public } from '@/common/decorators';
 import { Admin } from '@/common/decorators';
+import { resolveClientIp } from '@/common/utils/client-ip.util';
 import { ApiResult, ApiArrayResult, ApiOkVoid } from '@/common/decorators';
 import { BaseController } from '@/common/crud';
 import { AuthService } from '../services/auth.service';
 import { MenuService } from '../services/menu.service';
-import { SysConfigService } from '../services/sys-config.service';
 import { LoginDto, RefreshTokenDto } from '../dto/login.dto';
 import { LoginResultVo, RefreshResultVo, HealthVo, UserVo } from '../vo/base.vo';
-import { SiteInfoVo } from '../vo/site-info.vo';
 
 /**
  * 登录认证控制器
- * 提供无需鉴权的开放接口（健康检查、登录、刷新 token、站点信息）以及登录后的个人信息、权限与菜单查询接口。
+ * 提供无需鉴权的开放接口（健康检查、登录、刷新 token）以及登录后的个人信息、权限与菜单查询接口。
  * 标注 @Public 的接口跳过登录鉴权，其余接口需携带有效 token 访问。
  */
 @ApiTags('登录认证')
@@ -22,22 +21,8 @@ export class OpenController extends BaseController {
   constructor(
     private readonly authService: AuthService,
     private readonly menuService: MenuService,
-    private readonly sysConfigService: SysConfigService,
   ) {
     super();
-  }
-
-  /**
-   * 站点公开信息
-   * 返回系统名称与 Logo，供登录页、全局标题等未登录场景展示，无需鉴权。
-   */
-  @Public()
-  @Get('site-info')
-  @ApiOperation({ summary: '获取站点公开信息（系统名称/Logo）' })
-  @ApiResult(SiteInfoVo)
-  async siteInfo() {
-    const config = await this.sysConfigService.getConfig();
-    return this.ok({ sysName: config.sysName, sysLogo: config.sysLogo });
   }
 
   /**
@@ -60,8 +45,8 @@ export class OpenController extends BaseController {
   @Post('login')
   @ApiOperation({ summary: '登录' })
   @ApiResult(LoginResultVo)
-  async login(@Body() dto: LoginDto) {
-    const result = await this.authService.login(dto.username, dto.password);
+  async login(@Body() dto: LoginDto, @Req() req: any) {
+    const result = await this.authService.login(dto.username, dto.password, resolveClientIp(req));
     return this.ok(result);
   }
 

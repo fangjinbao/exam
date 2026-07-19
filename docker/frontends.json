@@ -1,0 +1,4 @@
+[
+  { "name": "admin", "apiPrefix": "/admin" },
+  { "name": "mobile", "apiPrefix": "/api" }
+]

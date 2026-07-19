@@ -2,8 +2,8 @@ import { AppRouteRecord } from '@/types/router'
 
 /**
  * 外部考生管理路由
- * 一级菜单（单页），维护外部单位考生信息并生成考试账号
- * 父级为 Layout 容器，唯一子项 isHide，侧边栏渲染为单个菜单项
+ * 一级菜单，含「外部单位」「外部考生」两个二级菜单
+ * 默认子项指向外部单位页，与 system.ts 默认页=第一个子页的约定一致
  */
 export const externalCandidateRoutes: AppRouteRecord = {
   path: '/external-candidate',
@@ -18,11 +18,29 @@ export const externalCandidateRoutes: AppRouteRecord = {
     {
       path: '',
       name: 'ExternalCandidateIndex',
-      component: () => import('@/views/external-candidate/index.vue'),
+      component: () => import('@/views/external-org/index.vue'),
       meta: {
-        title: 'menus.externalCandidate.title',
+        title: 'menus.externalCandidate.org',
         keepAlive: true,
         isHide: true
+      }
+    },
+    {
+      path: 'org',
+      name: 'ExternalCandidateOrg',
+      component: () => import('@/views/external-org/index.vue'),
+      meta: {
+        title: 'menus.externalCandidate.org',
+        keepAlive: true
+      }
+    },
+    {
+      path: 'candidate',
+      name: 'ExternalCandidateList',
+      component: () => import('@/views/external-candidate/index.vue'),
+      meta: {
+        title: 'menus.externalCandidate.candidate',
+        keepAlive: true
       }
     }
   ]

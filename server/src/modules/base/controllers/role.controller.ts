@@ -1,7 +1,8 @@
 import { Controller, Post, Get, Body, Param, ParseIntPipe } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiParam, ApiOkResponse } from '@nestjs/swagger';
+import { Req } from '@nestjs/common';
 import { CrudController, CrudControllerFactory } from '@/common/crud';
-import { ApiOkVoid, Perms } from '@/common/decorators';
+import { ApiOkVoid, Perms, OperationLog } from '@/common/decorators';
 import { RoleService } from '../services/role.service';
 import { SetMenusDto } from '../dto/base.dto';
 import { RoleVo } from '../vo/base.vo';
@@ -32,9 +33,15 @@ export class RoleController extends CrudControllerFactory(RoleVo) {
   @Post('setMenus')
   @Perms('setMenus')
   @ApiOperation({ summary: '设置角色菜单权限' })
+  @OperationLog({
+    target: '角色管理',
+    type: '编辑',
+    content: ({ request }) => `调整「${request.operationLogExtra?.roleName || ''}」角色权限`,
+  })
   @ApiOkVoid()
-  async setMenus(@Body() dto: SetMenusDto) {
-    await this.roleService.setMenus(dto.roleId, dto.menuIds);
+  async setMenus(@Body() dto: SetMenusDto, @Req() req: any) {
+    const res = await this.roleService.setMenus(dto.roleId, dto.menuIds);
+    req.operationLogExtra = { roleName: res.roleName };
     return this.ok();
   }
 

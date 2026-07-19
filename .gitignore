@@ -47,6 +47,9 @@ components.d.ts
 # ===== 后端运行时目录 =====
 uploads/
 
+# ===== AI 生图输出 =====
+output/
+
 # ===== Capacitor 原生工程（可由 npx cap add 重新生成）=====
 mobile/android/
 mobile/ios/

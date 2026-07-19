@@ -11,12 +11,9 @@
         <ElInput v-model="form.name" placeholder="请输入配置名称" maxlength="50" show-word-limit />
       </ElFormItem>
       <ElFormItem label="模型服务商" prop="provider">
-        <ElRadioGroup v-model="form.provider">
+        <ElRadioGroup v-model="form.provider" @change="handleProviderChange">
           <ElRadio v-for="p in providers" :key="p" :value="p">{{ p }}</ElRadio>
         </ElRadioGroup>
-      </ElFormItem>
-      <ElFormItem label="模型名称" prop="model">
-        <ElInput v-model="form.model" placeholder="请输入模型名称" maxlength="100" show-word-limit />
       </ElFormItem>
       <ElFormItem label="接口地址" prop="apiUrl">
         <ElInput v-model="form.apiUrl" placeholder="请输入接口地址（http/https）" maxlength="200" />
@@ -30,25 +27,8 @@
           maxlength="200"
         />
       </ElFormItem>
-      <ElFormItem label="最大并发数" prop="maxConcurrency">
-        <ElInputNumber
-          v-model="form.maxConcurrency"
-          :min="1"
-          :precision="0"
-          controls-position="right"
-          placeholder="选填"
-          style="width: 100%"
-        />
-      </ElFormItem>
-      <ElFormItem label="超时时间(秒)" prop="timeout">
-        <ElInputNumber
-          v-model="form.timeout"
-          :min="1"
-          :precision="0"
-          controls-position="right"
-          placeholder="选填"
-          style="width: 100%"
-        />
+      <ElFormItem label="模型名称" prop="model">
+        <ElInput v-model="form.model" placeholder="请输入模型名称，如 gpt-4o、claude-sonnet-4-20250514" maxlength="100" />
       </ElFormItem>
     </ElForm>
     <template #footer>
@@ -66,7 +46,13 @@
 
   const emit = defineEmits<{ success: [] }>()
 
-  const providers: AiModelProvider[] = ['通义千问', 'DeepSeek', '智谱', 'OpenAI', '其他']
+  const providers: AiModelProvider[] = ['OpenAI', 'Anthropic']
+
+  // 各服务商官方默认接口地址（base url），选择服务商时预填，可编辑以走中转/代理
+  const DEFAULT_API_URL: Record<AiModelProvider, string> = {
+    OpenAI: 'https://api.openai.com/v1',
+    Anthropic: 'https://api.anthropic.com/v1'
+  }
 
   const visible = ref(false)
   const isEditing = ref(false)
@@ -79,9 +65,7 @@
     provider: '',
     model: '',
     apiUrl: '',
-    apiKey: '',
-    maxConcurrency: undefined,
-    timeout: undefined
+    apiKey: ''
   })
   const form = reactive<AiModelPayload>(createForm())
 
@@ -124,10 +108,19 @@
       provider: row.provider,
       model: row.model,
       apiUrl: row.apiUrl,
-      apiKey: '',
-      maxConcurrency: row.maxConcurrency ?? undefined,
-      timeout: row.timeout ?? undefined
+      apiKey: ''
     })
+  }
+
+  /** 切换服务商：接口地址为空或仍是其它服务商默认值时，预填当前服务商官方地址 */
+  function handleProviderChange(val: string | number | boolean | undefined) {
+    const provider = val as AiModelProvider
+    const isDefaultUrl = Object.values(DEFAULT_API_URL).includes(form.apiUrl)
+    if (!form.apiUrl || isDefaultUrl) {
+      form.apiUrl = DEFAULT_API_URL[provider]
+    }
+    // 切换服务商后旧模型失效：清空已填模型名，避免提交厂商与模型不匹配的脏数据
+    form.model = ''
   }
 
   async function handleSubmit() {
@@ -139,9 +132,7 @@
         provider: form.provider,
         model: form.model.trim(),
         apiUrl: form.apiUrl.trim(),
-        apiKey: form.apiKey?.trim() || undefined,
-        maxConcurrency: form.maxConcurrency ?? null,
-        timeout: form.timeout ?? null
+        apiKey: form.apiKey?.trim() || undefined
       }
       if (isEditing.value && editingId.value) {
         await aiModelApi.update({ id: editingId.value, ...payload })

@@ -23,12 +23,6 @@ export class AiModelVo {
   @ApiProperty({ description: '脱敏后的密钥（仅展示，不含完整密钥）' })
   apiKeyMasked: string;
 
-  @ApiProperty({ description: '最大并发数', nullable: true })
-  maxConcurrency: number | null;
-
-  @ApiProperty({ description: '超时时间（秒）', nullable: true })
-  timeout: number | null;
-
   @ApiProperty({ description: '启用状态 1=启用 0=停用' })
   status: number;
 
@@ -46,4 +40,13 @@ export class AiModelVo {
 export class AiModelTestVo {
   @ApiProperty({ description: '连接是否成功' })
   success: boolean;
+
+  @ApiProperty({ description: '结果说明（成功提示或失败原因）' })
+  message: string;
+}
+
+/** 模型列表结果 VO */
+export class AiModelListVo {
+  @ApiProperty({ description: '可用模型名称列表', type: [String] })
+  models: string[];
 }

@@ -1,6 +1,6 @@
 /**
  * 操作日志 API
- * 对接 /admin/sys/operation-log/* 接口（原型阶段由 mock/operationLog.ts 提供数据）
+ * 对接 /admin/sys/operation-log/* 接口（真实采集，由后端全局拦截器落库）
  * 操作日志仅支持查看，无新增/编辑/删除
  * 统一关闭 http 层错误提示（showErrorMessage: false），由页面自行控制提示文案
  */

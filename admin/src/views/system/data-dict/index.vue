@@ -4,6 +4,16 @@
     <!-- 左侧：字典类型列表 -->
     <ElCard shadow="never" class="type-card">
       <div class="card-title">字典类型</div>
+      <div class="search-bar">
+        <ElInput
+          v-model="typeKeyword"
+          placeholder="搜索字典类型名称/编码"
+          clearable
+          :prefix-icon="Search"
+          @keyup.enter="handleTypeSearch"
+          @clear="handleTypeSearch"
+        />
+      </div>
       <div class="table-container">
         <ElTable
           v-loading="typeLoading"
@@ -42,9 +52,26 @@
         <div class="card-title">
           {{ selectedType ? `字典项 - ${selectedType.typeName}` : '字典项' }}
         </div>
-        <ElButton type="primary" :icon="Plus" :disabled="!selectedType" @click="handleAddItem">
+        <ElButton
+          v-auth="'item:add'"
+          type="primary"
+          :icon="Plus"
+          :disabled="!selectedType"
+          @click="handleAddItem"
+        >
           新增
         </ElButton>
+      </div>
+      <div class="search-bar">
+        <ElInput
+          v-model="itemKeyword"
+          placeholder="搜索字典项名称/值"
+          clearable
+          :disabled="!selectedType"
+          :prefix-icon="Search"
+          @keyup.enter="handleItemSearch"
+          @clear="handleItemSearch"
+        />
       </div>
       <div class="table-container">
         <ElTable v-loading="itemLoading" :data="itemData" height="100%" style="width: 100%">
@@ -61,8 +88,12 @@
           <!-- 操作按钮：无权限角色不渲染（原型阶段默认有权限） -->
           <ElTableColumn label="操作" width="140" align="center" fixed="right">
             <template #default="{ row }">
-              <ElButton link type="primary" @click="handleEditItem(row)">编辑</ElButton>
-              <ElButton link type="danger" @click="handleDeleteItem(row)">删除</ElButton>
+              <ElButton v-auth="'item:update'" link type="primary" @click="handleEditItem(row)">
+                编辑
+              </ElButton>
+              <ElButton v-auth="'item:delete'" link type="danger" @click="handleDeleteItem(row)">
+                删除
+              </ElButton>
             </template>
           </ElTableColumn>
           <template #empty>{{ selectedType ? '暂无字典项数据' : '请先选择左侧字典类型' }}</template>
@@ -88,7 +119,7 @@
 <script setup lang="ts">
   import { ref, reactive, onMounted } from 'vue'
   import { ElMessage, ElMessageBox } from 'element-plus'
-  import { Plus } from '@element-plus/icons-vue'
+  import { Plus, Search } from '@element-plus/icons-vue'
   import { dataDictApi, type DictType, type DictItem } from '@/api/dataDict'
   import DictItemFormDialog from './components/DictItemFormDialog.vue'
 
@@ -98,12 +129,14 @@
   const typeLoading = ref(false)
   const typeData = ref<DictType[]>([])
   const typePagination = reactive({ page: 1, pageSize: 10, total: 0 })
+  const typeKeyword = ref('')
   const selectedType = ref<DictType | null>(null)
 
   // 右侧字典项
   const itemLoading = ref(false)
   const itemData = ref<DictItem[]>([])
   const itemPagination = reactive({ page: 1, pageSize: 10, total: 0 })
+  const itemKeyword = ref('')
 
   const dialogRef = ref<InstanceType<typeof DictItemFormDialog>>()
 
@@ -112,6 +145,7 @@
     typeLoading.value = true
     try {
       const { data } = await dataDictApi.getTypeList({
+        keyword: typeKeyword.value.trim() || undefined,
         page: typePagination.page,
         pageSize: typePagination.pageSize
       })
@@ -131,6 +165,7 @@
     try {
       const { data } = await dataDictApi.getItemList({
         typeId: selectedType.value.id,
+        keyword: itemKeyword.value.trim() || undefined,
         page: itemPagination.page,
         pageSize: itemPagination.pageSize
       })
@@ -147,6 +182,7 @@
   function handleTypeSelect(row: DictType | null) {
     if (!row) return
     selectedType.value = row
+    itemKeyword.value = ''
     itemPagination.page = 1
     loadDictItemList()
   }
@@ -162,6 +198,19 @@
   }
 
   function handleItemSizeChange() {
+    itemPagination.page = 1
+    loadDictItemList()
+  }
+
+  /** 搜索字典类型：回到第一页重新加载 */
+  function handleTypeSearch() {
+    typePagination.page = 1
+    loadDictTypeList()
+  }
+
+  /** 搜索字典项：需先选中类型，回到第一页重新加载 */
+  function handleItemSearch() {
+    if (!selectedType.value) return
     itemPagination.page = 1
     loadDictItemList()
   }
@@ -258,6 +307,11 @@
 
       .table-header .card-title {
         margin-bottom: 0;
+      }
+
+      .search-bar {
+        flex-shrink: 0;
+        margin-bottom: 12px;
       }
 
       .table-container {

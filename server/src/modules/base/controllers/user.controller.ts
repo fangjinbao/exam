@@ -8,7 +8,7 @@ import {
   ParseIntPipe,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation } from '@nestjs/swagger';
-import { CrudController, CrudControllerFactory } from '@/common/crud';
+import { CrudController, CrudControllerFactory, CrudOptions } from '@/common/crud';
 import { ApiResult, ApiOkVoid, Perms, OperationLog } from '@/common/decorators';
 import { UserService } from '../services/user.service';
 import { AuthService } from '../services/auth.service';
@@ -57,6 +57,28 @@ export class UserController extends CrudControllerFactory(UserVo) {
     private readonly authService: AuthService,
   ) {
     super(userService);
+  }
+
+  /**
+   * 追加多部门筛选：departmentIds 为逗号分隔的部门 ID（如 "3,7,9"）。
+   * 通用 fieldEq 会跳过对象/数组类型，故这里单独转成 Prisma 的 `in` 条件。
+   * 前端负责把选中的父节点展开为完整子树 ID，服务端不再递归。
+   * 与单值 departmentId 并存时以本条件为准（更具体）。
+   */
+  protected buildWhere(
+    query: Record<string, any>,
+    opts: NonNullable<CrudOptions['pageQueryOp']>,
+  ) {
+    const where = super.buildWhere(query, opts);
+    const raw = query.departmentIds;
+    if (typeof raw === 'string' && raw.trim()) {
+      const ids = raw
+        .split(',')
+        .map((s) => Number(s.trim()))
+        .filter((n) => Number.isInteger(n) && n > 0);
+      if (ids.length) where.departmentId = { in: ids };
+    }
+    return where;
   }
 
   /**

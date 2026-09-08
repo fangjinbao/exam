@@ -2,7 +2,7 @@ import { AppRouteRecord } from '@/types/router'
 
 /**
  * 题库管理路由
- * 一级菜单（目录），当前含「知识点分类」二级菜单
+ * 一级菜单（目录），当前含「知识点分类」「题目反馈」二级菜单
  * 父级为 Layout 容器，默认子项指向知识点分类页，与 system.ts 默认页=第一个子页的约定一致
  */
 export const questionBankRoutes: AppRouteRecord = {

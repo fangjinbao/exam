@@ -8,6 +8,7 @@ import { AllExceptionsFilter } from './common/filters/all-exception.filter';
 import { TransformInterceptor } from './common/interceptors/transform.interceptor';
 import { OperationLogInterceptor } from './common/interceptors/operation-log.interceptor';
 import { AuthGuard } from './common/guards/auth.guard';
+import { AppAuthGuard } from './common/guards/app-auth.guard';
 import { PermsGuard } from './common/guards/perms.guard';
 
 /**
@@ -32,7 +33,10 @@ import { PermsGuard } from './common/guards/perms.guard';
     { provide: APP_FILTER, useClass: AllExceptionsFilter },
     { provide: APP_INTERCEPTOR, useClass: TransformInterceptor },
     { provide: APP_INTERCEPTOR, useClass: OperationLogInterceptor },
+    // 鉴权守卫按注册顺序执行：AuthGuard 管 /admin、AppAuthGuard 管 /app，
+    // 两者对不属于自己的前缀直接放行，PermsGuard 最后做权限点校验
     { provide: APP_GUARD, useClass: AuthGuard },
+    { provide: APP_GUARD, useClass: AppAuthGuard },
     { provide: APP_GUARD, useClass: PermsGuard },
   ],
 })

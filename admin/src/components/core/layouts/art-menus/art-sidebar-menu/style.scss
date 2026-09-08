@@ -108,8 +108,15 @@
       height: 100dvh;
     }
 
+    /*
+      菜单在 ElScrollbar 里面，高度必须由内容决定。
+      原来写 height: 100% 会把菜单钉死成滚动视口的高度，内容再多也不溢出，
+      滚动条因此不出现，超出的菜单项被 el-menu 自身的 overflow 裁掉且滚不到。
+      改 min-height 保留「菜单项少时底色铺满」的效果，同时允许向下长出去。
+    */
     .el-menu {
-      height: 100%;
+      min-height: 100%;
+      border-right: none;
     }
   }
 

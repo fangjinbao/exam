@@ -221,6 +221,17 @@ html.dark .el-card {
       color: var(--art-gray-900) !important;
       background-color: var(--art-gray-200) !important;
     }
+
+    // 破坏性操作项（如删除）：警示色，与普通项区分
+    &.is-danger:not(.is-disabled) {
+      color: var(--el-color-danger) !important;
+
+      &:hover,
+      &:focus {
+        color: var(--el-color-danger) !important;
+        background-color: var(--el-color-danger-light-9) !important;
+      }
+    }
   }
 }
 
@@ -293,6 +304,35 @@ html.dark .el-card {
 // 弹窗 footer 按钮间距
 .el-dialog__footer .el-button + .el-button {
   margin-left: 12px !important;
+}
+
+// 操作列容器（列上加 class-name="table-actions" 启用）：
+// 1) 按钮被 ElTooltip 的 span 包裹后，下方 .is-link + .is-link 相邻选择器失效，
+//    故改由 flex gap 统一控制间距，裸按钮与 span 包裹的按钮都适用；
+// 2) 左对齐而非居中：按钮数量常随行状态/权限变化（如仅草稿有「发布」、
+//    仅创建人有「共享」），居中会让相邻行的同名按钮左右错开，难以纵向对齐。
+// 3) wrap 而非 nowrap：按钮数随权限/行状态变化，列宽临界时会溢出。
+//    折行的代价只是行高跳动，按钮仍然可点；nowrap 则直接裁切——按钮看不见也点不到，
+//    用户不知道它存在，比行高不齐严重得多。
+//    真要单行整齐，应先按 paper/index.vue 的范式把低频操作收进「更多」下拉，
+//    确认各页面都放得下之后再改 nowrap，不能反过来先裁切再等人发现。
+.el-table .table-actions .cell {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 10px;
+}
+
+// gap 已统一控制间距，抵消下方 .is-link + .is-link 的 margin，避免两者叠加成 22px
+.el-table .table-actions .cell .el-button.is-link + .el-button.is-link {
+  margin-left: 0 !important;
+}
+
+// 操作列内被 tooltip 包裹的按钮：span 默认 inline，作为 flex item 时高度对不齐
+.el-table .table-actions .cell > span {
+  display: inline-flex;
+  align-items: center;
 }
 
 // 表格操作列 link 按钮间距（is-link 是实际 class）

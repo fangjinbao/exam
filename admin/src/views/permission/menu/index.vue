@@ -72,7 +72,7 @@
               />
             </template>
           </ElTableColumn>
-          <ElTableColumn label="操作" width="200" align="center" fixed="right">
+          <ElTableColumn label="操作" width="200" align="left" fixed="right" class-name="table-actions">
             <template #default="{ row }">
               <ElButton v-auth="'add'" link type="primary" @click="handleAdd(row.id)">新增</ElButton>
               <ElButton v-auth="'update'" link type="primary" @click="handleEdit(row)">编辑</ElButton>

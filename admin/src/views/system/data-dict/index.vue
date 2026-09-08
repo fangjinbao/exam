@@ -86,7 +86,7 @@
             </template>
           </ElTableColumn>
           <!-- 操作按钮：无权限角色不渲染（原型阶段默认有权限） -->
-          <ElTableColumn label="操作" width="140" align="center" fixed="right">
+          <ElTableColumn label="操作" width="140" align="left" fixed="right" class-name="table-actions">
             <template #default="{ row }">
               <ElButton v-auth="'item:update'" link type="primary" @click="handleEditItem(row)">
                 编辑

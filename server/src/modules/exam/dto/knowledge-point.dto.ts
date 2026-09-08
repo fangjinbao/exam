@@ -3,7 +3,7 @@ import { ApiProperty } from '@nestjs/swagger';
 
 /**
  * 新增知识点分类接口入参
- * 名称必填；父级为空表示顶级节点；排序、备注可选。
+ * 名称必填；父级为空表示顶级节点；编号、排序、备注可选（编号留空时由后端生成）。
  */
 export class CreateKnowledgePointDto {
   @ApiProperty({ description: '父级知识点 ID（顶级不传或传 null）', required: false })
@@ -11,6 +11,12 @@ export class CreateKnowledgePointDto {
   @IsInt()
   @IsPositive()
   parentId?: number;
+
+  @ApiProperty({ description: '知识点编号（≤30 字，全局唯一；留空自动生成）', required: false })
+  @IsOptional()
+  @IsString()
+  @MaxLength(30, { message: '知识点编号不超过 30 字' })
+  code?: string;
 
   @ApiProperty({ description: '知识点名称（≤100 字）' })
   @IsString()

@@ -20,6 +20,28 @@ const ACTION_LABELS: Record<string, string> = {
   export: '导出',
   setMenus: '分配权限',
   getMenus: '读取权限',
+  publish: '发布',
+  withdraw: '撤回',
+  finish: '结束',
+  'assign-participants': '分配人员',
+  share: '共享设置',
+  audit: '审核',
+  review: '复核',
+  handle: '处理',
+  assign: '安排',
+  'reset-password': '重置密码',
+  enable: '启用',
+  test: '测试',
+  // 监考中心：强制交卷与解锁续答共用 force-submit（都是改答卷提交状态），
+  // 清空重考单独用 reset（破坏性，需能单独授权）
+  'force-submit': '强制交卷',
+  reset: '清空重考',
+  // 鉴定报名：单位管理员按名额报人／撤销未审的报名
+  submit: '提交报名',
+  cancel: '撤销报名',
+  // 报名审核的批量口。单条审核沿用 review（标签是「复核」——该键被阅卷复核共用，
+  // ACTION_LABELS 只按动作名索引、区分不了模块，改它会把阅卷那边也带歪）
+  'review-batch': '批量审核',
 };
 
 /** 自动发现到的单个权限点 */

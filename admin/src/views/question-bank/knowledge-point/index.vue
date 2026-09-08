@@ -21,10 +21,17 @@
           empty-text="暂无知识点数据"
         >
           <ElTableColumn prop="name" label="知识点名称" min-width="240" show-overflow-tooltip />
+          <ElTableColumn prop="code" label="知识点编号" min-width="150" show-overflow-tooltip />
           <ElTableColumn prop="orderNum" label="排序" width="100" align="center" />
           <ElTableColumn prop="remark" label="备注" min-width="200" show-overflow-tooltip />
           <ElTableColumn prop="createTime" label="创建时间" width="180" />
-          <ElTableColumn label="操作" width="220" align="center" fixed="right">
+          <ElTableColumn
+            label="操作"
+            width="220"
+            align="left"
+            fixed="right"
+            class-name="table-actions"
+          >
             <template #default="{ row }">
               <ElButton v-auth="'add'" link type="primary" @click="handleAdd(row.id)">
                 新增子级
@@ -52,6 +59,14 @@
             v-model="form.name"
             placeholder="请输入知识点名称"
             maxlength="100"
+            show-word-limit
+          />
+        </ElFormItem>
+        <ElFormItem label="知识点编号" prop="code">
+          <ElInput
+            v-model="form.code"
+            placeholder="留空由系统自动生成"
+            maxlength="30"
             show-word-limit
           />
         </ElFormItem>
@@ -101,12 +116,14 @@
   const form = reactive<{
     id?: number
     parentId: number | null
+    code: string
     name: string
     orderNum: number
     remark: string
   }>({
     id: undefined,
     parentId: null,
+    code: '',
     name: '',
     orderNum: 0,
     remark: ''
@@ -116,7 +133,9 @@
     name: [
       { required: true, message: '请输入知识点名称', trigger: 'blur' },
       { max: 100, message: '知识点名称不超过 100 字', trigger: 'blur' }
-    ]
+    ],
+    // 编号非必填（留空由后端生成），只约束长度
+    code: [{ max: 30, message: '知识点编号不超过 30 字', trigger: 'blur' }]
   }
 
   // 在树中按 id 查找节点名称，用于新增子级时回显上级
@@ -174,6 +193,7 @@
     Object.assign(form, {
       id: row.id,
       parentId: row.parentId,
+      code: row.code ?? '',
       name: row.name,
       orderNum: row.orderNum ?? 0,
       remark: row.remark ?? ''
@@ -197,6 +217,8 @@
       await formRef.value?.validate()
       submitLoading.value = true
       const payload = {
+        // 编号留空时不传，交由后端生成（编辑场景则保持原编号不变）
+        code: form.code.trim() || undefined,
         name: form.name,
         orderNum: form.orderNum,
         remark: form.remark || undefined
@@ -223,6 +245,7 @@
     Object.assign(form, {
       id: undefined,
       parentId: null,
+      code: '',
       name: '',
       orderNum: 0,
       remark: ''

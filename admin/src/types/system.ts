@@ -49,32 +49,9 @@ export interface SiteConfig {
 }
 
 /**
- * 证书模板
+ * 证书模板类型统一以 API 层为准，避免类型来源分裂（对齐 SRS 3.5.7.1）
  */
-export interface CertificateTemplate {
-  /** 模板ID */
-  id: number
-  /** 模板名称 */
-  name: string
-  /** 描述 */
-  description?: string
-  /** 证书尺寸：1-A4横版 2-A4竖版 */
-  size: number
-  /** 背景图片URL */
-  backgroundImage: string
-  /** 模板内容（JSON格式） */
-  content: string
-  /** 创建人ID */
-  creatorId?: number
-  /** 创建人姓名 */
-  creatorName?: string
-  /** 创建时间 */
-  createTime: string
-  /** 更新时间 */
-  updateTime?: string
-  /** 状态 */
-  status: StatusEnum
-}
+export type { CertificateTemplate } from '@/api/certificateTemplate'
 
 /**
  * 证书模板查询参数

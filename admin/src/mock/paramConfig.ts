@@ -9,16 +9,6 @@
 // ==================== 参数数据 ====================
 export const mockParamConfigs = [
   {
-    id: 1,
-    name: '录像保留期限(天)',
-    value: '30',
-    description: '监考录像的自动保留天数，超期后系统自动清理，取值范围 1-365',
-    valueType: 'int',
-    min: 1,
-    max: 365,
-    updateTime: '2026-06-01 09:00:00'
-  },
-  {
     id: 2,
     name: '考试自动交卷提前提醒时间(分钟)',
     value: '5',

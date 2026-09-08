@@ -14,9 +14,25 @@
   /* 背景色 */
   --bg-page: #f2f3f5;
   --bg-card: #ffffff;
+  /* 填充底色：选项块、图标按钮等「非卡片」的浅灰填充 */
+  --bg-fill: #f5f6f8;
+  /* 主色浅底：选中态选项、倒计时胶囊等主色弱化背景 */
+  --primary-light: #eef3fe;
+  /* 状态浅底：成绩标签、答案标注等「浅底 + 同色字」的组合 */
+  --success-light: #eaf9ef;
+  --danger-light: #fdeeee;
+
+  /*
+    未达标色。及格判定不用 --danger-color 的红：红色读作「系统出错」，
+    而「未及格」是未达标，语义不同，故单列一档橙色及其浅底。
+  */
+  --unqualified-color: #e8833a;
+  --unqualified-light: #fff3e8;
 
   /* 边框色 */
   --border-color: #e5e6eb;
+  /* 分隔线：比 --border-color 更浅，用于卡片内部分栏（控件描边色压在卡内偏重） */
+  --divider-color: #f0f2f5;
 
   /* 间距 */
   --spacing-xs: 0.107rem; /* 4px */

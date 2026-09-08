@@ -23,6 +23,7 @@
     xAxisData: () => [],
     barWidth: '36%',
     stack: false,
+    showDataLabel: false,
 
     // 轴线显示配置
     showAxisLabel: true,
@@ -105,6 +106,18 @@
       stack: config.stack,
       itemStyle: getBaseItemStyle(config.color),
       barWidth: config.barWidth || props.barWidth,
+      label: {
+        // 横向图的数值挂在条的右端
+        show: props.showDataLabel,
+        position: 'right' as const,
+        // 复用图表统一的文字色，与坐标轴标签、其他图表的数值标签同一套
+        color: useChartOps().fontColor,
+        fontSize: 12,
+        formatter: (params: unknown) => {
+          const value = Number((params as Record<string, unknown>).value) || 0
+          return props.dataLabelFormatter ? props.dataLabelFormatter(value) : String(value)
+        }
+      },
       ...animationConfig
     }
   }
@@ -140,12 +153,25 @@
 
       return true
     },
-    watchSources: [() => props.data, () => props.xAxisData, () => props.colors],
+    /*
+      showDataLabel / dataLabelFormatter 必须在监听里。
+
+      它们参与 generateOptions，不监听就只能靠 data 恰好同时变化来间接重绘——
+      调用方若单独切换「显示数值」开关（data 引用不变），标签将完全不响应。
+    */
+    watchSources: [
+      () => props.data,
+      () => props.xAxisData,
+      () => props.colors,
+      () => props.showDataLabel,
+      () => props.dataLabelFormatter
+    ],
     generateOptions: (): EChartsOption => {
       const options: EChartsOption = {
         grid: getGridWithLegend(props.showLegend && isMultipleData.value, props.legendPosition, {
           top: 15,
-          right: 0,
+          // 开数值标签时右侧留出标签宽度，否则最长的那根条的数值会溢出画布
+          right: props.showDataLabel ? 44 : 0,
           left: 0
         }),
         tooltip: props.showTooltip ? getTooltipStyle() : undefined,

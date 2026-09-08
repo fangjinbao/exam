@@ -39,11 +39,11 @@ export class KnowledgePointController extends CrudControllerFactory(KnowledgePoi
 
   /**
    * 新增知识点分类
-   * 指定父级时校验父级存在。
+   * 指定父级时校验父级存在；编号留空则自动生成，填写则校验唯一后创建。
    */
   @Post('add')
   @Perms('add')
-  @ApiOperation({ summary: '新增知识点分类' })
+  @ApiOperation({ summary: '新增知识点分类（编号留空自动生成）' })
   @OperationLog({
     target: '知识点分类',
     type: '新增',
@@ -54,17 +54,26 @@ export class KnowledgePointController extends CrudControllerFactory(KnowledgePoi
     if (dto.parentId && !(await this.knowledgePointService.isParentExists(dto.parentId))) {
       return this.fail('父级知识点不存在');
     }
-    const created = await this.knowledgePointService.add(dto);
+    let code = dto.code?.trim();
+    if (code) {
+      if (await this.knowledgePointService.isCodeExists(code)) {
+        return this.fail(`知识点编号【${code}】已存在，请更换`);
+      }
+    } else {
+      code = await this.knowledgePointService.generateCode();
+    }
+    const created = await this.knowledgePointService.add({ ...dto, code });
     return this.ok(created, '新增知识点分类成功');
   }
 
   /**
    * 更新知识点分类
-   * 校验父级存在，且不能将自身设为父级（避免自引用成环）。
+   * 校验父级存在且不能将自身设为父级（避免自引用成环）；编号校验唯一（排除自身），
+   * 留空则保持原值不变（不重新生成，避免编辑其他字段时编号被悄悄换掉）。
    */
   @Put('update')
   @Perms('update')
-  @ApiOperation({ summary: '更新知识点分类' })
+  @ApiOperation({ summary: '更新知识点分类（校验编号唯一）' })
   @OperationLog({
     target: '知识点分类',
     type: '编辑',
@@ -72,14 +81,22 @@ export class KnowledgePointController extends CrudControllerFactory(KnowledgePoi
   })
   @ApiOkVoid()
   async update(@Body() dto: UpdateKnowledgePointDto) {
-    const { id, ...data } = dto;
+    const { id, code, ...data } = dto;
     if (data.parentId === id) {
       return this.fail('父级知识点不能是自身');
     }
     if (data.parentId && !(await this.knowledgePointService.isParentExists(data.parentId))) {
       return this.fail('父级知识点不存在');
     }
-    await this.knowledgePointService.update(id, data);
+    const trimmedCode = code?.trim();
+    if (trimmedCode && (await this.knowledgePointService.isCodeExists(trimmedCode, id))) {
+      return this.fail(`知识点编号【${trimmedCode}】已存在，请更换`);
+    }
+    await this.knowledgePointService.update(id, {
+      ...data,
+      // 编号留空时不覆盖原值（保持编辑前的编号）
+      ...(trimmedCode ? { code: trimmedCode } : {}),
+    });
     return this.ok(null, '编辑知识点分类成功');
   }
 

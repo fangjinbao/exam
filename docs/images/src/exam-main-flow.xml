@@ -1,0 +1,186 @@
+<mxGraphModel dx="1422" dy="762" grid="0" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="0" pageScale="1" pageWidth="1654" pageHeight="1169" math="0" shadow="0">
+  <root>
+    <mxCell id="0"/>
+    <mxCell id="1" parent="0"/>
+
+    <!-- 外层容器 -->
+    <mxCell id="2" value="考试系统业务流程" style="swimlane;startSize=36;fillColor=#f5f5f5;strokeColor=#666666;fontColor=#333333;fontSize=15;fontStyle=1;horizontal=1;" vertex="1" parent="1">
+      <mxGeometry x="40" y="40" width="1320" height="700" as="geometry"/>
+    </mxCell>
+
+    <!-- 泳道：管理员 -->
+    <mxCell id="10" value="管理员" style="swimlane;startSize=30;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=13;fontStyle=1;horizontal=0;" vertex="1" parent="2">
+      <mxGeometry x="0" y="36" width="1320" height="160" as="geometry"/>
+    </mxCell>
+
+    <!-- 泳道：考生 -->
+    <mxCell id="20" value="考生" style="swimlane;startSize=30;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=13;fontStyle=1;horizontal=0;" vertex="1" parent="2">
+      <mxGeometry x="0" y="196" width="1320" height="160" as="geometry"/>
+    </mxCell>
+
+    <!-- 泳道：系统自动 -->
+    <mxCell id="30" value="系统（自动）" style="swimlane;startSize=30;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=13;fontStyle=1;horizontal=0;" vertex="1" parent="2">
+      <mxGeometry x="0" y="356" width="1320" height="160" as="geometry"/>
+    </mxCell>
+
+    <!-- 泳道：鉴定负责人 -->
+    <mxCell id="40" value="鉴定负责人" style="swimlane;startSize=30;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=13;fontStyle=1;horizontal=0;" vertex="1" parent="2">
+      <mxGeometry x="0" y="516" width="1320" height="148" as="geometry"/>
+    </mxCell>
+
+    <!-- ===== 管理员泳道节点 ===== -->
+    <!-- 开始 -->
+    <mxCell id="11" value="开始" style="ellipse;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=12;" vertex="1" parent="10">
+      <mxGeometry x="40" y="60" width="80" height="40" as="geometry"/>
+    </mxCell>
+    <!-- 创建题库+试卷 -->
+    <mxCell id="12" value="创建题库&#xa;编辑题目" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=12;" vertex="1" parent="10">
+      <mxGeometry x="160" y="55" width="110" height="50" as="geometry"/>
+    </mxCell>
+    <!-- 组卷发布 -->
+    <mxCell id="13" value="组卷并发布试卷" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=12;" vertex="1" parent="10">
+      <mxGeometry x="310" y="55" width="120" height="50" as="geometry"/>
+    </mxCell>
+    <!-- 创建考试 -->
+    <mxCell id="14" value="创建考试" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=12;" vertex="1" parent="10">
+      <mxGeometry x="470" y="55" width="100" height="50" as="geometry"/>
+    </mxCell>
+    <!-- 判断考试类型 -->
+    <mxCell id="15" value="考试类型？" style="rhombus;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=12;" vertex="1" parent="10">
+      <mxGeometry x="610" y="45" width="110" height="70" as="geometry"/>
+    </mxCell>
+    <!-- 普通：分配考生 -->
+    <mxCell id="16" value="分配考生" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=12;" vertex="1" parent="10">
+      <mxGeometry x="610" y="5" width="110" height="40" as="geometry"/>
+    </mxCell>
+    <!-- 鉴定：绑定项目 -->
+    <mxCell id="17" value="绑定鉴定项目&#xa;(自动带入名单)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" vertex="1" parent="10">
+      <mxGeometry x="610" y="110" width="110" height="40" as="geometry"/>
+    </mxCell>
+    <!-- 发布考试 -->
+    <mxCell id="18" value="发布考试" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=12;" vertex="1" parent="10">
+      <mxGeometry x="770" y="55" width="100" height="50" as="geometry"/>
+    </mxCell>
+    <!-- 阅卷发布成绩 -->
+    <mxCell id="19" value="主观题阅卷&#xa;发布成绩" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=12;" vertex="1" parent="10">
+      <mxGeometry x="1060" y="55" width="110" height="50" as="geometry"/>
+    </mxCell>
+    <!-- 结束 -->
+    <mxCell id="19b" value="结束" style="ellipse;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=12;" vertex="1" parent="10">
+      <mxGeometry x="1220" y="60" width="80" height="40" as="geometry"/>
+    </mxCell>
+
+    <!-- ===== 考生泳道节点 ===== -->
+    <mxCell id="21" value="登录系统" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=12;" vertex="1" parent="20">
+      <mxGeometry x="160" y="60" width="100" height="40" as="geometry"/>
+    </mxCell>
+    <mxCell id="22" value="进入考试&#xa;（提前/正式进场）" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" vertex="1" parent="20">
+      <mxGeometry x="310" y="55" width="120" height="50" as="geometry"/>
+    </mxCell>
+    <mxCell id="23" value="答题并提交" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=12;" vertex="1" parent="20">
+      <mxGeometry x="470" y="60" width="110" height="40" as="geometry"/>
+    </mxCell>
+    <mxCell id="24" value="查看成绩与解析" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=12;" vertex="1" parent="20">
+      <mxGeometry x="1060" y="55" width="120" height="50" as="geometry"/>
+    </mxCell>
+    <mxCell id="25" value="领取证书" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=12;" vertex="1" parent="20">
+      <mxGeometry x="1220" y="60" width="80" height="40" as="geometry"/>
+    </mxCell>
+
+    <!-- ===== 系统自动泳道节点 ===== -->
+    <mxCell id="31" value="考试开始&#xa;→ 进行中" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=12;" vertex="1" parent="30">
+      <mxGeometry x="770" y="55" width="110" height="50" as="geometry"/>
+    </mxCell>
+    <mxCell id="32" value="考试结束&#xa;→ 已结束" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=12;" vertex="1" parent="30">
+      <mxGeometry x="920" y="55" width="110" height="50" as="geometry"/>
+    </mxCell>
+    <mxCell id="33" value="纯客观题？" style="rhombus;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=12;" vertex="1" parent="30">
+      <mxGeometry x="617" y="45" width="110" height="70" as="geometry"/>
+    </mxCell>
+    <mxCell id="34" value="自动判分&#xa;自动发布成绩" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=12;" vertex="1" parent="30">
+      <mxGeometry x="617" y="5" width="110" height="40" as="geometry"/>
+    </mxCell>
+    <mxCell id="35" value="及格+开启发证&#xa;→ 自动发证" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=12;" vertex="1" parent="30">
+      <mxGeometry x="1060" y="55" width="120" height="50" as="geometry"/>
+    </mxCell>
+
+    <!-- ===== 鉴定负责人泳道节点 ===== -->
+    <mxCell id="41" value="创建并发布&#xa;鉴定项目" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=12;" vertex="1" parent="40">
+      <mxGeometry x="40" y="54" width="120" height="50" as="geometry"/>
+    </mxCell>
+    <mxCell id="42" value="设置名额配置" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=12;" vertex="1" parent="40">
+      <mxGeometry x="200" y="54" width="120" height="50" as="geometry"/>
+    </mxCell>
+    <mxCell id="43" value="审核报名申请" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=12;" vertex="1" parent="40">
+      <mxGeometry x="360" y="54" width="120" height="50" as="geometry"/>
+    </mxCell>
+    <mxCell id="44" value="查看考试安排" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=12;" vertex="1" parent="40">
+      <mxGeometry x="760" y="54" width="120" height="50" as="geometry"/>
+    </mxCell>
+
+    <!-- ===== 连线 ===== -->
+    <!-- 管理员主流程 -->
+    <mxCell id="e1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;" edge="1" source="11" target="12" parent="10"><mxGeometry relative="1" as="geometry"/></mxCell>
+    <mxCell id="e2" style="edgeStyle=orthogonalEdgeStyle;rounded=0;" edge="1" source="12" target="13" parent="10"><mxGeometry relative="1" as="geometry"/></mxCell>
+    <mxCell id="e3" style="edgeStyle=orthogonalEdgeStyle;rounded=0;" edge="1" source="13" target="14" parent="10"><mxGeometry relative="1" as="geometry"/></mxCell>
+    <mxCell id="e4" style="edgeStyle=orthogonalEdgeStyle;rounded=0;" edge="1" source="14" target="15" parent="10"><mxGeometry relative="1" as="geometry"/></mxCell>
+    <mxCell id="e5" value="普通考试" style="edgeStyle=orthogonalEdgeStyle;rounded=0;exitX=0.5;exitY=0;exitDx=0;exitDy=0;" edge="1" source="15" target="16" parent="10"><mxGeometry relative="1" as="geometry"/></mxCell>
+    <mxCell id="e6" value="技能鉴定" style="edgeStyle=orthogonalEdgeStyle;rounded=0;exitX=0.5;exitY=1;exitDx=0;exitDy=0;" edge="1" source="15" target="17" parent="10"><mxGeometry relative="1" as="geometry"/></mxCell>
+    <mxCell id="e7" style="edgeStyle=orthogonalEdgeStyle;rounded=0;" edge="1" source="16" target="18" parent="10"><mxGeometry relative="1" as="geometry"/></mxCell>
+    <mxCell id="e8" style="edgeStyle=orthogonalEdgeStyle;rounded=0;" edge="1" source="17" target="18" parent="10"><mxGeometry relative="1" as="geometry"/></mxCell>
+    <mxCell id="e9" style="edgeStyle=orthogonalEdgeStyle;rounded=0;" edge="1" source="19" target="19b" parent="10"><mxGeometry relative="1" as="geometry"/></mxCell>
+
+    <!-- 考生流程 -->
+    <mxCell id="e20" style="edgeStyle=orthogonalEdgeStyle;rounded=0;" edge="1" source="21" target="22" parent="20"><mxGeometry relative="1" as="geometry"/></mxCell>
+    <mxCell id="e21" style="edgeStyle=orthogonalEdgeStyle;rounded=0;" edge="1" source="22" target="23" parent="20"><mxGeometry relative="1" as="geometry"/></mxCell>
+    <mxCell id="e22" style="edgeStyle=orthogonalEdgeStyle;rounded=0;" edge="1" source="24" target="25" parent="20"><mxGeometry relative="1" as="geometry"/></mxCell>
+
+    <!-- 系统自动流程 -->
+    <mxCell id="e30" style="edgeStyle=orthogonalEdgeStyle;rounded=0;" edge="1" source="33" target="34" parent="30"><mxGeometry relative="1" as="geometry"/></mxCell>
+    <mxCell id="e31" style="edgeStyle=orthogonalEdgeStyle;rounded=0;" edge="1" source="31" target="32" parent="30"><mxGeometry relative="1" as="geometry"/></mxCell>
+    <mxCell id="e32" style="edgeStyle=orthogonalEdgeStyle;rounded=0;" edge="1" source="32" target="33" parent="30"><mxGeometry relative="1" as="geometry"/></mxCell>
+
+    <!-- 鉴定负责人流程 -->
+    <mxCell id="e40" style="edgeStyle=orthogonalEdgeStyle;rounded=0;" edge="1" source="41" target="42" parent="40"><mxGeometry relative="1" as="geometry"/></mxCell>
+    <mxCell id="e41" style="edgeStyle=orthogonalEdgeStyle;rounded=0;" edge="1" source="42" target="43" parent="40"><mxGeometry relative="1" as="geometry"/></mxCell>
+
+    <!-- 跨泳道连线（从容器2出发，parent=2） -->
+    <!-- 管理员发布考试 → 系统开始计时 -->
+    <mxCell id="ec1" value="发布" style="edgeStyle=orthogonalEdgeStyle;rounded=0;dashed=1;strokeColor=#9673a6;" edge="1" source="18" target="31" parent="2">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <!-- 考生提交答卷 → 系统判断题型 -->
+    <mxCell id="ec2" value="提交" style="edgeStyle=orthogonalEdgeStyle;rounded=0;dashed=1;strokeColor=#9673a6;" edge="1" source="23" target="33" parent="2">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <!-- 系统自动发布成绩 → 考生查看 -->
+    <mxCell id="ec3" value="成绩发布" style="edgeStyle=orthogonalEdgeStyle;rounded=0;dashed=1;strokeColor=#82b366;" edge="1" source="34" target="24" parent="2">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <!-- 管理员发布成绩 → 考生查看 -->
+    <mxCell id="ec4" value="发布成绩" style="edgeStyle=orthogonalEdgeStyle;rounded=0;dashed=1;strokeColor=#82b366;" edge="1" source="19" target="24" parent="2">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <!-- 系统自动发证 → 考生领证 -->
+    <mxCell id="ec5" value="自动发证" style="edgeStyle=orthogonalEdgeStyle;rounded=0;dashed=1;strokeColor=#82b366;" edge="1" source="35" target="25" parent="2">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <!-- 含主观题 → 管理员阅卷 -->
+    <mxCell id="ec6" value="含主观题" style="edgeStyle=orthogonalEdgeStyle;rounded=0;dashed=1;strokeColor=#6c8ebf;" edge="1" source="33" target="19" parent="2">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <!-- 系统及格发证 -->
+    <mxCell id="ec7" value="成绩发布" style="edgeStyle=orthogonalEdgeStyle;rounded=0;dashed=1;strokeColor=#9673a6;" edge="1" source="34" target="35" parent="2">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <!-- 鉴定负责人审核通过 → 管理员绑定项目 -->
+    <mxCell id="ec8" value="审核通过" style="edgeStyle=orthogonalEdgeStyle;rounded=0;dashed=1;strokeColor=#d6b656;" edge="1" source="43" target="17" parent="2">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <!-- 考生进场 需要考试已发布 -->
+    <mxCell id="ec9" value="考试进行中" style="edgeStyle=orthogonalEdgeStyle;rounded=0;dashed=1;strokeColor=#82b366;" edge="1" source="31" target="22" parent="2">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+
+  </root>
+</mxGraphModel>

@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64" role="img" aria-label="智能AI考试平台">
+  <defs>
+    <linearGradient id="logoRing" x1="11.947" y1="50.335" x2="50.347" y2="17.079" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#00C7FF"/>
+      <stop offset="1" stop-color="#0085FF"/>
+    </linearGradient>
+    <radialGradient id="logoGlow" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0" stop-color="#FFA51F" stop-opacity=".5"/>
+      <stop offset="0.55" stop-color="#FFA51F" stop-opacity=".16"/>
+      <stop offset="1" stop-color="#FFA51F" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+
+  <!-- 平顶正六边形环：中心 (31.147, 33.707)，外接圆 R=19.2，R*sin60=16.628 -->
+  <polygon
+    points="50.347,33.707 40.747,17.079 21.547,17.079 11.947,33.707 21.547,50.335 40.747,50.335"
+    fill="none"
+    stroke="url(#logoRing)"
+    stroke-width="4.48"
+    stroke-linejoin="round"
+  />
+
+  <!-- 五个常规节点：r = 0.8 × 描边宽，直径为描边 1.6 倍才咬得出来 -->
+  <g fill="url(#logoRing)">
+    <circle cx="50.347" cy="33.707" r="3.584"/>
+    <circle cx="21.547" cy="17.079" r="3.584"/>
+    <circle cx="11.947" cy="33.707" r="3.584"/>
+    <circle cx="21.547" cy="50.335" r="3.584"/>
+    <circle cx="40.747" cy="50.335" r="3.584"/>
+  </g>
+
+  <!-- 右上顶点：被点亮的强调节点 -->
+  <circle cx="40.747" cy="17.079" r="8.107" fill="url(#logoGlow)"/>
+  <circle cx="40.747" cy="17.079" r="4.352" fill="#FFA51F"/>
+
+  <!-- 四角星闪光 -->
+  <path
+    d="M53.12,9.813 L54.187,12.586 L56.96,13.653 L54.187,14.72 L53.12,17.493 L52.053,14.72 L49.28,13.653 L52.053,12.586Z"
+    fill="#FFA51F"
+  />
+</svg>

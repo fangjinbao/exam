@@ -8,7 +8,7 @@
 export enum PracticeTypeEnum {
   /** 自主练习 */
   SELF = 1,
-  /** 指派练习 */
+  /** 岗位练兵 */
   ASSIGNED = 2
 }
 

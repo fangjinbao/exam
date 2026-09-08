@@ -1,4 +1,4 @@
 [
   { "name": "admin", "apiPrefix": "/admin", "port": 8080 },
-  { "name": "mobile", "apiPrefix": "/api", "port": 8081 }
+  { "name": "mobile", "apiPrefix": "/app", "port": 8081 }
 ]

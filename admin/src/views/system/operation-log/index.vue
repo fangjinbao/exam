@@ -169,10 +169,6 @@
       .filter-form {
         @include responsiveFilterForm();
       }
-
-      .filter-date {
-        width: 260px;
-      }
     }
 
     .table-card {

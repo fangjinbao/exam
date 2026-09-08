@@ -15,6 +15,7 @@
 
 import { createRouter, createWebHistory } from 'vue-router'
 import { getToken } from '@/utils/storage'
+import { startNavProgress, doneNavProgress } from '@/utils/navProgress'
 
 /**
  * 路由 Meta 信息类型定义
@@ -54,6 +55,18 @@ const routes = [
     }
   },
   {
+    path: '/task',
+    name: 'Task',
+    component: () => import('@/views/task/Task.vue'),
+    meta: {
+      title: '任务',
+      requiresAuth: true, // 需要登录
+      keepAlive: true,
+      showTabbar: true
+    }
+  },
+  {
+    // 工作台已从底部导航移除，路由保留以便直接访问与后续复用
     path: '/workspace',
     name: 'Workspace',
     component: () => import('@/views/workspace/Workspace.vue'),
@@ -84,6 +97,149 @@ const routes = [
       requiresAuth: true, // 需要登录
       keepAlive: true,
       showTabbar: true
+    }
+  },
+  {
+    path: '/message/detail/:id',
+    name: 'MessageDetail',
+    component: () => import('@/views/message/MessageDetail.vue'),
+    meta: {
+      title: '消息详情',
+      requiresAuth: true,
+      keepAlive: false,
+      showTabbar: false
+    }
+  },
+  {
+    path: '/exam/list',
+    name: 'ExamList',
+    component: () => import('@/views/exam/ExamList.vue'),
+    meta: {
+      title: '参加考试',
+      requiresAuth: true,
+      keepAlive: false,
+      showTabbar: false
+    }
+  },
+  {
+    path: '/exam/detail/:id',
+    name: 'ExamDetail',
+    component: () => import('@/views/exam/ExamDetail.vue'),
+    meta: {
+      title: '考试详情',
+      requiresAuth: true,
+      keepAlive: false,
+      showTabbar: false
+    }
+  },
+  {
+    path: '/exam/answer/:id',
+    name: 'ExamAnswer',
+    component: () => import('@/views/exam/ExamAnswer.vue'),
+    meta: {
+      title: '考试作答',
+      requiresAuth: true,
+      keepAlive: false,
+      showTabbar: false
+    }
+  },
+  {
+    path: '/exam/result/:id',
+    name: 'ExamResult',
+    component: () => import('@/views/exam/ExamResult.vue'),
+    meta: {
+      title: '交卷详情',
+      requiresAuth: true,
+      keepAlive: false,
+      showTabbar: false
+    }
+  },
+  {
+    path: '/practice/setup',
+    name: 'PracticeSetup',
+    component: () => import('@/views/practice/PracticeSetup.vue'),
+    meta: {
+      title: '在线练习',
+      requiresAuth: true,
+      keepAlive: false,
+      showTabbar: false
+    }
+  },
+  {
+    path: '/practice/answer',
+    name: 'PracticeAnswer',
+    component: () => import('@/views/practice/PracticeAnswer.vue'),
+    meta: {
+      title: '练习作答',
+      requiresAuth: true,
+      keepAlive: false,
+      showTabbar: false
+    }
+  },
+  {
+    path: '/practice/wrong',
+    name: 'WrongBook',
+    component: () => import('@/views/practice/WrongBook.vue'),
+    meta: {
+      title: '错题本',
+      requiresAuth: true,
+      keepAlive: false,
+      showTabbar: false
+    }
+  },
+  {
+    path: '/profile/edit',
+    name: 'ProfileEdit',
+    component: () => import('@/views/profile/ProfileEdit.vue'),
+    meta: {
+      title: '个人信息',
+      requiresAuth: true,
+      keepAlive: false,
+      showTabbar: false
+    }
+  },
+  {
+    path: '/profile/scores',
+    name: 'ScoreList',
+    component: () => import('@/views/profile/ScoreList.vue'),
+    meta: {
+      title: '我的成绩',
+      requiresAuth: true,
+      keepAlive: false,
+      showTabbar: false
+    }
+  },
+  {
+    path: '/profile/scores/:sheetId',
+    name: 'ScoreDetail',
+    component: () => import('@/views/profile/ScoreDetail.vue'),
+    meta: {
+      title: '成绩详情',
+      requiresAuth: true,
+      keepAlive: false,
+      showTabbar: false
+    }
+  },
+  {
+    path: '/profile/certificates',
+    name: 'CertificateList',
+    component: () => import('@/views/profile/CertificateList.vue'),
+    meta: {
+      title: '我的证书',
+      requiresAuth: true,
+      keepAlive: false,
+      showTabbar: false
+    }
+  },
+  {
+    path: '/profile/certificates/:id',
+    name: 'CertificateDetail',
+    component: () => import('@/views/profile/CertificateDetail.vue'),
+    meta: {
+      title: '证书详情',
+      requiresAuth: true,
+      keepAlive: false,
+      showTabbar: false
     }
   },
   {
@@ -143,6 +299,9 @@ const router = createRouter({
  * 在每次路由跳转前执行，用于设置页面标题、权限验证等
  */
 router.beforeEach((to, from, next) => {
+  // 懒加载路由下载 chunk 期间屏幕是空的，先亮进度条（快跳转不会真显示，见实现）
+  startNavProgress()
+
   // 设置页面标题
   document.title = to.meta.title || 'H5应用'
 
@@ -169,6 +328,21 @@ router.beforeEach((to, from, next) => {
 
   // 继续路由跳转
   next()
+})
+
+/** 跳转结束（含被重定向到登录页的情形）收掉进度条 */
+router.afterEach(() => {
+  doneNavProgress()
+})
+
+/**
+ * 跳转出错也要收掉进度条
+ *
+ * 最典型的是发版后旧页面去取已被删除的 chunk（动态导入失败）。
+ * 不收的话进度条会永远停在 70%，看着像还在加载。
+ */
+router.onError(() => {
+  doneNavProgress()
 })
 
 export default router

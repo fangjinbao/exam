@@ -13,6 +13,31 @@ import { AppModule } from './app.module';
  * 依次完成：创建 Nest 应用 → 放宽请求体大小限制 → 挂载上传目录静态资源 →
  * 注册全局校验管道 → 配置 CORS → 非生产环境挂载 Swagger 文档 → 启用优雅关闭钩子 → 监听端口。
  */
+/** 全应用假定的时区，与 docker/server.Dockerfile、docker-compose.yaml 的 TZ 一致 */
+const EXPECTED_TZ = 'Asia/Shanghai';
+
+/**
+ * 校验进程时区是否为预期值，不符只告警不阻断启动
+ *
+ * 为什么必须一致：TransformInterceptor 的 formatDate 用硬编码的 +8 偏移把时间
+ * 转成展示字符串，不看进程时区；而服务端有按本地钟点计算的逻辑
+ * （如 ExamService.shiftWindowToFuture 用 getHours/setHours 保留考试的开考时刻）。
+ * 两者参照系一旦不同，算出来的时间会与页面显示错位——实测把 TZ 设成 UTC 时
+ * 复制考试的时间会整整差出一天，且没有任何报错。
+ *
+ * 只告警不 exit：时区错配会让时间算错，但直接让服务起不来对线上是更大的事故，
+ * 该由部署方看到告警后修配置。要改成致命错误的话在这里 throw 即可。
+ */
+function assertExpectedTimeZone(logger: Logger) {
+  const actual = Intl.DateTimeFormat().resolvedOptions().timeZone;
+  if (actual === EXPECTED_TZ) return;
+  logger.error(
+    `时区配置异常：当前进程时区为 ${actual}，应为 ${EXPECTED_TZ}。` +
+      `展示层按 +8 固定偏移格式化时间，时区不符会导致考试时间与页面显示错位，` +
+      `请检查容器的 TZ 环境变量（docker/server.Dockerfile 与 docker-compose.yaml）。`,
+  );
+}
+
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
 
@@ -72,6 +97,7 @@ async function bootstrap() {
   printBanner();
 
   const logger = new Logger('Bootstrap');
+  assertExpectedTimeZone(logger);
   logger.log(`服务已启动: http://localhost:${port}`);
   if (nodeEnv !== 'production') {
     logger.log(`API 文档: http://localhost:${port}/docs`);

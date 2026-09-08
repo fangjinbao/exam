@@ -19,6 +19,10 @@
 // 存储键名常量
 const TOKEN_KEY = 'token'
 const USER_INFO_KEY = 'userInfo'
+const REFRESH_TOKEN_KEY = 'refreshToken'
+const USER_TYPE_KEY = 'userType'
+/** 记住的登录账号（只存账号与用户类型，不含密码） */
+const REMEMBERED_LOGIN_KEY = 'rememberedLogin'
 
 /**
  * 获取 Token
@@ -78,6 +82,91 @@ export const setUserInfo = (userInfo) => {
  */
 export const removeUserInfo = () => {
   localStorage.removeItem(USER_INFO_KEY)
+}
+
+/**
+ * 获取刷新 Token
+ * @returns {string|null} refreshToken 字符串，不存在则返回 null
+ */
+export const getRefreshToken = () => {
+  return localStorage.getItem(REFRESH_TOKEN_KEY)
+}
+
+/**
+ * 设置刷新 Token
+ * @param {string} refreshToken - refreshToken 字符串
+ */
+export const setRefreshToken = (refreshToken) => {
+  localStorage.setItem(REFRESH_TOKEN_KEY, refreshToken)
+}
+
+/**
+ * 删除刷新 Token
+ */
+export const removeRefreshToken = () => {
+  localStorage.removeItem(REFRESH_TOKEN_KEY)
+}
+
+/**
+ * 获取用户类型
+ * @returns {'internal'|'external'|null} 用户类型，不存在则返回 null
+ */
+export const getUserType = () => {
+  return localStorage.getItem(USER_TYPE_KEY)
+}
+
+/**
+ * 设置用户类型
+ * @param {'internal'|'external'} userType - 用户类型
+ */
+export const setUserType = (userType) => {
+  localStorage.setItem(USER_TYPE_KEY, userType)
+}
+
+/**
+ * 删除用户类型
+ */
+export const removeUserType = () => {
+  localStorage.removeItem(USER_TYPE_KEY)
+}
+
+/**
+ * 获取记住的登录账号
+ *
+ * 只记账号与用户类型，不记密码——密码留在本地会在设备被他人取用时直接泄露，
+ * 「记住用户」的通行做法也只是免去重复输入账号。
+ *
+ * @returns {{account: string, userType: string}|null} 记住的账号信息，无则返回 null
+ */
+export const getRememberedLogin = () => {
+  const raw = localStorage.getItem(REMEMBERED_LOGIN_KEY)
+  if (!raw) return null
+  try {
+    const parsed = JSON.parse(raw)
+    // 结构校验：手工改过 localStorage 或历史遗留的脏数据一律视为无效
+    if (parsed && typeof parsed.account === 'string' && parsed.account) {
+      return parsed
+    }
+    return null
+  } catch {
+    return null
+  }
+}
+
+/**
+ * 记住登录账号
+ * @param {string} account - 登录账号（工号或手机号）
+ * @param {'internal'|'external'} userType - 用户类型，回填时用于恢复所在 tab
+ */
+export const setRememberedLogin = (account, userType) => {
+  localStorage.setItem(REMEMBERED_LOGIN_KEY, JSON.stringify({ account, userType }))
+}
+
+/**
+ * 清除记住的登录账号
+ */
+export const removeRememberedLogin = () => {
+  localStorage.removeItem(REMEMBERED_LOGIN_KEY)
 }
 
 /**

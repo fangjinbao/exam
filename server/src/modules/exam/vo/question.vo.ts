@@ -27,17 +27,17 @@ export class QuestionVo {
   @ApiProperty({ description: '难度（字典 difficulty 的 value：easy/medium/hard）' })
   difficulty: string;
 
-  @ApiProperty({ description: '所属知识点 ID' })
-  knowledgePointId: number;
+  @ApiProperty({ description: '所属知识点 ID 列表（多对多）', type: [Number] })
+  knowledgePointIds: number[];
 
-  @ApiProperty({ description: '所属知识点名称', nullable: true })
-  knowledgePointName?: string | null;
+  @ApiProperty({ description: '所属知识点名称（顿号拼接，便于列表直接展示）' })
+  knowledgePointNames: string;
 
   @ApiProperty({ description: '所属题库 ID', nullable: true })
   questionBankId?: number | null;
 
-  @ApiProperty({ description: '分值建议', nullable: true })
-  suggestedScore: number | null;
+  @ApiProperty({ description: '分值（正数，最多 2 位小数）' })
+  suggestedScore: number;
 
   @ApiProperty({ description: '状态：formal 正式 / pending 待审' })
   status: string;

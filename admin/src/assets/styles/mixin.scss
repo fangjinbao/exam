@@ -162,7 +162,7 @@
 // 用法：在 .filter-form 上 @include responsiveFilterForm()
 // 约定：搜索控件加 .filter-input / .filter-select class，按钮放在末尾的 ElFormItem 内
 // 宽屏行内排列且控件可随容器收缩；窄屏（iPad Pro 及以下）每项独占一行、控件撑满，避免标签与输入框挤压
-@mixin responsiveFilterForm($input-width: 220px, $select-width: 150px) {
+@mixin responsiveFilterForm($input-width: 220px, $select-width: 150px, $date-width: 260px) {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
@@ -184,6 +184,12 @@
     max-width: 100%;
   }
 
+  // 日期区间选择器默认 360px 会把筛选行挤到换行，统一收窄
+  .filter-date {
+    width: $date-width;
+    max-width: 100%;
+  }
+
   @media only screen and (max-width: $device-ipad-pro) {
     :deep(.el-form-item) {
       display: flex;
@@ -198,8 +204,154 @@
     }
 
     .filter-input,
-    .filter-select {
+    .filter-select,
+    .filter-date {
       width: 100%;
+    }
+  }
+}
+
+/**
+* 胶囊式页签（分段控件）
+* 把 ElTabs 的默认「下划线 + 分隔线」换成一整条浅底胶囊、选中项主色实心块。
+* 页内主次内容切换用它比下划线更像一个控件，也不会与卡片边框、表头线混在一起。
+*
+* 用法：在组件 scoped 样式里对 ElTabs 的类名 @include capsuleTabs();
+* 内部已带 :deep()，调用处不必再套。
+*
+* 覆盖范围仅限默认（下划线）类型的 ElTabs，且假定页签数量少到不会溢出：
+* - 不适用于 type="card" / "border-card"，那两种变体另有边框与背景规则未在此接管；
+* - 页签多到触发横向滚动时，Element 的 .el-tabs__nav-prev/next 箭头与
+*   .is-scrollable 的补偿内边距仍是默认方形样式，会与胶囊轨道不搭，届时需另行补。
+*
+* @param {Number} $height 胶囊内每项的高度
+*/
+@mixin capsuleTabs($height: 32px) {
+  // 头部整体：一条浅灰底的胶囊轨道，内缩 4px 让选中块四周留出轨道底色
+  :deep(.el-tabs__header) {
+    padding: 4px;
+    margin: 0 0 16px;
+    background: var(--el-fill-color-light);
+    border-radius: calc(#{$height} / 2 + 4px);
+    // 轨道按内容宽度收窄靠左，不铺满整行——铺满会让一条浅灰长带看着像未加载完的占位块。
+    // 放在 mixin 里而非各调用处：三个调用点都要这行，重复写迟早漏掉一处。
+    // 父级非 flex 时该属性无效果，不会有副作用
+    align-self: flex-start;
+  }
+
+  // 轨道自带的整条下边框与选中项滑块都要去掉：选中态改由 item 自己的底色表达
+  :deep(.el-tabs__nav-wrap::after),
+  :deep(.el-tabs__active-bar) {
+    display: none;
+  }
+
+  /*
+    解开 Element 在 nav-wrap / nav-scroll 上的 overflow: hidden。
+    这两层原本用于裁剪溢出的页签配合左右箭头滚动，但 nav 的高度恰等于页签高度、
+    没有余量，键盘焦点环画在页签外沿时会被这两层整圈裁掉（视觉上等于没有焦点指示）。
+    本 mixin 已声明假定页签少到不溢出（见上方覆盖范围说明），故这里放开裁剪；
+    若将来某调用点页签会溢出，需要连同箭头样式一并重新设计。
+  */
+  :deep(.el-tabs__nav-wrap),
+  :deep(.el-tabs__nav-scroll) {
+    overflow: visible;
+  }
+
+  // Element 给 nav-wrap 留了 -1px 用于让页签压住下边框；边框已去掉，这 1px 会让胶囊偏上
+  :deep(.el-tabs__nav-wrap) {
+    margin-bottom: 0;
+  }
+
+  :deep(.el-tabs__nav) {
+    // 轨道两端不再需要 Element 默认的对齐补偿
+    border: 0;
+  }
+
+  :deep(.el-tabs__item) {
+    height: $height;
+    // 覆盖 Element 首/末项的不对称内边距（:nth-child(2) / :last-child 与本选择器权重相同，
+    // 靠层叠顺序压不住，只能用 !important），各项等宽留白
+    padding: 0 20px !important;
+    font-size: 14px;
+    // 未选中项降回常规字重，与选中项的 500 拉开一档（Element 默认给全部项 500）
+    font-weight: 400;
+    color: var(--el-text-color-regular);
+    border-radius: calc(#{$height} / 2);
+    transition:
+      color 0.2s,
+      background-color 0.2s;
+
+    &:hover {
+      color: var(--el-color-primary);
+    }
+
+    /*
+      Element 原生焦点环是 `box-shadow: ... var(--el-color-primary) inset`，并顺带把圆角压成 3px。
+      两处都要接管：圆角保持胶囊形；焦点环改用画在页签外沿轨道上的 outline。
+
+      环色用前景色、且刻意画在「轨道」而非页签自身背景上，是为了同时满足
+      选中/未选中 × 明暗两套主题共四种组合的 WCAG 3:1 非文本对比度。实测（相对亮度公式）：
+        主色环   对浅色轨道 2.59 ✗           —— 未选中态不达标
+        白环     对主色块   2.78 ✗           —— 选中态不达标
+        前景色   对主色块   浅色 4.68 ✓ / 暗色 2.30 ✗ —— 暗色下选中态不达标
+      即：画在页签背景上时，没有任何单色能覆盖四种组合（主色块上只有深色环够，
+      暗色轨道上只有浅色环够，而前景色随主题翻转，必有一头失败）。
+      改画在轨道上后，底色始终是轨道色，与前景色同步翻转：浅色 12.13 ✓ / 暗色 12.41 ✓，
+      一条规则通吃，选中态也无需再单独覆盖环色。
+
+      offset 1px + 宽 2px 共 3px，正好落在 header 的 4px 内边距里，不会溢出胶囊轨道。
+    */
+    &:focus-visible {
+      border-radius: calc(#{$height} / 2);
+      outline: 2px solid var(--el-text-color-primary);
+      outline-offset: 1px;
+      box-shadow: none;
+    }
+
+    &.is-active {
+      font-weight: 500;
+      // 选中项：主色实心 + 白字，与轨道浅底形成明确的「当前位置」
+      color: var(--el-color-white);
+      background: var(--el-color-primary);
+
+      &:hover {
+        color: var(--el-color-white);
+      }
+      // 选中态无需再覆盖焦点环：环画在轨道上而非主色块上，配色已在上面统一解决
+    }
+
+    &.is-disabled {
+      color: var(--el-text-color-disabled);
+      background: transparent;
+    }
+  }
+}
+
+/**
+* 表头内的问号提示图标
+* 用于列名本身说不清含义、需要挂一句说明的表头（如「账号」在内外部考生下指向两套体系）。
+*
+* 用法：表头用 `<span class="th-with-tip">列名 <ElIcon class="th-tip-icon">…</ElIcon></span>`，
+* 在表格容器的 scoped 样式里 @include tableHeaderTip();
+* 内部已带 :deep()（表头由 ElTable 渲染，在 scoped 作用域外），调用处不必再套。
+*/
+@mixin tableHeaderTip() {
+  :deep(.th-with-tip) {
+    display: inline-flex;
+    gap: 4px;
+    // 与列名文字居中对齐；表头行高由 ElTable 控制，这里不设高度免得撑开表头
+    align-items: center;
+  }
+
+  :deep(.th-tip-icon) {
+    // 比列名小一档：提示是次要信息，同字号会让问号与文字争夺视线
+    font-size: 13px;
+    color: var(--el-text-color-placeholder);
+    // help 光标先于 tooltip 出现，悬停前就能看出这里有说明可看
+    cursor: help;
+
+    &:hover {
+      color: var(--el-color-primary);
     }
   }
 }

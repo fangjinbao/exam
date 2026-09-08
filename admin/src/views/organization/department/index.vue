@@ -52,7 +52,7 @@
           <ElTableColumn prop="leader" label="负责人" width="120" />
           <ElTableColumn prop="orderNum" label="排序" width="100" align="center" />
           <ElTableColumn prop="updateTime" label="更新时间" width="180" />
-          <ElTableColumn label="操作" width="200" align="center" fixed="right">
+          <ElTableColumn label="操作" width="200" align="left" fixed="right" class-name="table-actions">
             <template #default="{ row }">
               <ElButton v-auth="'add'" link type="primary" @click="handleAdd(row.id)">新增</ElButton>
               <ElButton v-auth="'update'" link type="primary" @click="handleEdit(row)">编辑</ElButton>
@@ -84,6 +84,7 @@
         </ElFormItem>
         <ElFormItem label="部门类型" prop="type">
           <ElSelect v-model="form.type" placeholder="请选择部门类型" style="width: 100%">
+            <ElOption label="集团公司" value="集团公司" />
             <ElOption label="省公司" value="省公司" />
             <ElOption label="分公司" value="分公司" />
             <ElOption label="部门" value="部门" />
@@ -119,6 +120,7 @@
     string,
     { tagType: 'primary' | 'success' | 'info' | 'warning' | 'danger' }
   > = {
+    集团公司: { tagType: 'success' },
     省公司: { tagType: 'danger' },
     分公司: { tagType: 'warning' },
     部门: { tagType: 'primary' }

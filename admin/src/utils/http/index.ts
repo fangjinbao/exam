@@ -17,6 +17,19 @@ const USE_MOCK = import.meta.env.VITE_USE_MOCK === 'true'
 let isUnauthorizedErrorShown = false
 let unauthorizedTimer: NodeJS.Timeout | null = null
 
+/** 刷新 token 接口路径（用于识别刷新请求自身，避免其 401 触发再次刷新） */
+const REFRESH_TOKEN_URL = '/admin/open/refreshToken'
+
+/**
+ * 正在进行的刷新请求
+ *
+ * 单飞：页面同时发出多个请求时，access token 过期会让它们一起 401。
+ * 若各自去刷新，后端每次签发新 token 并覆盖 Redis 的 admin:token:{userId}，
+ * 先刷到的那个立刻被后刷的顶掉，重试仍然 401——并发下反而必然登出。
+ * 故所有 401 共用同一个刷新 Promise，只发一次刷新请求。
+ */
+let refreshPromise: Promise<string> | null = null
+
 /** 扩展 AxiosRequestConfig */
 interface ExtendedAxiosRequestConfig extends AxiosRequestConfig {
   showErrorMessage?: boolean
@@ -24,6 +37,8 @@ interface ExtendedAxiosRequestConfig extends AxiosRequestConfig {
   timeout?: number // 允许覆盖默认超时时间（用于大文件上传）
   skipResponseValidation?: boolean // 跳过标准响应验证（用于原始响应如 GeoJSON）
   skipAuthHandler?: boolean // 跳过 401 统一处理（用于退出登录等终态请求，避免重入 logOut 与重复弹错）
+  /** 内部标记：该请求已因 401 刷新过一次 token 并重试，二次 401 直接登出，防止无限重试 */
+  _tokenRetried?: boolean
 }
 
 const { VITE_API_URL, VITE_WITH_CREDENTIALS } = import.meta.env
@@ -86,22 +101,107 @@ axiosInstance.interceptors.response.use(
     if (code === ApiStatus.success) return response
     // 退出登录等终态请求：401 不重入 logOut、不弹错，交由调用方自行 catch
     if (code === ApiStatus.unauthorized && !config.skipAuthHandler) {
-      handleUnauthorizedError(errorMessage)
+      return recoverFromUnauthorized(config, errorMessage)
     }
     throw createHttpError(errorMessage || $t('httpMsg.requestFailed'), code)
   },
   (error) => {
     const config = error.config as ExtendedAxiosRequestConfig | undefined
-    if (error.response?.status === ApiStatus.unauthorized && !config?.skipAuthHandler) {
-      handleUnauthorizedError()
+    if (error.response?.status === ApiStatus.unauthorized && !config?.skipAuthHandler && config) {
+      return recoverFromUnauthorized(config)
     }
     return Promise.reject(handleError(error))
   }
 )
 
+/**
+ * 401 的恢复路径：先试着刷新 token 重放原请求，刷不动才登出
+ *
+ * 此前的实现是任何 401 直接 logOut，导致 access token 一到期（默认 2 小时）
+ * 就被踢回登录页，而 15 天有效的 refresh token 从未被用过
+ * （api/auth.ts 的 fetchRefreshToken 是死代码，全项目零调用）。
+ *
+ * 注意刷新救不回的两种 401，它们仍会登出且这是正确行为：
+ * 一是被顶号——后端 admin:token:{userId} 一个用户一个键，别处重新登录会覆盖它，
+ * 此时 refresh token 也已被换掉；二是 Redis 不可用，守卫读不到缓存即判失效。
+ *
+ * @param config 触发 401 的原请求配置
+ * @param message 后端返回的错误文案（走响应体 code 分支时才有）
+ */
+async function recoverFromUnauthorized(
+  config: ExtendedAxiosRequestConfig,
+  message?: string
+): Promise<AxiosResponse> {
+  // 刷新请求自身 401、或已经刷过一轮仍 401：不再试，直接登出。
+  // 少了这道判断会变成「401 → 刷新 → 重试 → 401 → 刷新」的死循环。
+  if (config._tokenRetried || config.url === REFRESH_TOKEN_URL) {
+    handleUnauthorizedError(message)
+  }
+
+  try {
+    await refreshAccessToken()
+  } catch {
+    // 刷新失败：refresh token 也过期了、被顶号、或压根没有
+    handleUnauthorizedError(message)
+  }
+
+  /*
+    重放原请求。走 axiosInstance.request 会重新过一遍请求拦截器，
+    Authorization 由拦截器按 store 里的新 token 覆盖写入，无需在此手动清旧值。
+    Content-Type 与已序列化的 data 在首次已设好，拦截器里那两个条件不再成立，
+    不会二次 JSON.stringify。
+  */
+  return axiosInstance.request({ ...config, _tokenRetried: true } as ExtendedAxiosRequestConfig)
+}
+
 /** 统一创建HttpError */
 function createHttpError(message: string, code: number) {
   return new HttpError(message, code)
+}
+
+/**
+ * 用 refresh token 换取新的 access token
+ *
+ * 直接走 axiosInstance 而不复用 api/auth.ts 的 fetchRefreshToken：后者从本模块
+ * 引 request，本模块再引它会成循环依赖。
+ *
+ * 刷新接口是 @Public 的，但请求拦截器仍会带上那个已过期的 token，后端不校验故无妨。
+ * skipAuthHandler 让刷新请求自身的失败不再重入 401 处理。
+ *
+ * @returns 新的 access token
+ * @throws 刷新失败（无 refresh token、refresh 已过期、被顶号）
+ */
+function refreshAccessToken(): Promise<string> {
+  if (refreshPromise) return refreshPromise
+
+  const userStore = useUserStore()
+  const currentRefreshToken = userStore.refreshToken
+
+  // 没有 refresh token 就没得刷（老会话遗留、或登录响应未带）
+  if (!currentRefreshToken) {
+    return Promise.reject(new Error('no refresh token'))
+  }
+
+  refreshPromise = axiosInstance
+    .request<Http.BaseResponse<{ token: string; expire: number }>>({
+      url: REFRESH_TOKEN_URL,
+      method: 'POST',
+      data: { refreshToken: currentRefreshToken },
+      skipAuthHandler: true
+    } as ExtendedAxiosRequestConfig)
+    .then((res) => {
+      const newToken = res.data?.data?.token
+      if (!newToken) throw new Error('refresh response missing token')
+      // 后端只签发新的 access token，refresh token 不变，故第二个参数不传
+      userStore.setToken(newToken)
+      return newToken
+    })
+    .finally(() => {
+      // 无论成败都要清掉，否则失败后所有后续请求会一直复用这个失败的 Promise
+      refreshPromise = null
+    })
+
+  return refreshPromise
 }
 
 /** 处理401错误（带防抖） */

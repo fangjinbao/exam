@@ -22,7 +22,19 @@ export default defineConfig({
     host: true,
     port: 3000,
     open: true,
-    cors: true
+    cors: true,
+    proxy: {
+      // 考生端接口转发到本地后端；后端无全局前缀，路由本身就带 /app，故不 rewrite
+      '/app': {
+        target: 'http://127.0.0.1:9001',
+        changeOrigin: true
+      },
+      // 上传文件（证书底图、印章等）由后端静态目录直接对外，不带 /app 前缀
+      '/uploads': {
+        target: 'http://127.0.0.1:9001',
+        changeOrigin: true
+      }
+    }
   },
   build: {
     outDir: 'dist',

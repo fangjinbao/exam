@@ -1,0 +1,130 @@
+/**
+ * 文件名称：views/grading-workspace/style.scss - 阅卷工作台样式
+ *
+ * 从 index.vue 拆出：合并在单文件内会超出项目 500 行上限。
+ * 由 index.vue 以 `@use './style'` 在 scoped style 中引入，作用域行为不变。
+ *
+ * 必须显式 @use variables：被 @use 引入的文件有独立模块作用域，
+ * 拿不到 vite scss.additionalData 注入的全局变量（那只作用于入口样式表）。
+ */
+
+@use '@/assets/styles/variables' as *;
+
+  .workspace {
+    // 高度由脚本实测注入，此处不写 height:100%——父级无确定高度，写了会落空
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    min-height: 420px;
+
+    // 窄屏交回整页滚动：脚本不再锁高度，卷面区改为不限高，避免内容被裁。
+    // 此处不覆盖 .center-card 的 overflow:hidden——窄屏下祖先链（含 #app-main）
+    // 均无固定高度，容器按内容自然撑高，hidden 不会产生实际裁剪。勿当作冗余删除：
+    // 一旦别处改动让祖先重新获得固定高度，它就是防止卷面溢出卡片的最后一道。
+    @media only screen and (width <= $device-ipad) {
+      min-height: 0;
+
+      .paper-scroll {
+        overflow-y: visible;
+      }
+    }
+  }
+
+  // 页头与 exam-detail / exam-edit 保持一致：无卡片，返回按钮 + 竖线 + 标题
+  .page-header {
+    display: flex;
+    flex-shrink: 0;
+    gap: 12px;
+    align-items: center;
+    padding: 0 4px;
+  }
+
+  .back-btn {
+    font-size: 14px;
+    color: var(--el-text-color-regular);
+
+    &:hover {
+      color: var(--el-color-primary);
+    }
+  }
+
+  .header-divider {
+    width: 1px;
+    height: 14px;
+    background: var(--el-border-color);
+  }
+
+  .page-title {
+    overflow: hidden;
+    font-size: 16px;
+    font-weight: 600;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .head-progress {
+    margin-left: auto;
+    font-size: 13px;
+    color: var(--el-text-color-secondary);
+  }
+
+  .num-warn {
+    color: var(--el-color-warning);
+  }
+
+  .num-ok {
+    color: var(--el-color-success);
+  }
+
+  // 左名单 + 中卷面 + 右答题卡，中间自适应剩余宽度
+  .body {
+    display: flex;
+    flex: 1;
+    gap: 12px;
+    min-height: 0;
+  }
+
+  // 与 exam-detail 的 .body-card 同款：白底 + 12px 圆角，不用 ElCard
+  .center-card {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    min-width: 0;
+    padding: 16px 20px;
+    overflow: hidden;
+    background: var(--el-bg-color);
+    border-radius: 12px;
+  }
+
+  .sheet-tabs {
+    flex-shrink: 0;
+
+    :deep(.el-tabs__header) {
+      margin-bottom: 0;
+    }
+  }
+
+  // 卷面独立滚动，页头、页签与底部操作栏保持可见
+  .paper-scroll {
+    flex: 1;
+    min-height: 0;
+    padding-top: 12px;
+    overflow-y: auto;
+  }
+
+  // 提示靠左、提交靠右：两端对齐比全部挤在右侧更易读
+  .foot-bar {
+    display: flex;
+    flex-shrink: 0;
+    gap: 12px;
+    align-items: center;
+    justify-content: space-between;
+    padding-top: 14px;
+    margin-top: 4px;
+    border-top: 1px solid var(--el-border-color-lighter);
+  }
+
+  .foot-hint {
+    font-size: 13px;
+    color: var(--el-text-color-secondary);
+  }

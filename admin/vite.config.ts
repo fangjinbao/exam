@@ -8,7 +8,6 @@ import Components from 'unplugin-vue-components/vite'
 import AutoImport from 'unplugin-auto-import/vite'
 import ElementPlus from 'unplugin-element-plus/vite'
 import { ElementPlusResolver } from 'unplugin-vue-components/resolvers'
-import { annotationPlugin } from './viteAnnotationPlugin'
 // import { visualizer } from 'rollup-plugin-visualizer'
 
 export default ({ mode }: { mode: string }) => {
@@ -36,6 +35,17 @@ export default ({ mode }: { mode: string }) => {
         },
         // 公共接口
         '/api': {
+          target: VITE_API_PROXY_URL,
+          changeOrigin: true
+        },
+        /*
+         * 上传文件静态目录
+         *
+         * 上传接口返回的是相对路径 /uploads/xxx.png（见 space-info.controller）。
+         * 不代理的话这个地址会打到前端 dev server 上直接 404，
+         * 富文本里插入的图片就全是碎图。生产由 nginx 统一转发，仅 dev 需要。
+         */
+        '/uploads': {
           target: VITE_API_PROXY_URL,
           changeOrigin: true
         },
@@ -81,8 +91,6 @@ export default ({ mode }: { mode: string }) => {
       }
     },
     plugins: [
-      // 原型标注保存中间件：拦截 POST /__annotation_save__ 写入 public/annotations
-      annotationPlugin(),
       vue(),
       // 自动按需导入 API
       AutoImport({

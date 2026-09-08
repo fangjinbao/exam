@@ -6,6 +6,13 @@ import { PrismaService } from '@/common/prisma.service';
 import { RedisService } from '@/common/redis.service';
 
 /**
+ * 管理端 token 作用域标记
+ * 与 C 端的 'app' 区分（见 AppAuthService.APP_TOKEN_SCOPE），
+ * 写入 JWT payload 并由 AuthGuard 校验，确保两套 token 不能互换使用。
+ */
+export const ADMIN_TOKEN_SCOPE = 'admin';
+
+/**
  * 认证授权服务
  * 负责后台用户的登录、token 签发与刷新、登出，以及权限（perms）的缓存维护。
  * token 与权限均以 Redis 缓存，并通过 passwordVersion 实现改密后旧 token 失效。
@@ -53,6 +60,9 @@ export class AuthService {
       username: user.username,
       roleIds,
       passwordVersion: user.passwordV,
+      // 标记为管理端 token，由 AuthGuard 校验。
+      // C 端 token 用同一 JWT_SECRET 签发，仅靠验签无法区分两者，必须靠此字段隔离。
+      scope: ADMIN_TOKEN_SCOPE,
     };
 
     // configService.get 运行时返回字符串，必须转为数字。
@@ -123,7 +133,13 @@ export class AuthService {
 
       const accessExpire = Number(this.configService.get<number>('JWT_ACCESS_EXPIRE', 7200));
       const newToken = this.jwtService.sign(
-        { userId: user.id, username: user.username, roleIds: payload.roleIds, passwordVersion: user.passwordV },
+        {
+          userId: user.id,
+          username: user.username,
+          roleIds: payload.roleIds,
+          passwordVersion: user.passwordV,
+          scope: ADMIN_TOKEN_SCOPE,
+        },
         { expiresIn: accessExpire },
       );
 

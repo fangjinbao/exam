@@ -36,7 +36,7 @@
           <ElTableColumn prop="label" label="标识" width="150" />
           <ElTableColumn prop="remark" label="备注" min-width="200" show-overflow-tooltip />
           <ElTableColumn prop="createTime" label="创建时间" width="180" />
-          <ElTableColumn label="操作" width="250" align="center" fixed="right">
+          <ElTableColumn label="操作" width="250" align="left" fixed="right" class-name="table-actions">
             <template #default="{ row }">
               <ElButton v-auth="'update'" link type="primary" @click="handleEdit(row)">编辑</ElButton>
               <ElButton v-auth="'setMenus'" link type="primary" @click="handleAssignPermissions(row)">

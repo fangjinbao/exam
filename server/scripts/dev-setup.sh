@@ -80,7 +80,11 @@ init_seed() {
     count=$(printf '%s' "$count" | grep -oE '[0-9]+' | head -1 || echo "0")
     count=${count:-0}
     if [ "$count" -gt 0 ]; then
-        log "种子数据已存在（base_sys_user 有 $count 条），跳过" "WARN"
+        # 只跳过「整体初始化」（管理员、演示数据等一次性内容）。
+        # 数据字典不受此限制：它是代码里定死的枚举，由应用启动钩子
+        # BootstrapService.syncDict() 每次启动逐项补齐，新增题型等改动会自动生效。
+        log "种子数据已存在（base_sys_user 有 $count 条），跳过整体初始化" "WARN"
+        log "数据字典由服务启动时自动补齐，无需手动执行" "INFO"
         return 0
     fi
     log "初始化种子数据..."

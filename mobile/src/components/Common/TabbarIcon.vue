@@ -2,17 +2,17 @@
   组件名称：TabbarIcon - 底部导航栏图标组件
 
   功能描述：
-    用于底部导航栏的自定义 SVG 图标组件，支持四种图标类型（首页、工作台、消息、我的）
+    用于底部导航栏的自定义 SVG 图标组件，支持五种图标类型（首页、任务、工作台、消息、我的）
     根据激活状态自动切换图标颜色
+    workspace/message 图标保留供非 Tab 场景复用
 
   使用方式：
     <TabbarIcon name="home" :active="true" />
-    <TabbarIcon name="workspace" :active="false" />
-    <TabbarIcon name="message" :active="false" />
+    <TabbarIcon name="task" :active="false" />
     <TabbarIcon name="profile" :active="true" activeColor="#1171F8" />
 
   Props:
-    - name: 图标名称，可选值 'home' | 'workspace' | 'message' | 'profile'
+    - name: 图标名称，可选值 'home' | 'task' | 'workspace' | 'message' | 'profile'
     - active: 是否激活状态，默认 false
     - activeColor: 激活时的颜色，默认 '#1171F8'
     - inactiveColor: 未激活时的颜色，默认 '#969799'
@@ -20,7 +20,7 @@
 
 <template>
   <div class="tabbar-icon">
-    <!-- 首页图标 -->
+    <!-- 首页图标：实心房子，门洞用 evenodd 镂空 -->
     <svg
       v-if="name === 'home'"
       viewBox="0 0 1024 1024"
@@ -28,7 +28,8 @@
       :fill="active ? activeColor : inactiveColor"
     >
       <path
-        d="M946.5 505L560.1 118.8l-25.9-25.9a31.5 31.5 0 0 0-44.4 0L77.5 505a63.9 63.9 0 0 0-18.8 46c0.4 35.2 29.7 63.3 64.9 63.3h42.5V940h691.8V614.3h43.4c17.1 0 33.2-6.7 45.3-18.8a63.6 63.6 0 0 0 18.7-45.3c0-17-6.7-33.1-18.8-45.2zM568 868H456V664h112v204zm217.9-325.7V868H632V640c0-22.1-17.9-40-40-40H432c-22.1 0-40 17.9-40 40v228H238.1V542.3h-96l370-369.7 23.1 23.1L882 542.3h-96.1z"
+        fill-rule="evenodd"
+        d="M481.5 106.6a48 48 0 0 1 61 0l400 336A48 48 0 0 1 960 479v389a48 48 0 0 1-48 48H112a48 48 0 0 1-48-48V479a48 48 0 0 1 17.5-36.4l400-336ZM440 640h144v244H440V640Z"
       />
     </svg>
 
@@ -41,6 +42,19 @@
     >
       <path
         d="M880 112H144c-17.7 0-32 14.3-32 32v736c0 17.7 14.3 32 32 32h736c17.7 0 32-14.3 32-32V144c0-17.7-14.3-32-32-32zm-40 728H184V184h656v656zM304 288h416v48H304zm0 144h416v48H304zm0 144h416v48H304z"
+      />
+    </svg>
+
+    <!-- 任务图标：实心圆角方块，对勾用 evenodd 镂空，不依赖背景色 -->
+    <svg
+      v-else-if="name === 'task'"
+      viewBox="0 0 1024 1024"
+      xmlns="http://www.w3.org/2000/svg"
+      :fill="active ? activeColor : inactiveColor"
+    >
+      <path
+        fill-rule="evenodd"
+        d="M224 128h576a96 96 0 0 1 96 96v576a96 96 0 0 1-96 96H224a96 96 0 0 1-96-96V224a96 96 0 0 1 96-96Zm228 524L296 496l56-56 100 100 220-220 56 56L452 652Z"
       />
     </svg>
 
@@ -59,15 +73,16 @@
       />
     </svg>
 
-    <!-- 我的图标 -->
+    <!-- 我的图标：实心头肩像 -->
     <svg
       v-else-if="name === 'profile'"
       viewBox="0 0 1024 1024"
       xmlns="http://www.w3.org/2000/svg"
       :fill="active ? activeColor : inactiveColor"
     >
+      <path d="M512 128a184 184 0 1 1 0 368 184 184 0 0 1 0-368Z" />
       <path
-        d="M858.5 763.6a374 374 0 0 0-80.6-119.5 375.63 375.63 0 0 0-119.5-80.6c-.4-.2-.8-.3-1.2-.5C719.5 518 760 444.7 760 362c0-137-111-248-248-248S264 225 264 362c0 82.7 40.5 156 102.8 201.1-.4.2-.8.3-1.2.5-44.8 18.9-85 46-119.5 80.6a375.63 375.63 0 0 0-80.6 119.5A371.7 371.7 0 0 0 136 901.8a8 8 0 0 0 8 8.2h60c4.4 0 7.9-3.5 8-7.8 2-77.2 33-149.5 87.8-204.3 56.7-56.7 132-87.9 212.2-87.9s155.5 31.2 212.2 87.9C779 752.7 810 825 812 902.2c.1 4.4 3.6 7.8 8 7.8h60a8 8 0 0 0 8-8.2c-1-47.8-10.9-94.3-29.5-138.2zM512 534c-45.9 0-89.1-17.9-121.6-50.4S340 407.9 340 362c0-45.9 17.9-89.1 50.4-121.6S466.1 190 512 190s89.1 17.9 121.6 50.4S684 316.1 684 362c0 45.9-17.9 89.1-50.4 121.6S557.9 534 512 534z"
+        d="M512 560c156.3 0 283 99.6 283 222.5V852a48 48 0 0 1-48 48H277a48 48 0 0 1-48-48v-69.5C229 659.6 355.7 560 512 560Z"
       />
     </svg>
   </div>
@@ -77,20 +92,20 @@
 /**
  * Tabbar 图标组件 Props 类型定义
  * @typedef {Object} Props
- * @property {'home'|'workspace'|'message'|'profile'} name - 图标名称
+ * @property {'home'|'task'|'workspace'|'message'|'profile'} name - 图标名称
  * @property {boolean} [active=false] - 是否激活
  * @property {string} [activeColor='#1171F8'] - 激活颜色
  * @property {string} [inactiveColor='#969799'] - 未激活颜色
  */
 
-// 定义组件 Props
-const props = defineProps({
+// 定义组件 Props（模板直接引用各字段，无需接收返回值）
+defineProps({
   // 图标名称（必填）
   name: {
     type: String,
     required: true,
     // 验证图标名称是否合法
-    validator: (value) => ['home', 'workspace', 'message', 'profile'].includes(value)
+    validator: (value) => ['home', 'task', 'workspace', 'message', 'profile'].includes(value)
   },
   // 是否激活状态
   active: {

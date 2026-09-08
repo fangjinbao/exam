@@ -89,6 +89,8 @@ export function getUserList(params?: {
   keyword?: string
   status?: number
   departmentId?: number
+  /** 多部门筛选：逗号分隔的部门 ID，如 "1,2,3"（与 departmentId 二选一） */
+  departmentIds?: string
   page?: number
   pageSize?: number
 }) {

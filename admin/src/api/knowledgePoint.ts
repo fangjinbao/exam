@@ -10,6 +10,8 @@ import request from '@/utils/http'
 export interface KnowledgePoint {
   id: number
   parentId: number | null
+  /** 知识点编号（全局唯一，后端保证非空） */
+  code: string
   name: string
   orderNum: number
   remark?: string | null
@@ -21,6 +23,8 @@ export interface KnowledgePoint {
 /** 新增知识点入参 */
 export interface CreateKnowledgePointPayload {
   parentId?: number | null
+  /** 知识点编号，留空由后端自动生成 */
+  code?: string
   name: string
   orderNum?: number
   remark?: string

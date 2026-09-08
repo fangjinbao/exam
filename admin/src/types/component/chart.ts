@@ -94,6 +94,21 @@ export interface BarChartProps extends BaseChartProps, AxisDisplayProps, Interac
   stack?: boolean
   /** 圆角 */
   borderRadius?: number | number[]
+  /**
+   * 是否在柱子末端显示数值
+   *
+   * 默认关闭：数据点多时标签会互相重叠反而更难读，
+   * 只在柱子数量少、需要精确读数的场景显式开启。
+   */
+  showDataLabel?: boolean
+  /**
+   * 数值标签格式化，如 `(v) => v + '%'`；未传时直接显示原值。
+   *
+   * 必须传入稳定引用（组件顶层定义的常量），不要写成模板里的内联箭头函数：
+   * 该属性在组件内部被 watch 监听（deep: true），内联写法每次父组件重渲染
+   * 都产生新的函数引用，会触发一次多余的图表重建。不会死循环，但白费开销。
+   */
+  dataLabelFormatter?: (value: number) => string
 }
 
 // 折线图数据项接口

@@ -27,7 +27,7 @@
           <ElTableColumn prop="description" label="岗位描述" min-width="250" show-overflow-tooltip />
           <ElTableColumn prop="orderNum" label="排序" width="100" align="center" />
           <ElTableColumn prop="createTime" label="创建时间" width="180" />
-          <ElTableColumn label="操作" width="150" align="center" fixed="right">
+          <ElTableColumn label="操作" width="150" align="left" fixed="right" class-name="table-actions">
             <template #default="{ row }">
               <ElButton v-auth="'update'" link type="primary" @click="handleEdit(row)">编辑</ElButton>
               <ElButton v-auth="'delete'" link type="danger" @click="handleDelete(row)">删除</ElButton>

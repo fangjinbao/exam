@@ -48,6 +48,8 @@ model SysUser {
   updateTime   DateTime @updatedAt
 
   department SysDepartment? @relation(fields: [departmentId], references: [id])
+  /// 本人负责的鉴定项目（反向关系；被引用时不可删除）
+  certProjectsManaged CertProject[]
   position   SysPosition?   @relation(fields: [positionId], references: [id])
   userRoles  SysUserRole[]
 
@@ -88,33 +90,41 @@ model SysRole {
 
 /// 系统菜单
 model SysMenu {
-  id         Int      @id @default(autoincrement())
+  id          Int      @id @default(autoincrement())
   /// 父级菜单 ID
-  parentId   Int?
+  parentId    Int?
   /// 菜单名称
-  name       String
+  name        String
   /// 前端路由路径
-  router     String?
+  router      String?
   /// 权限标识
-  perms      String?
+  perms       String?
   /// 类型 0=目录 1=菜单 2=按钮
-  type       Int      @default(0)
+  type        Int      @default(0)
   /// 图标
-  icon       String?
+  icon        String?
   /// 排序号
-  orderNum   Int      @default(0)
+  orderNum    Int      @default(0)
   /// 视图组件路径
-  viewPath   String?
+  viewPath    String?
   /// 是否缓存 1=是 0=否
-  keepAlive  Int      @default(1)
+  keepAlive   Int      @default(1)
   /// 是否显示 1=是 0=否
-  isShow     Int      @default(1)
+  isShow      Int      @default(1)
+  /// 种子声明版本号：seed 中该菜单声明的版本，用于门控外观字段是否回写
+  ///
+  /// seedNavMenus 每次启动都跑。若无条件回写 name/icon/orderNum/isShow，
+  /// 管理员在菜单管理页的手工调整会在重启后被静默还原；若一律不回写，
+  /// 代码里新调的排序又对已建库永久无效。故按版本号门控：
+  /// 仅当代码声明的版本高于库中值时才回写外观字段并更新此列。
+  /// 管理员改菜单不动此列，因此下次重启不会覆盖他的改动。
+  declVersion Int      @default(0)
   /// 租户 ID
-  tenantId   Int?
+  tenantId    Int?
   /// 创建时间
-  createTime DateTime @default(now())
+  createTime  DateTime @default(now())
   /// 更新时间
-  updateTime DateTime @updatedAt
+  updateTime  DateTime @updatedAt
 
   roleMenus SysRoleMenu[]
 
@@ -149,6 +159,10 @@ model SysDepartment {
 
   users           SysUser[]
   roleDepartments SysRoleDepartment[]
+  /// 作为「单位」被引用的鉴定名额行（反向关系）
+  quotaAsOrg      CertProjectQuota[] @relation("QuotaOrg")
+  /// 作为「部门」被引用的鉴定名额行（反向关系）
+  quotaAsDept     CertProjectQuota[] @relation("QuotaDept")
 
   @@index([parentId])
   @@index([tenantId])
@@ -671,7 +685,13 @@ model ExternalCandidate {
   updateTime DateTime @updatedAt
 
   /// 所属外部单位（多对一）
-  org ExternalOrg @relation(fields: [orgId], references: [id])
+  org                  ExternalOrg           @relation(fields: [orgId], references: [id])
+  /// 被考试分配的记录（反向关系）
+  examCandidates       ExamCandidate[]
+  /// 被岗位练兵分配的记录（反向关系）
+  practiceParticipants PracticeParticipant[]
+  /// 被自主练习开放授权的记录（反向关系）
+  selfPracticeUsers    SelfPracticeUser[]
 
   @@index([orgId])
   @@index([tenantId])
@@ -709,6 +729,8 @@ model KnowledgePoint {
   id         Int      @id @default(autoincrement())
   /// 父级知识点 ID（顶级节点为 null）
   parentId   Int?
+  /// 知识点编号（≤30 字，全局唯一；新增留空时由系统自动生成）
+  code       String   @unique @db.VarChar(30)
   /// 知识点名称
   name       String   @db.VarChar(100)
   /// 排序号（同级内升序）
@@ -722,70 +744,616 @@ model KnowledgePoint {
   /// 更新时间
   updateTime DateTime @updatedAt
 
-  /// 关联的题目（一对多）
-  questions Question[]
+  /// 关联的题目（多对多，经中间表 QuestionKnowledgePoint）
+  questions          QuestionKnowledgePoint[]
+  /// 被自主练习限定为可练范围的记录（一对多，反向关系；被引用时受删除保护）
+  selfPracticeScopes SelfPracticeKnowledgePoint[]
 
   @@index([parentId])
   @@index([tenantId])
   @@map("exam_knowledge_point")
 }
 
+/// 题目↔知识点关联（多对多中间表；一道题可挂多个知识点）
+model QuestionKnowledgePoint {
+  /// 题目 ID
+  questionId       Int
+  /// 知识点 ID
+  knowledgePointId Int
+
+  /// 关联的题目（题目删除时级联删除关联）
+  question       Question       @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  /// 关联的知识点（受删除保护：被引用时不可删除，见 ensureDeletable）
+  knowledgePoint KnowledgePoint @relation(fields: [knowledgePointId], references: [id])
+
+  @@id([questionId, knowledgePointId])
+  @@index([knowledgePointId])
+  @@map("exam_question_knowledge_point")
+}
+
 /// 题目（题库核心数据；题型/难度存数据字典的 value，知识点关联知识点分类；状态区分正式/待审）
 model Question {
-  id               Int      @id @default(autoincrement())
+  id              Int      @id @default(autoincrement())
   /// 题干（多行文本）
-  stem             String   @db.Text
+  stem            String   @db.Text
   /// 题型（存字典 question_type 的 value：single 单选/multiple 多选/judge 判断/blank 填空/qa 问答/essay 论述）
-  type             String   @db.VarChar(20)
+  type            String   @db.VarChar(20)
   /// 选项（多行文本；客观题 single/multiple/judge/blank 必填，主观题 qa/essay 为空）
-  options          String?  @db.Text
+  options         String?  @db.Text
   /// 标准答案
-  answer           String   @db.Text
+  answer          String   @db.Text
   /// 答案解析（可空）
-  analysis         String?  @db.Text
+  analysis        String?  @db.Text
+  /// 评分标准（主观题 qa/essay 用于 AI/人工阅卷的评分依据，客观题为空）
+  scoringCriteria String?  @db.Text
   /// 难度（存字典 difficulty 的 value：easy 简单/medium 中等/hard 困难）
-  difficulty       String   @db.VarChar(20)
-  /// 所属知识点 ID（指向 KnowledgePoint）
-  knowledgePointId Int
+  difficulty      String   @db.VarChar(20)
   /// 所属题库 ID（指向 QuestionBank，可空以兼容存量题目；新题目应归属题库）
-  questionBankId   Int?
-  /// 分值建议（可空，正整数）
-  suggestedScore   Int?
+  questionBankId  Int?
+  /// 分值（必填，正数，最多 2 位小数；DTO 与前端限制 2 位小数）
+  suggestedScore  Float
   /// 状态：formal 正式 / pending 待审（AI 生成题目审核通过前保持 pending）
-  status           String   @default("formal") @db.VarChar(20)
+  status          String   @default("formal") @db.VarChar(20)
   /// 退回原因（审核退回时记录，≤200 字）
-  rejectReason     String?  @db.VarChar(200)
+  rejectReason    String?  @db.VarChar(200)
   /// 租户 ID
-  tenantId         Int?
+  tenantId        Int?
   /// 创建时间
-  createTime       DateTime @default(now())
+  createTime      DateTime @default(now())
   /// 更新时间
-  updateTime       DateTime @updatedAt
+  updateTime      DateTime @updatedAt
 
-  /// 所属知识点（多对一）
-  knowledgePoint KnowledgePoint @relation(fields: [knowledgePointId], references: [id])
+  /// 母题 ID（null=独立题或母题本身；非 null=挂在某道 composite 母题下的小题）
+  ///
+  /// 「从题池挑新题」的查询必须加 parentId=null，否则小题会以独立题身份进卷；
+  /// 「回查已有作答记录对应的题目」（错题本等）不能加，那里的 id 本就是小题 id。
+  parentId Int?
+  /// 小题在母题内的排序（母题与独立题恒为 0）
+  sortNo   Int     @default(0)
+  /// 题干纯文本镜像（由 stem 去 HTML 标签生成）
+  ///
+  /// stem 支持富文本后，搜索若仍打 stem 会命中标签名（搜 p 匹配所有题），
+  /// 故搜索、Excel 导出、AI 组卷展示等纯文本场景统一改用本列。
+  stemText String? @db.Text
+
+  /// 所属母题（母题删除时级联删除其小题）
+  parent   Question?  @relation("SubQuestion", fields: [parentId], references: [id], onDelete: Cascade)
+  /// 下属小题（一对多，反向关系；仅 type=composite 的母题会有）
+  children Question[] @relation("SubQuestion")
+
+  /// 关联的知识点（多对多，经中间表 QuestionKnowledgePoint）
+  knowledgePoints QuestionKnowledgePoint[]
   /// 所属题库（多对一，可空）
-  questionBank   QuestionBank?  @relation(fields: [questionBankId], references: [id])
+  questionBank    QuestionBank?            @relation(fields: [questionBankId], references: [id])
+  /// 被固定试卷引用的题目项（一对多，反向关系；被引用时受删除保护）
+  paperQuestions  PaperQuestion[]
+  /// 关联的答题项（一对多，反向关系）
+  answerItems     AnswerItem[]
+  /// 关联的练习作答明细（一对多，反向关系）
+  practiceAnswers PracticeAnswer[]
+  /// 关联的收藏记录（一对多，反向关系）
+  favorites       QuestionFavorite[]
 
-  @@index([knowledgePointId])
   @@index([questionBankId])
   @@index([type])
   @@index([difficulty])
   @@index([status])
   @@index([tenantId])
+  @@index([parentId])
   @@map("exam_question")
 }
 
 /// 题库（题目容器，按业务主题划分，如"安全教育题库"；先建题库再进入维护其题目）
 model QuestionBank {
-  id          Int      @id @default(autoincrement())
+  id           Int      @id @default(autoincrement())
   /// 题库名称（2-50 字，全局唯一）
-  name        String   @unique @db.VarChar(50)
+  name         String   @unique @db.VarChar(50)
   /// 题库编码（≤30 字，全局唯一；新增留空时由系统自动生成）
-  code        String   @unique @db.VarChar(30)
+  code         String   @unique @db.VarChar(30)
   /// 题库描述（≤200 字，可空）
-  description String?  @db.VarChar(200)
+  description  String?  @db.VarChar(200)
   /// 状态 1=启用 0=停用（停用后组卷/抽题/练习不展示，历史引用不受影响）
+  status       Int      @default(1)
+  /// 创建人用户 ID（base_sys_user.id；仅创建人可修改共享属性）
+  createBy     Int?
+  /// 可见范围 self=仅自己 dept=本部门(含子部门) company=本公司 all=全部组织
+  visibleScope String   @default("all") @db.VarChar(20)
+  /// 共享权限级别 manage=可管理(增删改查含题目) view=可查看(只读)
+  shareLevel   String   @default("manage") @db.VarChar(20)
+  /// 租户 ID
+  tenantId     Int?
+  /// 创建时间
+  createTime   DateTime @default(now())
+  /// 更新时间
+  updateTime   DateTime @updatedAt
+
+  /// 本题库下的题目（一对多，反向关系）
+  questions          Question[]
+  /// 被试卷引用的题库范围项（一对多，反向关系；被引用时受删除保护）
+  paperBanks         PaperBank[]
+  /// 被岗位练兵引用的题库范围项（一对多，反向关系；被引用时受删除保护）
+  practiceBanks      PracticeBank[]
+  /// 自主练习开放配置（一对一，反向关系；题库删除时级联删除）
+  selfPracticeConfig SelfPracticeConfig?
+
+  @@index([tenantId])
+  @@index([createBy])
+  @@map("exam_question_bank")
+}
+
+/// 证书模板（维护证书版式内容与编号规则，供认证项目引用与证书发放生成编号；被认证项目引用时不可删除）
+model CertificateTemplate {
+  id              Int      @id @default(autoincrement())
+  /// 模板名称（≤50 字，系统内全局唯一）
+  name            String   @unique @db.VarChar(50)
+  /// 证书标题（≤100 字，证书正文主标题，必填）
+  title           String   @db.VarChar(100)
+  /// 颁发机构名称（≤100 字，必填）
+  issuingOrg      String   @db.VarChar(100)
+  /// 证书说明文案（≤500 字，证书正文说明性内容，可空）
+  description     String?  @db.VarChar(500)
+  /// 印章图片 URL（机构印章展示，可空；由文件上传接口返回的相对路径）
+  sealImage       String?  @db.VarChar(255)
+  /// 编号规则（≤50 字，证书编号生成规则，如"年份+流水号"，必填）
+  numberRule      String   @db.VarChar(50)
+  /// 证书尺寸 1=A4横版 2=A4竖版（可视化设计器画布方向）
+  size            Int      @default(2)
+  /// 证书底图 URL（可视化设计器背景图，可空；由文件上传接口返回的相对路径）
+  backgroundImage String?  @db.VarChar(255)
+  /// 版式 JSON（可视化设计器排版元素数组，可空；结构 {elements:[{id,type,x,y,...}]}）
+  content         String?  @db.Text
+  /// 状态 1=启用 0=停用（停用后不可用于新的认证项目配置，已引用项目不受影响）
+  status          Int      @default(1)
+  /// 租户 ID
+  tenantId        Int?
+  /// 创建时间
+  createTime      DateTime @default(now())
+  /// 更新时间
+  updateTime      DateTime @updatedAt
+
+  /// 按本模板发放的证书（一对多，反向关系）
+  certificates Certificate[]
+
+  @@index([tenantId])
+  @@map("exam_certificate_template")
+}
+
+/// 试卷（组卷结果；type 区分固定/随机；固定卷题目见 PaperQuestion，随机卷抽题规则见 PaperRule；被考试引用后不可删除）
+model Paper {
+  id                    Int      @id @default(autoincrement())
+  /// 试卷名称（2-50 字）
+  name                  String   @db.VarChar(50)
+  /// 试卷类型：fixed 固定试卷 / random 随机试卷
+  type                  String   @db.VarChar(20)
+  /// 试卷状态：pending 待生成（仅随机卷，已配规则但未抽题）/ draft 草稿 / published 已发布
+  /// 随机卷新建后为 pending，点「生成试卷」按规则抽题固化为实体题目后转 draft；
+  /// draft 态可手工增删改题目；published 后不可编辑，考试仅可选已发布
+  status                String   @default("draft") @db.VarChar(20)
+  /// 总分（系统计算：固定=Σ各题分值；随机=Σ(抽取数量×每题分值)）
+  totalScore            Float    @default(0)
+  /// 题目数量（系统计算：固定=题数；随机=抽题规则总抽取数量）
+  questionCount         Int      @default(0)
+  /// 建议时长（分钟）
+  suggestDuration       Int
+  /// 知识点分布要求（AI 组卷录入的原始描述文本，可空）
+  knowledgeDistribution String?  @db.VarChar(500)
+  /// 创建人用户 ID（base_sys_user.id；仅创建人可修改共享属性）
+  createBy              Int?
+  /// 可见范围 self=仅自己 dept=本部门(含子部门) company=本公司 all=全部组织
+  visibleScope          String   @default("all") @db.VarChar(20)
+  /// 共享权限级别 manage=可管理(编辑/发布/删除) view=可查看(只读)
+  shareLevel            String   @default("manage") @db.VarChar(20)
+  /// 租户 ID
+  tenantId              Int?
+  /// 创建时间
+  createTime            DateTime @default(now())
+  /// 更新时间
+  updateTime            DateTime @updatedAt
+
+  /// 题库范围（多对多，经中间表 PaperBank）
+  paperBanks     PaperBank[]
+  /// 固定试卷题目项（一对多）
+  paperQuestions PaperQuestion[]
+  /// 随机试卷抽题规则（一对多）
+  paperRules     PaperRule[]
+  /// 引用本试卷的考试（一对多，反向关系；被引用时受删除保护）
+  exams          Exam[]
+
+  @@index([type])
+  @@index([status])
+  @@index([tenantId])
+  @@index([createBy])
+  @@map("exam_paper")
+}
+
+/// 试卷↔题库范围（多对多中间表；固定与随机试卷都用它记录组卷/抽题的题库范围；题库被引用后不可删除）
+model PaperBank {
+  /// 试卷 ID
+  paperId Int
+  /// 题库 ID
+  bankId  Int
+  /// 抽题权重（0~1，随机试卷各库合计为 1；固定试卷不使用，恒 0）
+  /// 存量数据与固定试卷为 0，抽题时按均分处理，不因缺权重而抽不出题
+  weight  Float @default(0)
+
+  /// 关联的试卷（试卷删除时级联删除关联）
+  paper Paper        @relation(fields: [paperId], references: [id], onDelete: Cascade)
+  /// 关联的题库（受删除保护：被引用时不可删除）
+  bank  QuestionBank @relation(fields: [bankId], references: [id])
+
+  @@id([paperId, bankId])
+  @@index([bankId])
+  @@map("exam_paper_bank")
+}
+
+/// 固定试卷题目项（type=fixed 时使用；引用正式题目并设定每题分值与卷面顺序；题目被引用后不可删除）
+model PaperQuestion {
+  id         Int   @id @default(autoincrement())
+  /// 所属试卷 ID
+  paperId    Int
+  /// 引用的题目 ID（须为正式状态）
+  questionId Int
+  /// 每题分值（正数，最多 2 位小数）
+  score      Float
+  /// 卷面排序序号（同卷内升序）
+  sortNo     Int   @default(0)
+
+  /// 所属试卷（试卷删除时级联删除题目项）
+  paper    Paper    @relation(fields: [paperId], references: [id], onDelete: Cascade)
+  /// 引用的题目（受删除保护：被引用时不可删除）
+  question Question @relation(fields: [questionId], references: [id])
+
+  @@index([paperId])
+  @@index([questionId])
+  @@map("exam_paper_question")
+}
+
+/// 随机试卷抽题规则项（type=random 时使用；一条=一个【题型×难度×知识点】组合的抽取数量与每题分值）
+model PaperRule {
+  id               Int    @id @default(autoincrement())
+  /// 所属试卷 ID
+  paperId          Int
+  /// 题型（存字典 question_type 的 value）
+  questionType     String @db.VarChar(20)
+  /// 难度（存字典 difficulty 的 value）
+  difficulty       String @db.VarChar(20)
+  /// 知识点 ID（指向 KnowledgePoint）
+  knowledgePointId Int
+  /// 抽取数量（正整数）
+  drawCount        Int
+  /// 该组合下每题分值（正数，最多 2 位小数）
+  scorePerQuestion Float
+
+  /// 所属试卷（试卷删除时级联删除抽题规则）
+  paper Paper @relation(fields: [paperId], references: [id], onDelete: Cascade)
+
+  @@index([paperId])
+  @@index([knowledgePointId])
+  @@map("exam_paper_rule")
+}
+
+/// 考试（选一份已发布试卷，分配考生并配置防作弊；状态含进行中/已结束由考试时间自动判定；已发布/进行中不可删除）
+model Exam {
+  id             Int      @id @default(autoincrement())
+  /// 考试类型：normal 普通考试 / skill 技能鉴定考试
+  /// skill 时 certProjectId 必填，且考生名单由该项目审核通过的报名记录全量派生、不接受手工增删
+  /// 不用 enum：全库状态类字段（Exam.status、CertProject.publishStatus、CertApplication.status）一律 String，破例会让「状态怎么存」有两套答案
+  examType       String   @default("normal") @db.VarChar(20)
+  /// 考试名称（≤50 字）
+  name           String   @db.VarChar(50)
+  /// 考试说明（≤500 字，可空）
+  description    String?  @db.VarChar(500)
+  /// 所选试卷 ID（须为已发布试卷）
+  paperId        Int
+  /// 开始时间
+  startTime      DateTime
+  /// 结束时间（须晚于开始时间）
+  endTime        DateTime
+  /// 考试时长（分钟）
+  duration       Int
+  /// 及格分数（正数，最多 1 位小数）
+  passScore      Float
+  /// 绑定的鉴定项目 ID：examType=skill 时必填，normal 时须为空
+  /// 不变式 examType='skill' ⇔ certProjectId IS NOT NULL，由服务层 assertTypeAndCertConsistency 守
+  certProjectId  Int?
+  /// 创建人用户 ID（base_sys_user.id）
+  createBy       Int?
+  /// 通过后自动发证（关闭时不发证；开启后按 certTemplateId 指定的模板发）
+  autoIssueCert  Boolean  @default(false)
+  /// 自动发证使用的证书模板 ID（autoIssueCert 开启时必填）
+  /// 与 certProjectId 无关：鉴定项目上没有证书模板与有效期字段，发证一律看这里。
+  /// 故技能鉴定考试要发证也得单独指定模板，两者不互斥
+  certTemplateId Int?
+  /// 考试状态：unpublished 未发布 / published 已发布 / ongoing 进行中 / finished 已结束
+  /// 说明：published 到开始时间进入 ongoing、到结束时间进入 finished，由查询时按时间惰性判定并回写
+  status         String   @default("unpublished") @db.VarChar(20)
+  /// 租户 ID
+  tenantId       Int?
+  /// 创建时间
+  createTime     DateTime @default(now())
+  /// 更新时间
+  updateTime     DateTime @updatedAt
+
+  /// 所选试卷（多对一，受试卷删除保护）
+  paper        Paper           @relation(fields: [paperId], references: [id])
+  /// 分配的考生（一对多）
+  candidates   ExamCandidate[]
+  /// 指派的工作人员（一对多；监考与阅卷按 role 区分）
+  staff        ExamStaff[]
+  /// 考试设置（一对一：防作弊 + 重考 + 考前/考中/考后）
+  setting      ExamSetting?
+  /// 考生答卷（一对多）
+  answerSheets AnswerSheet[]
+
+  @@index([paperId])
+  @@index([status])
+  @@index([examType])
+  @@index([tenantId])
+  @@index([createBy])
+  @@map("exam_exam")
+}
+
+/// 考试考生关联（按 candidateType 二选一关联内部人员或外部考生；examSiteId 为线下考点分配，可空）
+model ExamCandidate {
+  id                  Int      @id @default(autoincrement())
+  /// 所属考试 ID
+  examId              Int
+  /// 考生类型：internal 内部人员 / external 外部考生
+  candidateType       String   @db.VarChar(20)
+  /// 内部考生用户 ID（candidateType=internal 时有值，指向 SysUser）
+  internalUserId      Int?
+  /// 外部考生 ID（candidateType=external 时有值，指向 ExternalCandidate）
+  externalCandidateId Int?
+  /// 考点 ID（可空，线下考场编排用，指向 ExamSite）
+  examSiteId          Int?
+  /// 创建时间
+  createTime          DateTime @default(now())
+
+  /// 所属考试（考试删除时级联删除考生分配）
+  exam              Exam               @relation(fields: [examId], references: [id], onDelete: Cascade)
+  /// 外部考生（多对一，可空）
+  externalCandidate ExternalCandidate? @relation(fields: [externalCandidateId], references: [id])
+
+  /// 同一考生在同一场考试只应有一条分配记录，防止重复分配与重复取卷
+  /// 注意：MySQL 唯一索引不约束 NULL，故按考生类型拆成两条——
+  /// internal 行的 externalCandidateId 恒为 NULL，反之亦然，各自互不干扰
+  @@unique([examId, candidateType, internalUserId], name: "uniq_exam_internal_candidate")
+  @@unique([examId, candidateType, externalCandidateId], name: "uniq_exam_external_candidate")
+  @@index([examId])
+  @@index([internalUserId])
+  @@index([externalCandidateId])
+  @@map("exam_exam_candidate")
+}
+
+/// 考试工作人员指派（监考 / 阅卷）
+/// 两类名单结构完全相同，故照 ExamCandidate 用 candidateType 区分内外部的同款做法，
+/// 用 role 判别列区分岗位，不拆成两张表。
+/// 人员一律取自内部人员（SysUser）：原 proctor 监考员角色已随监考中心下线一并删除，
+/// 见 migrations/20260816010000_remove_proctor_center。
+model ExamStaff {
+  id         Int      @id @default(autoincrement())
+  /// 所属考试 ID
+  examId     Int
+  /// 岗位：proctor 监考 / grader 阅卷
+  role       String   @db.VarChar(20)
+  /// 人员用户 ID（指向 SysUser；与 ExamCandidate.internalUserId 一致，不设外键）
+  userId     Int
+  /// 姓名快照（人员改名或停用后名单仍可回溯，与考生姓名同理）
+  name       String   @db.VarChar(50)
+  /// 创建时间
+  createTime DateTime @default(now())
+
+  /// 所属考试（考试删除时级联删除指派）
+  exam Exam @relation(fields: [examId], references: [id], onDelete: Cascade)
+
+  /// 同一人在同一场考试的同一岗位只应有一条记录，防重复指派
+  @@unique([examId, role, userId], name: "uniq_exam_staff")
+  /// 复合索引服务于阅卷中心的「按指派过滤」：按 examId + role 相关子查询命中
+  @@index([examId, role])
+  @@index([userId])
+  @@map("exam_exam_staff")
+}
+
+/// 考试防作弊策略（与 Exam 一对一；七项开关 + 允许切屏次数 + 抓拍间隔）
+/// 考试设置（一对一挂在考试上）：防作弊、重考次数，以及考前/考中/考后的行为约束。
+/// 原名 ExamAntiCheatConfig，随考前/考中/考后设置并入后改名，表名同步为 exam_setting。
+///
+/// 【加字段必读】这张表的列必须同步加进 ExamSettingDto（exam/dto/exam.dto.ts），
+/// 否则管理端「编辑考试」会整体保存失败（400），不是只有新开关不生效：
+/// ExamService.getDetail 用 `omit` 读本表（除排除项外全带出）→ 编辑页把整份
+/// setting 回填进表单、提交时原样发回 → main.ts 的 ValidationPipe 开了
+/// forbidNonWhitelisted，DTO 里没有的字段会让整个请求被拒。
+/// 连带管理端 ExamSetting 接口（admin/src/api/exam.ts）也要加上对应字段。
+model ExamSetting {
+  /// 所属考试 ID（主键 + 外键，一对一）
+  examId             Int     @id
+  /// 防切屏检测（开启后超出允许次数强制交卷）
+  screenSwitchDetect Boolean @default(false)
+  /// 允许切屏次数（防切屏开启时有效）
+  allowSwitchTimes   Int     @default(0)
+  /// 题目乱序（每人打乱题序与选项序）
+  shuffleQuestions   Boolean @default(false)
+  /// 操作限制（禁复制粘贴/右键/多屏）
+  operationRestrict  Boolean @default(false)
+
+  /// 最多重考次数（0=不允许重考）
+  retakeLimit Int @default(0)
+
+  /// 【考前】允许提前进入考场的分钟数（0=不允许提前进入）
+  earlyEnterMinutes Int     @default(0)
+  /// 【考前】开考前需签署考试承诺书
+  requireCommitment Boolean @default(false)
+
+  /// 【考中】允许提前交卷
+  allowEarlySubmit  Boolean @default(true)
+  /// 【考中】最短作答时长（分钟，允许提前交卷时生效；0=不限制）
+  minAnswerMinutes  Int     @default(0)
+  /// 【考中】显示剩余时间
+  showRemainingTime Boolean @default(true)
+
+  /// 【考后】允许考生查看成绩
+  allowViewScore    Boolean @default(true)
+  /// 【考后】允许考生查看答案与解析
+  allowViewAnalysis Boolean @default(false)
+  /// 【已废弃，勿再使用】成绩公布方式
+  ///
+  /// 该列已无任何读写方，从未参与过发布判定，配了也不生效，
+  /// 故已从管理端表单、DTO、VO、buildSetting 全部摘除。
+  ///
+  /// 实际公布规则：纯客观题交卷即自动判分发布（AppExamService.submitExam 的
+  /// `scorePublished: !hasSubjective`）；含主观题交卷后待阅卷，全部评完只置
+  /// gradingStatus=completed，仍需管理端在阅卷中心调 GradingService.publishScore
+  /// 才对考生可见，已发布的还可由 withdrawScore 撤回。
+  /// 保留列仅因删列不可逆且迁移会自动作用于生产库，待确认后由单独迁移删除。
+  scorePublishMode  String  @default("afterGrading") @db.VarChar(20)
+
+  /// 所属考试（考试删除时级联删除设置）
+  exam Exam @relation(fields: [examId], references: [id], onDelete: Cascade)
+
+  @@map("exam_setting")
+}
+
+/// 考生答卷（阅卷任务主表；一名考生一份；客观题交卷自动判分，主观题 AI/人工阅卷；成绩发布后考生可查）
+model AnswerSheet {
+  id                  Int       @id @default(autoincrement())
+  /// 所属考试 ID
+  examId              Int
+  /// 考生类型：internal 内部 / external 外部
+  candidateType       String    @db.VarChar(20)
+  /// 内部考生用户 ID（candidateType=internal 时有值）
+  internalUserId      Int?
+  /// 外部考生 ID（candidateType=external 时有值）
+  externalCandidateId Int?
+  /// 考生姓名快照（列表展示用，交卷时冗余留存）
+  candidateName       String    @db.VarChar(50)
+  /// 客观题得分（系统自动判分汇总；未判分为 null，前端显示「-」）
+  objectiveScore      Float?
+  /// 主观题得分（AI/人工阅卷汇总；未完成为 null）
+  subjectiveScore     Float?
+  /// 总分（客观+主观；成绩未发布为 null）
+  totalScore          Float?
+  /// 阅卷状态：pending 待阅卷 / ai_grading AI阅卷中 / pending_review 待复核 / completed 已完成
+  gradingStatus       String    @default("pending") @db.VarChar(20)
+  /// 成绩是否已发布（发布后考生可查，撤回后回退）
+  scorePublished      Boolean   @default(false)
+  /// 是否及格（与 Exam.passScore 比较；成绩发布后有值）
+  passed              Boolean?
+  /// 开考时间（考生首次取卷时写入；倒计时按「开考时刻+时长」与考试结束时间的较早者计算）
+  startTime           DateTime?
+  /// 交卷时间（可空）
+  submitTime          DateTime?
+  /// 已切屏次数（考生端上报累加；与 ExamSetting.allowSwitchTimes 比较判定是否强制交卷）
+  switchCount         Int       @default(0)
+  /// 租户 ID
+  tenantId            Int?
+  /// 创建时间
+  createTime          DateTime  @default(now())
+  /// 更新时间
+  updateTime          DateTime  @updatedAt
+
+  /// 所属考试（考试删除时级联删除答卷）
+  exam          Exam           @relation(fields: [examId], references: [id], onDelete: Cascade)
+  /// 逐题作答与得分（一对多）
+  answerItems   AnswerItem[]
+  /// 人工复核记录（一对多，append-only）
+  reviewRecords ReviewRecord[]
+
+  @@index([examId])
+  @@index([gradingStatus])
+  @@index([tenantId])
+  /// 考生端按「考生+考试」查自己的答卷（取卷续答、防重复交卷、首页统计）
+  @@index([candidateType, internalUserId])
+  @@index([candidateType, externalCandidateId])
+  @@map("exam_answer_sheet")
+}
+
+/// 答题项（逐题作答与得分；客观题自动判分 isCorrect，主观题存 AI 评分/评语与人工复核后 finalScore）
+model AnswerItem {
+  id               Int      @id @default(autoincrement())
+  /// 所属答卷 ID
+  answerSheetId    Int
+  /// 对应题目 ID
+  questionId       Int
+  /// 题号（卷面顺序，从 1 开始）
+  questionNo       Int
+  /// 题目大类：objective 客观题 / subjective 主观题
+  questionCategory String   @db.VarChar(20)
+  /// 该题分值（卷面配置分值）
+  fullScore        Float
+  /// 考生答案
+  candidateAnswer  String?  @db.Text
+  /// 标准答案快照（来自题目配置，判分/复核参考）
+  standardAnswer   String?  @db.Text
+  /// 评分标准快照（主观题用，来自题目 scoringCriteria）
+  scoringCriteria  String?  @db.Text
+  /// 该题得分（客观题=自动判分，主观题=finalScore）
+  score            Float?
+  /// 客观题对错（true 正确 / false 错误；主观题为 null）
+  isCorrect        Boolean?
+  /// AI 评分（主观题）
+  aiScore          Float?
+  /// AI 评语（主观题）
+  aiComment        String?  @db.Text
+  /// 人工复核后最终分数（主观题；默认取 aiScore）
+  finalScore       Float?
+  /// AI 阅卷是否失败（主观题；失败转人工评分）
+  aiGradeFailed    Boolean  @default(false)
+
+  /// 所属答卷（答卷删除时级联删除答题项）
+  answerSheet AnswerSheet @relation(fields: [answerSheetId], references: [id], onDelete: Cascade)
+  /// 对应题目（多对一）
+  question    Question    @relation(fields: [questionId], references: [id])
+
+  @@index([answerSheetId])
+  @@index([questionId])
+  @@map("exam_answer_item")
+}
+
+/// 人工复核记录（append-only 留痕：复核人/时间/修改前后分数/意见；不可删除、不可篡改）
+model ReviewRecord {
+  id            Int      @id @default(autoincrement())
+  /// 所属答卷 ID
+  answerSheetId Int
+  /// 复核的答题项 ID
+  answerItemId  Int
+  /// 复核人用户 ID（系统记录）
+  reviewerId    Int
+  /// 复核人姓名快照
+  reviewerName  String   @db.VarChar(50)
+  /// 修改前分数（本次评分之前的分数，首次评分时为 null）
+  scoreBefore   Float?
+  /// 修改后分数
+  scoreAfter    Float
+  /// 评语（≤500 字，选填；不填存空串，列本身保持 NOT NULL 不做迁移）
+  reviewComment String   @db.VarChar(500)
+  /// 复核时间
+  reviewTime    DateTime @default(now())
+
+  /// 所属答卷（答卷删除时级联删除复核记录）
+  answerSheet AnswerSheet @relation(fields: [answerSheetId], references: [id], onDelete: Cascade)
+
+  @@index([answerSheetId])
+  @@index([answerItemId])
+  @@map("exam_review_record")
+}
+
+/// 鉴定工种（技能鉴定基础数据：如加油工、电工；下挂若干鉴定级别）
+///
+/// 为什么工种与级别分两张表、而不是像 KnowledgePoint 那样自引用：
+/// 工种→级别的层级恒为两层，自引用表在结构上允许「级别下再挂级别」，
+/// 只能靠校验拦，且两者字段本就不同（工种有编号与状态，级别只有名称与排序）。
+/// 分表把这个约束变成结构性的，前端树形表格照旧由 levels 关系组装。
+model CertOccupation {
+  id          Int      @id @default(autoincrement())
+  /// 工种名称（≤50 字，同租户内唯一）
+  name        String   @db.VarChar(50)
+  /// 工种编号（≤30 字，同租户内唯一；新增留空时由系统按 GZ+序号 生成）
+  code        String   @db.VarChar(30)
+  /// 工种说明（≤500 字，可空）
+  description String?  @db.VarChar(500)
+  /// 排序号（列表内升序）
+  orderNum    Int      @default(0)
+  /// 状态 1=启用 0=停用（停用后不可再被新的鉴定业务选用，已有数据不受影响）
   status      Int      @default(1)
   /// 租户 ID
   tenantId    Int?
@@ -794,9 +1362,613 @@ model QuestionBank {
   /// 更新时间
   updateTime  DateTime @updatedAt
 
-  /// 本题库下的题目（一对多，反向关系）
-  questions Question[]
+  /// 本工种下的鉴定级别（一对多；工种删除时级联删除其级别）
+  levels CertOccupationLevel[]
+  /// 用到本工种的鉴定项目（反向关系；被引用时不可删除）
+  certProjects CertProject[]
 
   @@index([tenantId])
-  @@map("exam_question_bank")
+  @@map("exam_cert_occupation")
+}
+
+/// 鉴定级别（隶属某一工种，如加油工的初级/中级/高级）
+model CertOccupationLevel {
+  id           Int      @id @default(autoincrement())
+  /// 所属工种 ID
+  occupationId Int
+  /// 级别名称（≤50 字，同一工种内唯一）
+  name         String   @db.VarChar(50)
+  /// 排序号（同工种内升序，用于表达级别高低次序）
+  orderNum     Int      @default(0)
+  /// 级别说明（≤500 字，可空）
+  description  String?  @db.VarChar(500)
+  /// 创建时间
+  createTime   DateTime @default(now())
+  /// 更新时间
+  updateTime   DateTime @updatedAt
+
+  /// 所属工种（多对一；工种删除时本级别随之删除）
+  occupation CertOccupation @relation(fields: [occupationId], references: [id], onDelete: Cascade)
+  /// 用到本级别的鉴定项目（反向关系；被引用时不可删除）
+  certProjects CertProject[]
+
+  @@index([occupationId])
+  @@map("exam_cert_occupation_level")
+}
+
+/// 认证项目（资格认证基础数据：关联考试与证书模板、配置报考条件与有效期；被报考记录引用时不可删除）
+/// 鉴定项目的名额分配（一个项目给若干「单位 + 部门」各分多少名额）
+///
+/// 单位与部门都指向部门树（SysDepartment），按 type 区分：
+/// 单位是公司节点（集团公司/省公司/分公司），部门是 type=部门 的节点。
+/// 注意「单位」不等于「顶层节点」——省公司挂在集团公司下、分公司挂在省公司下，
+/// 三者都是能分名额的单位，按层级判断会漏掉除集团公司外的全部 61 个。
+///
+/// 两者都显式存，而不是只存部门再由树反推单位——反推要递归查父级，
+/// 且部门日后被挪到别的单位下时，历史名额的归属会跟着变，对不上当初的分配。
+model CertProjectQuota {
+  id         Int      @id @default(autoincrement())
+  /// 所属鉴定项目
+  projectId  Int
+  /// 单位（公司节点，如「浙江石油分公司」）
+  orgId      Int
+  /// 部门（单位下 type=部门 的子节点，可空）
+  ///
+  /// 可空是因为多数分公司下面并没有再设部门（44 个里 32 个没有），
+  /// 留空表示这份名额分给整个单位、不细分到部门。
+  deptId     Int?
+  /// 分配名额数（正整数）
+  quota      Int
+  /// 创建时间
+  createTime DateTime @default(now())
+  /// 更新时间
+  updateTime DateTime @updatedAt
+
+  /// 所属项目（项目删除时级联删除其名额行）
+  project CertProject   @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  /// 单位（受删除保护）
+  org     SysDepartment  @relation("QuotaOrg", fields: [orgId], references: [id])
+  /// 部门（受删除保护，可空）
+  dept    SysDepartment? @relation("QuotaDept", fields: [deptId], references: [id])
+
+  /// 同一项目内「单位+部门」只能出现一行：重复分配该改数量而不是加一行，
+  /// 否则同一个部门有两条名额记录，报名时按哪条算说不清。
+  ///
+  /// deptId 为 NULL 时 MySQL 唯一索引不拦（NULL 互不相等），
+  /// 即「整个单位一行」可能重复添加，故服务端另有一道同组校验兜住。
+  @@unique([projectId, orgId, deptId])
+  @@index([projectId])
+  @@index([orgId])
+  @@index([deptId])
+  @@map("exam_cert_project_quota")
+}
+
+model CertProject {
+  id             Int      @id @default(autoincrement())
+  /// 认证名称（≤50 字，系统内全局唯一）
+  name           String   @unique @db.VarChar(50)
+  /// 鉴定简介（≤500 字，可空；表单里唯一的非必填项）
+  description    String?  @db.VarChar(500)
+  /// 鉴定工种 ID（指向 CertOccupation）
+  occupationId   Int
+  /// 鉴定级别 ID（指向 CertOccupationLevel，须属于上面的工种）
+  levelId        Int
+  /// 负责人用户 ID（指向 base_sys_user）
+  managerId      Int
+  /// 联系电话（≤20 字）
+  contactPhone   String   @db.VarChar(20)
+  /// 报名截止时间（精确到秒；到此时刻即关闭报名）
+  applyDeadline  DateTime
+  /// 鉴定开始时间
+  startTime      DateTime
+  /// 鉴定结束时间
+  endTime        DateTime
+  /// 报考条件说明（≤500 字，可空）
+  applyCondition String?  @db.VarChar(500)
+  /// 启用状态，恒为 1（保留字段，无写入口）
+  ///
+  /// 原为启用/停用开关，与 publishStatus 语义重叠，已下线：要停止各单位报名
+  /// 用撤回，语义更准且能回到可编辑态。DTO 已移除该字段、弹窗已去掉单选组、
+  /// update-status 路由不再注册，故新数据恒为 1。
+  /// 列保留是为读取存量（早期版本可能存出 0），cert-enroll 的 status: 1 过滤
+  /// 与 publish 的校验都只对那批存量起作用。删列需迁移且不可逆，收益也不大。
+  status         Int      @default(1)
+  /// 发布状态：unpublished 未发布 / published 已发布（本模块唯一的生命周期）
+  ///
+  /// 未发布的项目在「鉴定报名」里不出现。
+  ///
+  /// 已发布即锁定：名额已下发、各单位据此报人，此时改名额或改工种级别会让
+  /// 已报的人对不上账，故编辑/删除一律要求先撤回（参照 Exam 的同名机制）。
+  publishStatus  String    @default("unpublished") @db.VarChar(20)
+  /// 发布时间（发布时记录，撤回时清空）
+  publishTime    DateTime?
+  /// 发布人用户 ID（发布时记录，撤回时清空）
+  publishBy      Int?
+  /// 创建人用户 ID（base_sys_user.id；列表按此隔离，超管 admin 可见全部）
+  createBy       Int?
+  /// 租户 ID
+  tenantId       Int?
+  /// 创建时间
+  createTime     DateTime @default(now())
+  /// 更新时间
+  updateTime     DateTime @updatedAt
+
+  /// 鉴定工种（多对一，受删除保护）
+  occupation   CertOccupation      @relation(fields: [occupationId], references: [id])
+  /// 鉴定级别（多对一，受删除保护）
+  level        CertOccupationLevel @relation(fields: [levelId], references: [id])
+  /// 负责人（多对一，受删除保护）
+  manager      SysUser             @relation(fields: [managerId], references: [id])
+  /// 本项目下的报考申请（一对多，反向关系；存在时项目不可删除）
+  applications CertApplication[]
+  /// 本项目发放的证书（一对多，反向关系）
+  certificates Certificate[]
+  /// 本项目的名额分配（一对多；项目删除时级联删除）
+  quotas       CertProjectQuota[]
+
+  @@index([occupationId])
+  @@index([levelId])
+  @@index([managerId])
+  @@index([tenantId])
+  @@index([createBy])
+  @@map("exam_cert_project")
+}
+
+/// 报考申请（考生报考认证项目的审核记录；审核通过后获得对应考试参考资格；考生二选一关联内部/外部）
+model CertApplication {
+  id                  Int       @id @default(autoincrement())
+  /// 报考的认证项目 ID
+  projectId           Int
+  /// 考生类型：internal 内部人员 / external 外部考生
+  candidateType       String    @db.VarChar(20)
+  /// 内部考生用户 ID（candidateType=internal 时有值，指向 SysUser，无外键约束）
+  internalUserId      Int?
+  /// 外部考生 ID（candidateType=external 时有值，指向 ExternalCandidate，无外键约束）
+  externalCandidateId Int?
+  /// 考生姓名快照（提交报考时冗余留存，列表展示用）
+  candidateName       String    @db.VarChar(50)
+  /// 报名所占的单位 ID（公司节点，可空）
+  ///
+  /// 单位管理员按名额报人时必填，用于对上 CertProjectQuota 的名额账：
+  /// 「该单位已报多少人」就是按 projectId+orgId 数这张表。
+  /// 可空是为兼容考生自主报考的存量记录——那条路径不占单位名额。
+  orgId               Int?
+  /// 报名所占的部门 ID（可空）
+  ///
+  /// 名额行的部门为空时（名额分给整个单位）这里也为空。
+  /// 单独存一份而不从人员的 departmentId 反推：人员日后调岗，
+  /// 历史报名的名额归属不应跟着变。
+  deptId              Int?
+  /// 提交人用户 ID（单位管理员报名时记录，可空；考生自主报考时为空）
+  submitterId         Int?
+  /// 提交人姓名快照（同上）
+  submitterName       String?   @db.VarChar(50)
+  /// 报考时间（考生提交时记录）
+  applyTime           DateTime  @default(now())
+  /// 审核状态：pending 待审核 / approved 已通过 / rejected 已驳回
+  status              String    @default("pending") @db.VarChar(20)
+  /// 审核人用户 ID（审核操作时记录，可空）
+  reviewerId          Int?
+  /// 审核人姓名快照（审核操作时记录，可空）
+  reviewerName        String?   @db.VarChar(50)
+  /// 驳回原因（驳回时必填，≤200 字，可空）
+  rejectReason        String?   @db.VarChar(200)
+  /// 审核时间（审核操作时记录，可空）
+  reviewTime          DateTime?
+  /// 租户 ID
+  tenantId            Int?
+  /// 创建时间
+  createTime          DateTime  @default(now())
+  /// 更新时间
+  updateTime          DateTime  @updatedAt
+
+  /// 报考的认证项目（多对一，受删除保护）
+  project CertProject @relation(fields: [projectId], references: [id])
+
+  /// 不加 @@unique([projectId, internalUserId])：驳回后名额释放、允许补报，
+  /// 唯一约束会把被驳回的人永久挡在门外。驳回记录要留作痕迹，补报另开一条
+  /// pending，故「同一人重复报名」由服务端校验拦（只拦 pending/approved）。
+  @@index([projectId])
+  @@index([status])
+  @@index([tenantId])
+  /// 数名额用：按 projectId+orgId 统计已报人数
+  @@index([projectId, orgId, status])
+  /// 查「某人在本项目是否已报」用
+  @@index([projectId, internalUserId])
+  @@map("exam_cert_application")
+}
+
+/// 证书发放记录（考生通过考试且报考审核通过后颁发的电子证书台账；编号全局唯一，有效期状态按有效期至运行时判定）
+model Certificate {
+  id                  Int      @id @default(autoincrement())
+  /// 证书编号（系统按模板编号规则自动生成，全局唯一）
+  certNo              String   @unique @db.VarChar(50)
+  /// 关联认证项目 ID（发证所依据的认证项目；独立发证场景为空——
+  /// 考试只配 certTemplateId 不挂认证项目时无项目可依，见 Exam.certTemplateId）
+  projectId           Int?
+  /// 关联证书模板 ID（发证所用的证书模板）
+  templateId          Int
+  /// 模板快照 JSON（发证时冗余留存标题/机构/尺寸/底图/印章/版式）
+  /// 已下发的证书必须定格在发证那一刻：模板日后改版不能回溯改写已发出的证书。
+  /// 渲染一律以此为准；为空表示本功能上线前的存量证书，回退读模板当前值。
+  /// 结构见 modules/exam/utils/cert-template-snapshot.ts 的 CertTemplateSnapshot
+  templateSnapshot    String?  @db.Text
+  /// 考生类型：internal 内部 / external 外部
+  candidateType       String   @db.VarChar(20)
+  /// 内部考生用户 ID（candidateType=internal 时有值，无外键约束）
+  internalUserId      Int?
+  /// 外部考生 ID（candidateType=external 时有值，无外键约束）
+  externalCandidateId Int?
+  /// 考生姓名快照（发证时冗余留存）
+  candidateName       String   @db.VarChar(50)
+  /// 成绩来源答卷 ID（触发发证的达标答卷，可空）
+  /// 唯一约束兜住自动发证的幂等：同一份答卷反复发布成绩只应产出一张证书
+  /// （MySQL 唯一索引允许多个 NULL，手工发证不受影响）
+  answerSheetId       Int?     @unique
+  /// 颁发日期（系统自动发证时记录）
+  issueDate           DateTime @default(now())
+  /// 有效期至（系统计算：颁发日期 + 认证项目有效期月数）
+  expireDate          DateTime
+  /// 租户 ID
+  tenantId            Int?
+  /// 创建时间
+  createTime          DateTime @default(now())
+  /// 更新时间
+  updateTime          DateTime @updatedAt
+
+  /// 关联认证项目（多对一，独立发证时为空）
+  project  CertProject?        @relation(fields: [projectId], references: [id])
+  /// 关联证书模板（多对一）
+  template CertificateTemplate @relation(fields: [templateId], references: [id])
+
+  @@index([projectId])
+  @@index([templateId])
+  @@index([tenantId])
+  @@map("exam_certificate")
+}
+
+model Practice {
+  id               Int       @id @default(autoincrement())
+  /// 练习名称（≤200 字）
+  name             String    @db.VarChar(200)
+  /// 练习编号（≤30 字，全局唯一；新增留空时由系统自动生成）
+  code             String    @unique @db.VarChar(30)
+  /// 练习说明（≤500 字，可空）
+  description      String?   @db.VarChar(500)
+  /// 抽题方式：sequential 全库顺序练（忽略规则，按题库顺序全练，支持断点续练）/ random 按规则抽题
+  drawMode         String    @default("sequential") @db.VarChar(20)
+  /// 练习开始时间（可空，与 endTime 同时为空表示不限时）
+  startTime        DateTime?
+  /// 练习结束时间（可空；非空时须晚于 startTime）
+  endTime          DateTime?
+  /// 自动结束：开启后到 endTime 时状态自动变为 finished
+  autoFinish       Boolean   @default(false)
+  /// 参与范围：specified 指定员工参与 / all 全员参与
+  participantScope String    @default("specified") @db.VarChar(20)
+  /// 练习状态：unpublished 未发布 / published 已发布 / ongoing 进行中 / finished 已结束
+  /// 说明：published 到 startTime 进入 ongoing、autoFinish 开启且到 endTime 进入 finished，
+  /// 由查询时按时间惰性判定并回写（与 Exam 一致）
+  status           String    @default("unpublished") @db.VarChar(20)
+  /// 创建人用户 ID（base_sys_user.id）
+  createBy         Int?
+  /// 租户 ID
+  tenantId         Int?
+  /// 创建时间
+  createTime       DateTime  @default(now())
+  /// 更新时间
+  updateTime       DateTime  @updatedAt
+
+  /// 练习题库范围（一对多）
+  banks        PracticeBank[]
+  /// 抽题规则（一对多，drawMode=random 时生效）
+  rules        PracticeRule[]
+  /// 指定参与人员（一对多，participantScope=specified 时有值）
+  participants PracticeParticipant[]
+  /// 练习设置（一对一）
+  setting      PracticeSetting?
+  /// 考生的练习作答记录（一对多）
+  records      PracticeRecord[]
+
+  @@index([status])
+  @@index([tenantId])
+  @@index([createBy])
+  @@map("exam_practice")
+}
+
+model PracticeBank {
+  /// 练习 ID
+  practiceId Int
+  /// 题库 ID
+  bankId     Int
+
+  /// 所属练习（练习删除时级联删除关联）
+  practice Practice     @relation(fields: [practiceId], references: [id], onDelete: Cascade)
+  /// 关联的题库（受删除保护：被引用时不可删除）
+  bank     QuestionBank @relation(fields: [bankId], references: [id])
+
+  @@id([practiceId, bankId])
+  @@index([bankId])
+  @@map("exam_practice_bank")
+}
+
+model PracticeRule {
+  id               Int    @id @default(autoincrement())
+  /// 所属练习 ID
+  practiceId       Int
+  /// 题型（存字典 question_type 的 value）
+  questionType     String @db.VarChar(20)
+  /// 难度（存字典 difficulty 的 value）
+  difficulty       String @db.VarChar(20)
+  /// 知识点 ID（指向 KnowledgePoint）
+  knowledgePointId Int
+  /// 抽取数量（正整数）
+  drawCount        Int
+
+  /// 所属练习（练习删除时级联删除抽题规则）
+  practice Practice @relation(fields: [practiceId], references: [id], onDelete: Cascade)
+
+  @@index([practiceId])
+  @@index([knowledgePointId])
+  @@map("exam_practice_rule")
+}
+
+model PracticeParticipant {
+  id                  Int      @id @default(autoincrement())
+  /// 所属练习 ID
+  practiceId          Int
+  /// 参与人类型：internal 内部人员 / external 外部考生
+  participantType     String   @db.VarChar(20)
+  /// 内部人员用户 ID（participantType=internal 时有值，指向 SysUser）
+  internalUserId      Int?
+  /// 外部考生 ID（participantType=external 时有值，指向 ExternalCandidate）
+  externalCandidateId Int?
+  /// 创建时间
+  createTime          DateTime @default(now())
+
+  /// 所属练习（练习删除时级联删除人员分配）
+  practice          Practice           @relation(fields: [practiceId], references: [id], onDelete: Cascade)
+  /// 外部考生（多对一，可空）
+  externalCandidate ExternalCandidate? @relation(fields: [externalCandidateId], references: [id])
+
+  /// 同一人在同一练习只应有一条记录。MySQL 唯一索引不约束 NULL，
+  /// 故按类型拆两条——internal 行的 externalCandidateId 恒为 NULL，反之亦然
+  @@unique([practiceId, participantType, internalUserId], name: "uniq_practice_internal_participant")
+  @@unique([practiceId, participantType, externalCandidateId], name: "uniq_practice_external_participant")
+  @@index([practiceId])
+  @@index([internalUserId])
+  @@index([externalCandidateId])
+  @@map("exam_practice_participant")
+}
+
+model PracticeSetting {
+  /// 所属练习 ID（主键 + 外键，一对一）
+  practiceId            Int     @id
+  /// 允许反复练习（关闭后每人只能完成一次）
+  allowRepeat           Boolean @default(true)
+  /// 单题作答后展示对错
+  showResultPerQuestion Boolean @default(true)
+  /// 展示答案（仅 showResultPerQuestion 开启时生效，关闭时强制置 false）
+  showAnswer            Boolean @default(true)
+  /// 展示解析（仅 showResultPerQuestion 开启时生效，关闭时强制置 false）
+  showAnalysis          Boolean @default(true)
+
+  /// 所属练习（练习删除时级联删除设置）
+  practice Practice @relation(fields: [practiceId], references: [id], onDelete: Cascade)
+
+  @@map("exam_practice_setting")
+}
+
+model SelfPracticeConfig {
+  /// 所属题库 ID（主键 + 外键，一对一）
+  bankId                Int      @id
+  /// 开放状态：true 开启（学员可自主选择本题库练习）/ false 关闭
+  isOpen                Boolean  @default(false)
+  /// 开放范围：all 全员开放 / specified 指定员工
+  openScope             String   @default("all") @db.VarChar(20)
+  /// 单次练习题数上限（0 = 不限，取题库全部）
+  maxQuestionsPerRound  Int      @default(0)
+  /// 允许反复练习
+  allowRepeat           Boolean  @default(true)
+  /// 单题作答后展示对错
+  showResultPerQuestion Boolean  @default(true)
+  /// 展示答案（仅 showResultPerQuestion 开启时生效，关闭时强制置 false）
+  showAnswer            Boolean  @default(true)
+  /// 展示解析（仅 showResultPerQuestion 开启时生效，关闭时强制置 false）
+  showAnalysis          Boolean  @default(true)
+  /// 开放操作人用户 ID（base_sys_user.id）
+  createBy              Int?
+  /// 租户 ID
+  tenantId              Int?
+  /// 创建时间
+  createTime            DateTime @default(now())
+  /// 更新时间
+  updateTime            DateTime @updatedAt
+
+  /// 所属题库（题库删除时级联删除开放配置）
+  bank            QuestionBank                 @relation(fields: [bankId], references: [id], onDelete: Cascade)
+  /// 开放给的指定人员（一对多，openScope=specified 时有值）
+  users           SelfPracticeUser[]
+  /// 可练知识点范围（一对多，为空表示不限）
+  knowledgePoints SelfPracticeKnowledgePoint[]
+
+  @@index([tenantId])
+  @@index([createBy])
+  @@map("exam_self_practice_config")
+}
+
+model SelfPracticeUser {
+  id                  Int      @id @default(autoincrement())
+  /// 所属题库 ID（指向 SelfPracticeConfig.bankId）
+  bankId              Int
+  /// 人员类型：internal 内部人员 / external 外部考生
+  userType            String   @db.VarChar(20)
+  /// 内部人员用户 ID（userType=internal 时有值，指向 SysUser）
+  internalUserId      Int?
+  /// 外部考生 ID（userType=external 时有值，指向 ExternalCandidate）
+  externalCandidateId Int?
+  /// 创建时间
+  createTime          DateTime @default(now())
+
+  /// 所属开放配置（配置删除时级联删除授权记录）
+  config            SelfPracticeConfig @relation(fields: [bankId], references: [bankId], onDelete: Cascade)
+  /// 外部考生（多对一，可空）
+  externalCandidate ExternalCandidate? @relation(fields: [externalCandidateId], references: [id])
+
+  /// 同一人对同一题库只应有一条授权。MySQL 唯一索引不约束 NULL，故按类型拆两条
+  @@unique([bankId, userType, internalUserId], name: "uniq_self_practice_internal_user")
+  @@unique([bankId, userType, externalCandidateId], name: "uniq_self_practice_external_user")
+  @@index([bankId])
+  @@index([internalUserId])
+  @@index([externalCandidateId])
+  @@map("exam_self_practice_user")
+}
+
+model SelfPracticeKnowledgePoint {
+  /// 所属题库 ID（指向 SelfPracticeConfig.bankId）
+  bankId           Int
+  /// 知识点 ID
+  knowledgePointId Int
+
+  /// 所属开放配置（配置删除时级联删除范围限定）
+  config         SelfPracticeConfig @relation(fields: [bankId], references: [bankId], onDelete: Cascade)
+  /// 关联的知识点（受删除保护：被引用时不可删除）
+  knowledgePoint KnowledgePoint     @relation(fields: [knowledgePointId], references: [id])
+
+  @@id([bankId, knowledgePointId])
+  @@index([knowledgePointId])
+  @@map("exam_self_practice_kp")
+}
+
+/// 练习作答记录（一次练习会话）。
+/// 与 AnswerSheet 分开建表的原因：练习无阅卷流程与成绩发布，且来源可能是
+/// 岗位练兵（practiceId 有值）或自主练习/错题重练（practiceId 为空）。
+model PracticeRecord {
+  id                   Int       @id @default(autoincrement())
+  /// 岗位练兵 ID（自主练习与错题重练为空）
+  practiceId           Int?
+  /// 练习来源：assigned 岗位练兵 / self 自主练习 / wrong 错题重练
+  sourceType           String    @default("assigned") @db.VarChar(20)
+  /// 来源名称快照（列表展示用，自主练习存题库或知识点名）
+  sourceName           String    @db.VarChar(200)
+  /// 自主练习的题库 ID（sourceType=self 时有值；岗位练兵与错题重练为空）
+  ///
+  /// 必须落库而不能只靠 sourceName 反查：
+  /// 1) 断点续练要按题库区分未完成记录，否则 A 题库练一半再进 B 题库会串到 A 的题；
+  /// 2) allowRepeat 与展示开关都存在 SelfPracticeConfig（以 bankId 为主键），
+  ///    靠题库名匹配时一改名就失效。
+  selfBankId           Int?
+  /// 自主练习按知识点练时的知识点 ID（sourceType=self 且按知识点练时有值）
+  selfKnowledgePointId Int?
+  /// 练习人类型：internal 内部人员 / external 外部考生
+  userType             String    @db.VarChar(20)
+  /// 内部人员用户 ID（userType=internal 时有值）
+  internalUserId       Int?
+  /// 外部考生 ID（userType=external 时有值）
+  externalCandidateId  Int?
+  /// 题目总数
+  totalCount           Int       @default(0)
+  /// 已答题数（支撑断点续练：小于 totalCount 表示未练完）
+  answeredCount        Int       @default(0)
+  /// 答对题数
+  correctCount         Int       @default(0)
+  /// 是否已完成（练完全部题目后置 true，allowRepeat=false 时据此拦截重练）
+  finished             Boolean   @default(false)
+  /// 完成时间（可空）
+  finishTime           DateTime?
+  /// 租户 ID
+  tenantId             Int?
+  /// 创建时间
+  createTime           DateTime  @default(now())
+  /// 更新时间
+  updateTime           DateTime  @updatedAt
+
+  /// 所属岗位练兵（练习删除时级联删除记录）
+  practice Practice?        @relation(fields: [practiceId], references: [id], onDelete: Cascade)
+  /// 逐题作答明细
+  answers  PracticeAnswer[]
+
+  @@index([practiceId])
+  @@index([internalUserId])
+  @@index([externalCandidateId])
+  @@index([tenantId])
+  // 断点续练按「人 + 题库」找未完成记录，走这条索引
+  @@index([selfBankId])
+  @@map("exam_practice_record")
+}
+
+/// 练习逐题作答明细。standardAnswer 冗余快照，避免题目后续被改动导致复盘失真
+model PracticeAnswer {
+  id              Int      @id @default(autoincrement())
+  /// 所属练习记录 ID
+  recordId        Int
+  /// 题目 ID
+  questionId      Int
+  /// 题序（从 1 开始，断点续练按此定位下一题）
+  questionNo      Int
+  /// 考生作答（未作答为空）
+  candidateAnswer String?  @db.Text
+  /// 标准答案快照（取题时冗余留存）
+  standardAnswer  String?  @db.Text
+  /// 是否答对（未作答为 null）
+  isCorrect       Boolean?
+  /// 作答时间
+  createTime      DateTime @default(now())
+
+  /// 所属练习记录（记录删除时级联删除明细）
+  record   PracticeRecord @relation(fields: [recordId], references: [id], onDelete: Cascade)
+  /// 关联题目（题目删除时级联删除明细）
+  question Question       @relation(fields: [questionId], references: [id], onDelete: Cascade)
+
+  @@unique([recordId, questionNo], name: "uniq_practice_answer_no")
+  @@index([recordId])
+  @@index([questionId])
+  @@map("exam_practice_answer")
+}
+
+/// 消息已读状态（消息本身由业务数据实时派生，不落库；此表只记录「谁读过哪条」）
+/// messageKey 形如 exam_notice-12，即「消息类型-来源业务记录 ID」，由服务端拼装
+model MessageRead {
+  id                  Int      @id @default(autoincrement())
+  /// 用户类型 internal=内部员工 / external=外部考生
+  userType            String   @db.VarChar(20)
+  /// 内部员工 ID（userType=internal 时有值）
+  internalUserId      Int?
+  /// 外部考生 ID（userType=external 时有值）
+  externalCandidateId Int?
+  /// 消息标识：{类型}-{来源记录 ID}，同一用户同一消息只应有一条
+  messageKey          String   @db.VarChar(64)
+  readTime            DateTime @default(now())
+
+  /// 内外部各自唯一：MySQL 唯一索引允许多个 NULL，故两条约束互不干扰
+  @@unique([userType, internalUserId, messageKey], name: "uniq_msg_read_internal")
+  @@unique([userType, externalCandidateId, messageKey], name: "uniq_msg_read_external")
+  @@index([userType, internalUserId])
+  @@index([userType, externalCandidateId])
+  @@map("exam_message_read")
+}
+
+/// 题目收藏。与错题本不同——错题由作答明细推导，收藏是用户主动标记，需独立存表
+model QuestionFavorite {
+  id                  Int      @id @default(autoincrement())
+  tenantId            Int?
+  /// 用户类型：internal / external
+  userType            String   @db.VarChar(20)
+  /// 内部人员用户 ID（userType=internal 时有值）
+  internalUserId      Int?
+  /// 外部考生 ID（userType=external 时有值）
+  externalCandidateId Int?
+  /// 收藏的题目
+  questionId          Int
+  createTime          DateTime @default(now())
+
+  /// 题目删除时一并清掉收藏
+  question Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
+
+  /// 内外部各自唯一：MySQL 唯一索引允许多个 NULL，故两条约束互不干扰
+  @@unique([userType, internalUserId, questionId], name: "uniq_favorite_internal")
+  @@unique([userType, externalCandidateId, questionId], name: "uniq_favorite_external")
+  @@index([userType, internalUserId])
+  @@index([userType, externalCandidateId])
+  @@index([questionId])
+  @@map("exam_question_favorite")
 }

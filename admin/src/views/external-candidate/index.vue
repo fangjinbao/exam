@@ -53,12 +53,12 @@
     <ElCard shadow="never" class="table-card">
       <div class="table-header">
         <ElButton v-if="canAdd" type="primary" :icon="Plus" @click="handleAdd">新增</ElButton>
-        <ElButton v-if="canImport" type="primary" plain :icon="Upload" @click="handleImport">
+        <ElButton v-if="canImport" type="info" plain :icon="Upload" @click="handleImport">
           批量导入
         </ElButton>
         <ElButton
           v-if="canExport"
-          type="primary"
+          type="info"
           plain
           :icon="Download"
           :loading="exporting"
@@ -66,9 +66,10 @@
         >
           导出
         </ElButton>
+        <!-- 未选中时保持中性灰，选中后才转为 danger 提示破坏性 -->
         <ElButton
           v-if="canDelete"
-          type="danger"
+          :type="selectedIds.length ? 'danger' : 'info'"
           plain
           :icon="Delete"
           :disabled="!selectedIds.length"
@@ -110,7 +111,7 @@
             </template>
           </ElTableColumn>
           <ElTableColumn prop="createTime" label="创建时间" min-width="170" show-overflow-tooltip />
-          <ElTableColumn v-if="canOperate" label="操作" width="240" align="center" fixed="right">
+          <ElTableColumn v-if="canOperate" label="操作" width="240" align="left" fixed="right" class-name="table-actions">
             <template #default="{ row }">
               <ElButton v-if="canUpdate" link type="primary" @click="handleEdit(row)">编辑</ElButton>
               <ElButton

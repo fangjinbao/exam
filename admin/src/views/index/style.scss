@@ -8,6 +8,28 @@
 
   .app-sidebar {
     flex-shrink: 0;
+
+    /*
+      侧栏自己限高并裁掉溢出，菜单的滚动才会落在内部的 ElScrollbar 上。
+      .app-layout 是 min-height: 100vh（允许被内容撑长），侧栏若不显式限高，
+      菜单变多时整条侧栏会跟着长出视口，超出的菜单项滚不到。
+    */
+    height: 100vh;
+    overflow: hidden;
+
+    .layout-sidebar {
+      height: 100%;
+      overflow: hidden;
+    }
+
+    .menu-left {
+      height: 100%;
+      overflow: hidden;
+    }
+
+    .el-scrollbar__wrap {
+      overflow-y: auto;
+    }
   }
 
   #app-main {
@@ -156,9 +178,20 @@
 
     .layout-sidebar {
       height: 100%;
+      overflow: hidden;
 
       .menu-left {
         height: 100%;
+        overflow: hidden;
+      }
+
+      // 滚动容器必须拿到确定高度，否则内容再多也不触发滚动
+      .el-scrollbar {
+        height: 100% !important;
+      }
+
+      .el-scrollbar__wrap {
+        overflow-y: auto;
       }
     }
   }

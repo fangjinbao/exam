@@ -2,8 +2,8 @@
   页面名称：Workspace - 工作台
 
   功能描述：
-    工作台页面，展示组件示例入口
-    包含图表组件、表单组件、详情组件、列表组件等
+    考生完成考试与练习的集中入口，包含参加考试、在线练习、错题本
+    展示待考数量与错题数量作为入口提示
 
   路由信息：
     路径：/workspace
@@ -13,142 +13,188 @@
 
 <template>
   <div class="workspace-page">
+    <van-nav-bar title="工作台" fixed placeholder />
+
     <div class="content">
-      <!-- 工作台卡片 -->
-      <div class="workspace-card">
-        <h2>工作台</h2>
-        <p>这里是工作台页面</p>
-      </div>
-
-      <!-- 图表组件区域 -->
-      <div class="workspace-section">
-        <div class="section-title">图表组件</div>
-        <van-cell-group inset>
-          <van-cell title="图表组件" is-link @click="handleGoToCharts" />
-        </van-cell-group>
-      </div>
-
-      <!-- 表单组件区域 -->
-      <div class="workspace-section">
-        <div class="section-title">表单组件</div>
-        <van-cell-group inset>
-          <van-cell title="基础表单" is-link @click="handleGoToForm('basic')" />
-          <van-cell title="复杂表单" is-link @click="handleGoToForm('complex')" />
-          <van-cell title="登记表单" is-link @click="handleGoToForm('register')" />
-        </van-cell-group>
-      </div>
-
-      <!-- 详情组件区域 -->
-      <div class="workspace-section">
-        <div class="section-title">详情组件</div>
-        <van-cell-group inset>
-          <van-cell title="用户详情" is-link @click="handleGoToDetail('user')" />
-          <van-cell title="订单详情" is-link @click="handleGoToDetail('order')" />
-          <van-cell title="项目详情" is-link @click="handleGoToDetail('project')" />
-          <van-cell title="产品详情" is-link @click="handleGoToDetail('product')" />
-        </van-cell-group>
-      </div>
-
-      <!-- 列表组件区域 -->
-      <div class="workspace-section">
-        <div class="section-title">列表组件</div>
-        <van-cell-group inset>
-          <van-cell title="基础列表" is-link @click="handleGoToList('basic')" />
-          <van-cell title="搜索筛选列表" is-link @click="handleGoToList('search')" />
-          <van-cell title="滚动加载列表" is-link @click="handleGoToList('scroll')" />
-          <van-cell title="卡片列表" is-link @click="handleGoToList('card')" />
-        </van-cell-group>
-      </div>
+      <!-- 功能入口 -->
+      <section class="entry-group">
+        <button
+          v-for="entry in entries"
+          :key="entry.key"
+          type="button"
+          class="entry-item"
+          @click="router.push(entry.path)"
+        >
+          <span class="entry-icon" :class="`entry-icon--${entry.key}`">
+            <van-icon :name="entry.icon" size="24" />
+          </span>
+          <span class="entry-text">
+            <span class="entry-name">{{ entry.name }}</span>
+            <span class="entry-desc">{{ entry.desc }}</span>
+          </span>
+          <van-tag v-if="entry.badge" type="danger" round>{{ entry.badge }}</van-tag>
+          <van-icon name="arrow" class="entry-arrow" />
+        </button>
+      </section>
     </div>
   </div>
 </template>
 
 <script setup>
+import { ref, computed, onActivated } from 'vue'
 import { useRouter } from 'vue-router'
+import { getOverviewApi, getUpcomingExamsApi } from '@/api/modules/homeApi'
 
-/**
- * 工作台页面
- * 提供组件示例入口和管理界面
- */
-
-// 路由实例
 const router = useRouter()
 
-/**
- * 跳转到图表组件示例页面
- */
-const handleGoToCharts = () => {
-  router.push('/charts/demo')
-}
+// 待考数量（参加考试入口角标）
+const upcomingCount = ref(0)
+
+// 错题数量（错题本入口角标）
+const wrongCount = ref(0)
+
+// 请求序号：Tab 快速切换会有多次请求在途，只接受最新一次的结果
+let requestId = 0
+
+/** 功能入口配置 */
+const entries = computed(() => [
+  {
+    key: 'exam',
+    name: '参加考试',
+    desc: '查看待参加的考试并作答',
+    icon: 'edit',
+    path: '/exam/list',
+    badge: upcomingCount.value
+  },
+  {
+    key: 'practice',
+    name: '在线练习',
+    desc: '按题库或知识点练习并看解析',
+    icon: 'todo-list-o',
+    path: '/practice/setup',
+    badge: 0
+  },
+  {
+    key: 'wrong',
+    name: '错题本',
+    desc: '回顾历次错题并再次练习',
+    icon: 'warning-o',
+    path: '/practice/wrong',
+    badge: wrongCount.value
+  }
+])
 
 /**
- * 跳转到表单组件页面
- * @param {string} type - 表单类型（basic/complex/register）
+ * 加载入口角标数据
+ * 请求失败时角标保持为 0，不阻断入口使用
  */
-const handleGoToForm = (type) => {
-  router.push(`/components/form?type=${type}`)
+const loadBadges = async () => {
+  const currentId = ++requestId
+  try {
+    const [overviewRes, upcomingRes] = await Promise.all([
+      getOverviewApi(),
+      getUpcomingExamsApi()
+    ])
+    // 已有更新的请求在途时丢弃本次结果，避免旧数据覆盖新数据
+    if (currentId !== requestId) return
+    wrongCount.value = overviewRes.data?.wrongCount || 0
+    upcomingCount.value = (upcomingRes.data || []).length
+  } catch {
+    // 角标加载失败不阻断入口使用，仅最新一次请求的失败结果生效
+    if (currentId === requestId) {
+      wrongCount.value = 0
+      upcomingCount.value = 0
+    }
+  }
 }
 
-/**
- * 跳转到详情组件页面
- * @param {string} type - 详情类型（user/order/project/product）
- */
-const handleGoToDetail = (type) => {
-  router.push(`/components/detail?type=${type}`)
-}
-
-/**
- * 跳转到列表组件页面
- * @param {string} type - 列表类型（basic/search/scroll/card）
- */
-const handleGoToList = (type) => {
-  router.push(`/components/list?type=${type}`)
-}
+// 页面被 KeepAlive 缓存，每次激活时重新拉取，保证待考数与错题数角标及时刷新
+onActivated(loadBadges)
 </script>
 
 <style scoped>
-/* 页面容器 */
 .workspace-page {
-  min-height: 100%;
+  min-height: 100vh;
   background-color: var(--bg-page);
 }
 
-/* 内容区域 */
 .content {
   padding: var(--spacing-md);
+  padding-bottom: 80px;
 }
 
-/* 工作台卡片 */
-.workspace-card {
-  background: linear-gradient(135deg, var(--primary-color) 0%, #0d5ac7 100%);
+.entry-group {
+  background-color: var(--bg-card);
   border-radius: var(--radius-lg);
-  padding: var(--spacing-xl);
-  text-align: center;
-  color: white;
-  margin-bottom: var(--spacing-lg);
+  overflow: hidden;
 }
 
-.workspace-card h2 {
-  font-size: 24px;
-  margin-bottom: var(--spacing-sm);
+/* 入口项：整行可点，触摸高度 64px */
+.entry-item {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  width: 100%;
+  min-height: 64px;
+  padding: var(--spacing-md);
+  background: none;
+  border: none;
+  text-align: left;
+  cursor: pointer;
 }
 
-.workspace-card p {
-  font-size: 14px;
-  opacity: 0.9;
+.entry-item + .entry-item {
+  border-top: 1px solid var(--border-color);
 }
 
-/* 功能列表区域 */
-.workspace-section {
-  margin-bottom: var(--spacing-lg);
+.entry-item:active {
+  background-color: var(--bg-page);
 }
 
-/* 区域标题 */
-.section-title {
-  font-size: 14px;
-  font-weight: bold;
-  color: var(--text-secondary);
-  margin-bottom: var(--spacing-sm);
-  padding-left: var(--spacing-sm);
+/* 图标底色按功能区分，弱化处理不做强调色块 */
+.entry-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-md);
+  flex-shrink: 0;
+  color: var(--primary-color);
+  background-color: rgba(17, 113, 248, 0.1);
+}
+
+.entry-icon--wrong {
+  color: var(--danger-color);
+  background-color: rgba(245, 63, 63, 0.1);
+}
+
+.entry-icon--practice {
+  color: var(--success-color);
+  background-color: rgba(0, 180, 42, 0.1);
+}
+
+.entry-text {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+}
+
+.entry-name {
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+.entry-desc {
+  margin-top: 2px;
+  font-size: 12px;
+  color: var(--text-disabled);
+}
+
+.entry-arrow {
+  color: var(--text-disabled);
+  flex-shrink: 0;
 }
 </style>

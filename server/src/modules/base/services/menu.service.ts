@@ -86,6 +86,31 @@ export class MenuService extends BaseService {
         where: { id: { in: menuIds } },
         orderBy: { orderNum: 'asc' },
       });
+
+      // 伴随隐藏页自动带出：如「/paper」这类单页菜单的创建/编辑页是独立顶级隐藏菜单
+      // 「/paper-edit」（受"单页一级菜单无法挂子页"模型约束，只能平级而非子节点），
+      // 分配权限时不会被父节点级联勾选。此处按命名约定
+      // `${router}-edit` / `${router}-detail` / `${router}-workspace` 补齐：
+      // 只要用户有权访问 /x，就自动带出隐藏的 /x-edit、/x-detail、/x-workspace
+      // （后者对应 /grading → /grading-workspace 阅卷工作台），
+      // 避免普通角色点"创建/编辑/详情/阅卷"时前端无对应路由而 404。
+      // 带出的仅是父页面的从属视图，接口侧仍由各自 @Perms 独立鉴权，不构成越权。
+      const grantedRouters = new Set(menus.map((m) => m.router).filter(Boolean));
+      const companionSuffixes = ['-edit', '-detail', '-workspace'];
+      const companionRouters = [...grantedRouters].flatMap((r) =>
+        companionSuffixes.map((suffix) => `${r}${suffix}`),
+      );
+      if (companionRouters.length) {
+        const companions = await this.prisma.sysMenu.findMany({
+          where: { router: { in: companionRouters }, isShow: 0 },
+          orderBy: { orderNum: 'asc' },
+        });
+        // 去重合并（companion 可能已在角色菜单中）
+        const existingIds = new Set(menus.map((m) => m.id));
+        for (const c of companions) {
+          if (!existingIds.has(c.id)) menus.push(c);
+        }
+      }
     }
 
     // 按 parentId 归集 type 2 按钮，供父菜单挂 authList

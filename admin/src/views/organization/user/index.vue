@@ -1,5 +1,5 @@
 <template>
-  <div class="organization-user">
+  <div ref="rootRef" class="organization-user" :style="rootHeightStyle">
     <div class="user-layout">
       <!-- 左侧：部门树卡片 -->
       <ElCard shadow="never" class="dept-tree-card">
@@ -56,11 +56,12 @@
         <ElCard shadow="never" class="table-card">
           <div class="table-header">
             <ElButton v-auth="'add'" type="primary" @click="handleAdd">新增</ElButton>
-            <ElButton type="primary" plain @click="handleImport">导入</ElButton>
-            <ElButton type="primary" plain @click="handleExport">导出</ElButton>
-            <ElButton type="primary" plain :disabled="selectedRows.length === 0" @click="handleBatchSetPosition">设置岗位</ElButton>
-            <ElButton type="primary" plain :disabled="selectedRows.length === 0" @click="handleBatchSetRole">设置角色</ElButton>
-            <ElButton v-auth="'batch-delete'" type="danger" plain :disabled="selectedRows.length === 0" @click="handleBatchDelete">批量删除</ElButton>
+            <ElButton type="info" plain @click="handleImport">导入</ElButton>
+            <ElButton type="info" plain @click="handleExport">导出</ElButton>
+            <ElButton type="info" plain :disabled="selectedRows.length === 0" @click="handleBatchSetPosition">设置岗位</ElButton>
+            <ElButton type="info" plain :disabled="selectedRows.length === 0" @click="handleBatchSetRole">设置角色</ElButton>
+            <!-- 未选中时保持中性灰，选中后才转为 danger 提示破坏性 -->
+            <ElButton v-auth="'batch-delete'" :type="selectedRows.length ? 'danger' : 'info'" plain :disabled="selectedRows.length === 0" @click="handleBatchDelete">批量删除</ElButton>
           </div>
 
           <div class="table-container">
@@ -98,7 +99,7 @@
                   />
                 </template>
               </ElTableColumn>
-              <ElTableColumn label="操作" width="150" align="center" fixed="right">
+              <ElTableColumn label="操作" width="150" align="left" fixed="right" class-name="table-actions">
                 <template #default="{ row }">
                   <ElButton v-auth="'update'" link type="primary" @click="handleEdit(row)">编辑</ElButton>
                   <ElButton v-auth="'delete'" link type="danger" @click="handleDelete(row)">删除</ElButton>
@@ -211,7 +212,7 @@
 </template>
 
 <script setup lang="ts">
-  import { ref, reactive, computed, watch, onMounted, nextTick } from 'vue'
+  import { ref, reactive, computed, watch, onMounted, onBeforeUnmount, nextTick } from 'vue'
   import { ElMessage, ElMessageBox, type FormInstance, type FormRules } from 'element-plus'
   import { Search, Plus } from '@element-plus/icons-vue'
   import { userApi, type AdminUser } from '@/api/user'
@@ -224,6 +225,46 @@
 
   // 部门树
   const treeRef = ref()
+
+  // ===== 页面可用高度：实测而非硬编码 =====
+  // 不能写死 calc(100vh - Npx)：顶部占用随布局模式变化——框架一有独立页签行，
+  // 框架二把页签并入 60px 顶栏且多一层 ArtTopHeader；tabStyle 为 tab-card/
+  // tab-google 时顶栏还多 20px 下边距。任何固定值都会在某个模式下留出空白。
+  // 改为实测本容器在滚动容器内的偏移，与上方有几层、各多高无关。
+  const rootRef = ref<HTMLElement | null>(null)
+  const measuredHeight = ref(0)
+  // 窄屏（<=800px）下 #app-main 变为 height:auto/overflow:visible，
+  // 布局本意是整页滚动，此时不锁高度，交给样式里的 max-height 兜树高
+  const isNarrow = ref(false)
+
+  const rootHeightStyle = computed(() =>
+    !isNarrow.value && measuredHeight.value > 0
+      ? { height: `${measuredHeight.value}px` }
+      : undefined,
+  )
+
+  const measureHeight = () => {
+    isNarrow.value = window.innerWidth <= 800
+    const el = rootRef.value
+    if (!el || isNarrow.value) return
+
+    const wrap = el.closest('.el-scrollbar__wrap') as HTMLElement | null
+    // 底部留 20px 呼吸位，与 .art-page-view 的 padding-bottom 对齐
+    const gap = 20
+    if (wrap) {
+      // 加回 scrollTop 抵消滚动位移，否则已滚动时算出的高度会偏大
+      const offsetInWrap =
+        el.getBoundingClientRect().top - wrap.getBoundingClientRect().top + wrap.scrollTop
+      measuredHeight.value = Math.max(wrap.clientHeight - offsetInWrap - gap, 420)
+    } else {
+      measuredHeight.value = Math.max(
+        window.innerHeight - el.getBoundingClientRect().top - gap,
+        420,
+      )
+    }
+  }
+
+  let heightObserver: ResizeObserver | null = null
   const deptFilterText = ref('')
   const departmentTree = ref<Department[]>([])
   const selectedDeptId = ref<number>()
@@ -501,19 +542,54 @@
     treeRef.value?.setCurrentKey(0)
     loadUserList()
     loadPositionAndRoleList()
+
+    measureHeight()
+    window.addEventListener('resize', measureHeight)
+    // 顶栏/页签显隐、布局模式切换都会改变本容器的起始位置，
+    // 观察 body 尺寸变化以跟随重算（resize 事件覆盖不到这些场景）
+    heightObserver = new ResizeObserver(measureHeight)
+    heightObserver.observe(document.body)
+  })
+
+  onBeforeUnmount(() => {
+    window.removeEventListener('resize', measureHeight)
+    heightObserver?.disconnect()
+    heightObserver = null
   })
 </script>
 
 <style lang="scss" scoped>
   .organization-user {
-    height: 100%;
+    // 高度由脚本实测后以内联 style 注入（见 measureHeight）。
+    // 不依赖父级传递高度：外层 .art-page-view 是 flex:1 但没有 min-height:0，
+    // 而再外层 .el-scrollbar__view 是 min-height:100%（允许超出视口），
+    // 父级高度等于内容高度，此处写 height:100% 会落空，部门树一长就撑开整页。
+    // 也不写 calc(100vh - Npx)：顶部占用随布局模式（框架一/框架二）、
+    // 页签显隐、tabStyle 边距变化，固定值必然在某些模式下留白。
+    min-height: 420px;
     display: flex;
     flex-direction: column;
+
+    // 窄屏下布局本意是整页滚动（#app-main 变 height:auto/overflow:visible），
+    // 脚本不再锁高度，仅限制树区高度使其内部滚动，避免树无限长
+    @media only screen and (max-width: $device-ipad) {
+      min-height: 0;
+
+      .user-layout {
+        flex-direction: column;
+      }
+
+      .dept-tree-card {
+        width: 100%;
+        max-height: 50dvh;
+      }
+    }
 
     .user-layout {
       display: flex;
       gap: 16px;
       height: 100%;
+      min-height: 0;
       overflow: hidden;
 
       .dept-tree-card {
@@ -528,6 +604,7 @@
 
         :deep(.el-card__body) {
           flex: 1;
+          min-height: 0;
           display: flex;
           flex-direction: column;
           overflow: hidden;
@@ -535,6 +612,7 @@
         }
 
         .tree-header {
+          flex-shrink: 0;
           margin-bottom: 16px;
 
           .tree-title {
@@ -544,17 +622,33 @@
         }
 
         .tree-search {
+          flex-shrink: 0;
           margin-bottom: 16px;
         }
 
+        // 树区吃掉剩余空间并在内部滚动（ElScrollbar）。
+        // min-height:0 是必须的：flex 项默认 min-height:auto 不会小于内容高度，
+        // 缺了它 flex:1 形同虚设，树仍会撑开卡片。
         .tree-container {
           flex: 1;
-          overflow: hidden;
+          min-height: 0;
+
+          // 节点横向过长时不换行，改为横向滚动，避免撑破 280px 卡片宽度
+          :deep(.el-tree) {
+            display: inline-block;
+            min-width: 100%;
+          }
+
+          :deep(.el-tree-node__label) {
+            white-space: nowrap;
+          }
         }
       }
 
       .user-content {
         flex: 1;
+        min-width: 0;
+        min-height: 0;
         display: flex;
         flex-direction: column;
         gap: 16px;
@@ -578,6 +672,7 @@
 
         .table-card {
           flex: 1;
+          min-height: 0;
           border: none !important;
           box-shadow: none !important;
           border-radius: 12px;
@@ -588,6 +683,7 @@
           :deep(.el-card__body) {
             padding: 20px;
             height: 100%;
+            min-height: 0;
             display: flex;
             flex-direction: column;
           }
@@ -601,6 +697,7 @@
 
           .table-container {
             flex: 1;
+            min-height: 0;
             overflow: hidden;
           }
 

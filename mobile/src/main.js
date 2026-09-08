@@ -30,8 +30,12 @@ import '@/assets/styles/main.css' // 全局样式
 import '@/assets/styles/transition.css' // 页面过渡动画样式
 import '@/assets/styles/vant-custom.css' // Vant 组件自定义样式
 
-// 导入 Mock 数据配置（开发环境使用）
-import '@/mock'
+// Mock 数据：仅在 VITE_USE_MOCK=true 时装载
+// Mock.js 是在浏览器层拦截 XHR，一旦装载就会静默顶掉所有真实请求，
+// 导致「页面看起来是通的、其实没连后端」。故默认关闭，需显式开启。
+if (import.meta.env.VITE_USE_MOCK === 'true') {
+  await import('@/mock')
+}
 
 // 创建 Vue 应用实例
 const app = createApp(App)

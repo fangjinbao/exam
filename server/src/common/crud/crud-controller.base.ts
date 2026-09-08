@@ -133,7 +133,11 @@ export class CrudControllerBase extends BaseController {
    * @param opts 分页查询配置（模糊字段、精确字段）
    * @returns Prisma where 对象
    */
-  private buildWhere(
+  /**
+   * 组装 Prisma where。改为 protected 以便子类追加自定义条件
+   * （如按多部门 in 筛选），子类应先调 super 再合并，避免重复通用逻辑。
+   */
+  protected buildWhere(
     query: Record<string, any>,
     opts: NonNullable<CrudOptions['pageQueryOp']>,
   ): Record<string, any> {

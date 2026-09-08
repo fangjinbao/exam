@@ -1,12 +1,32 @@
-/* 页面过渡动画 - 淡入淡出效果 */
+/* 页面过渡动画 */
 
-/* 淡入淡出动画 */
-.fade-enter-active,
+/*
+  为什么不是等长的淡入淡出：
+    根组件用的是 mode="out-in"，两段动画串行执行。原先进出各 0.3s，
+    等于每次跳转要 0.6s，其中前半段屏幕已经空了、新页还没开始，
+    这段空白就是「切换很生硬」的主要来源。
+
+  现在离场压到 0.12s（只求盖住旧内容消失的瞬间，不必让用户看完），
+  入场 0.22s 并带一点上移，读作「新内容推上来」而不是「凭空出现」。
+  总时长 0.34s，比原先快近一半。
+*/
+
 .fade-leave-active {
-  transition: opacity 0.3s ease;
+  transition: opacity 0.12s ease-in;
 }
 
-.fade-enter-from,
+.fade-enter-active {
+  transition:
+    opacity 0.22s ease-out,
+    transform 0.22s ease-out;
+}
+
+.fade-enter-from {
+  opacity: 0;
+  /* 位移很小：移多了在 mode="out-in" 下会显出「掉下来」的滑稽感 */
+  transform: translateY(8px);
+}
+
 .fade-leave-to {
   opacity: 0;
 }
@@ -14,4 +34,54 @@
 .fade-enter-to,
 .fade-leave-from {
   opacity: 1;
+  transform: translateY(0);
+}
+
+/*
+  跟随系统「减弱动态效果」：位移对前庭敏感的用户不友好，
+  但完全去掉过渡会退回硬切，故保留极短的淡入、只去掉位移
+*/
+@media (prefers-reduced-motion: reduce) {
+  .fade-enter-active {
+    transition: opacity 0.12s ease-out;
+  }
+
+  .fade-enter-from {
+    transform: none;
+  }
+}
+
+/* ── 路由跳转进度条（见 utils/navProgress.js） ── */
+
+/*
+  用 transform: scaleX 而非改 width：scaleX 走合成层，
+  chunk 下载本就占着主线程，改 width 会连带触发重排、条子走得一卡一卡
+*/
+.nav-progress {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 9999;
+  width: 100%;
+  height: 2px;
+  background-color: var(--primary-color);
+  transform: scaleX(0);
+  transform-origin: 0 50%;
+  opacity: 0;
+  pointer-events: none;
+  transition:
+    transform 0.25s ease-out,
+    opacity 0.2s ease;
+}
+
+.nav-progress.is-active {
+  opacity: 1;
+}
+
+/* 收尾：走满同时淡出，避免「到 100% 后条子还停一下」 */
+.nav-progress.is-done {
+  transition:
+    transform 0.12s ease-out,
+    opacity 0.2s ease;
+  opacity: 0;
 }

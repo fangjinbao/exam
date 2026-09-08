@@ -34,6 +34,30 @@ export const formatDate = (date, format = 'YYYY-MM-DD HH:mm:ss') => {
 }
 
 /**
+ * 计算两个时间相差的自然日天数
+ *
+ * 按自然日而非 24 小时计算：今天 23:00 与明天 01:00 只差 2 小时，
+ * 但对用户是「明天」，所以先把两端归零到当日 00:00 再相减。
+ * 「距开考 N 天」「还剩 N 天」这类文案都要按自然日算，否则会差一天。
+ *
+ * @param {string|number|Date} target - 目标时间
+ * @param {string|number|Date} [from=Date.now()] - 起算时间，默认当前
+ * @returns {number|null} 目标在起算日之后为正、之前为负；时间无效时返回 null
+ * @example diffNaturalDays('2025-08-30') // 距今 7 天则返回 7
+ */
+export const diffNaturalDays = (target, from = Date.now()) => {
+  const a = new Date(target)
+  const b = new Date(from)
+  // 交给调用方决定无效时怎么兜底，不能返回 0——那会被读成「今天」
+  if (Number.isNaN(a.getTime()) || Number.isNaN(b.getTime())) return null
+
+  const dayA = new Date(a.getFullYear(), a.getMonth(), a.getDate())
+  const dayB = new Date(b.getFullYear(), b.getMonth(), b.getDate())
+  // 用 round 而非 floor：夏令时地区两端相差 23 或 25 小时，floor 会少算一天
+  return Math.round((dayA - dayB) / 86400000)
+}
+
+/**
  * 格式化金额
  * @param {number} amount - 金额数值
  * @param {number} [decimals=2] - 小数位数（默认2位）

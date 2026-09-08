@@ -21,8 +21,8 @@
       <MainLayout v-if="route.meta.showTabbar">
         <!-- 需要缓存的页面 -->
         <transition name="fade" mode="out-in">
-          <keep-alive>
-            <component :is="Component" v-if="route.meta.keepAlive" :key="route.path" />
+          <keep-alive :max="CACHE_MAX">
+            <component :is="Component" v-if="route.meta.keepAlive" :key="cacheKey(route)" />
           </keep-alive>
         </transition>
         <!-- 不需要缓存的页面 -->
@@ -35,8 +35,8 @@
       <template v-else>
         <!-- 需要缓存的页面 -->
         <transition name="fade" mode="out-in">
-          <keep-alive>
-            <component :is="Component" v-if="route.meta.keepAlive" :key="route.path" />
+          <keep-alive :max="CACHE_MAX">
+            <component :is="Component" v-if="route.meta.keepAlive" :key="cacheKey(route)" />
           </keep-alive>
         </transition>
         <!-- 不需要缓存的页面 -->
@@ -49,16 +49,26 @@
 </template>
 
 <script setup>
-import { onMounted } from 'vue'
 import MainLayout from '@/components/Layout/MainLayout.vue'
+import { useUserStore } from '@/stores/userStore'
+
+const userStore = useUserStore()
 
 /**
- * 应用初始化
- * 在组件挂载后执行，输出启动日志
+ * 缓存页的 key：路径 + 会话标识
+ * 退出登录时 sessionKey 递增，使所有缓存页实例被销毁重建，
+ * 避免同设备换号后新账号看到上一账号的残留数据
+ * @param {import('vue-router').RouteLocationNormalized} route - 当前路由
+ * @returns {string} 缓存 key
  */
-onMounted(() => {
-  console.log('H5产品经理原型AI框架已启动')
-})
+const cacheKey = (route) => `${route.path}#${userStore.sessionKey}`
+
+/**
+ * 缓存上限：与启用 keepAlive 的路由数（首页/任务/工作台/消息/我的）一致
+ * 保证 5 个 Tab 可同时驻留，同时让换号后作废的旧实例被 LRU 淘汰，不无限累积
+ */
+const CACHE_MAX = 5
+
 </script>
 
 <style>

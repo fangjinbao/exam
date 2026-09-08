@@ -47,6 +47,7 @@
     "prisma": "^6.0.0",
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.1",
+    "sanitize-html": "^2.13.1",
     "uuid": "^11.0.0"
   },
   "devDependencies": {
@@ -60,6 +61,7 @@
     "@types/multer": "^2.1.0",
     "@types/node": "^22.0.0",
     "@types/passport-jwt": "^4.0.0",
+    "@types/sanitize-html": "^2.13.0",
     "@types/uuid": "^10.0.0",
     "source-map-support": "^0.5.21",
     "ts-loader": "^9.5.0",
@@ -71,6 +73,7 @@
     "node": ">=20.0.0"
   },
   "prisma": {
-    "seed": "ts-node prisma/seed.ts"
+    "//": "必须带 -r tsconfig-paths/register：seed.service.ts 里用了 @/ 路径别名（如 @/modules/exam/utils/cert-template-snapshot），裸 ts-node 不认 tsconfig 的 paths 映射，会报 Cannot find module",
+    "seed": "ts-node -r tsconfig-paths/register prisma/seed.ts"
   }
 }

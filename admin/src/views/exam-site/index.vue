@@ -29,9 +29,10 @@
     <ElCard shadow="never" class="table-card">
       <div class="table-header">
         <ElButton v-auth="'add'" type="primary" :icon="Plus" @click="handleAdd">新增</ElButton>
+        <!-- 未选中时保持中性灰，选中后才转为 danger 提示破坏性 -->
         <ElButton
           v-auth="'batch-delete'"
-          type="danger"
+          :type="selectedIds.length ? 'danger' : 'info'"
           plain
           :icon="Delete"
           :disabled="!selectedIds.length"
@@ -74,7 +75,7 @@
               </ElTag>
             </template>
           </ElTableColumn>
-          <ElTableColumn label="操作" width="220" align="center" fixed="right">
+          <ElTableColumn label="操作" width="220" align="left" fixed="right" class-name="table-actions">
             <template #default="{ row }">
               <ElButton v-auth="'update'" link type="primary" @click="handleEdit(row)">编辑</ElButton>
               <ElButton v-auth="'delete'" link type="danger" @click="handleDelete(row)">删除</ElButton>

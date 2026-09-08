@@ -26,10 +26,17 @@ $fade-easing: transition-config('fade-easing');
 // === 动画类 ===
 
 // 淡入淡出动画
+// 单独用更长的时长（全局 $duration 仅 0.1s 太快，首次进入会像“闪一下”）
+$fade-duration: 0.32s;
+
 .fade {
-  &-enter-active,
+  &-enter-active {
+    transition: opacity $fade-duration $fade-easing;
+    will-change: opacity;
+  }
+
   &-leave-active {
-    transition: opacity $duration $fade-easing;
+    transition: opacity calc($fade-duration * 0.6) $fade-easing;
     will-change: opacity;
   }
 

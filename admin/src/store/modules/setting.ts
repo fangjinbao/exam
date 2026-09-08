@@ -34,7 +34,7 @@ export const useSettingStore = defineStore(
 
     // 框架布局设置
     /** 框架类型 */
-    const frameworkType = ref(FrameworkTypeEnum.FRAMEWORK_ONE)
+    const frameworkType = ref(FrameworkTypeEnum.FRAMEWORK_TWO)
 
     // 主题相关设置
     /** 系统主题类型 */
@@ -86,8 +86,8 @@ export const useSettingStore = defineStore(
     // 样式设置
     /** 边框模式 */
     const boxBorderMode = ref(false)
-    /** 页面过渡效果 */
-    const pageTransition = ref('slide-left')
+    /** 页面过渡效果（默认纯淡入，避免首次进入的上下位移闪动） */
+    const pageTransition = ref('fade')
     /** 标签页样式 */
     const tabStyle = ref(defaultTabStyle)
     /** 自定义圆角 */
@@ -446,7 +446,15 @@ export const useSettingStore = defineStore(
       key: 'setting',
       storage: localStorage,
       // systemName 不持久化：写死于本地配置，每次启动直接取默认值，避免缓存旧名称
-      omit: ['systemName']
+      omit: ['systemName'],
+      // 恢复缓存后做一次性迁移：把旧缓存里的竖直滑动（从下往上/从上往下）归正为纯淡入，
+      // 避免老浏览器因历史设置仍出现首次进入的上下位移动画
+      afterHydrate: (ctx) => {
+        const verticalSlides = ['slide-bottom', 'slide-top']
+        if (verticalSlides.includes(ctx.store.pageTransition)) {
+          ctx.store.pageTransition = 'fade'
+        }
+      }
     }
   }
 )

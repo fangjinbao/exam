@@ -239,4 +239,74 @@ export class AiModelService extends BaseService {
     });
     return { ok: true, data: { success, message } };
   }
+
+  /**
+   * 用当前启用的模型发起一次单轮对话，返回纯文本答复
+   *
+   * 供业务侧（如练习 AI 答疑）复用，避免各处重复拼服务商协议。
+   * 全局仅一项 status=1，未启用或密钥缺失时返回失败而非抛异常，
+   * 让调用方自行决定降级话术。
+   *
+   * @param prompt 用户问题
+   * @param systemPrompt 系统提示词（限定回答风格与范围）
+   * @param maxTokens 回复长度上限
+   */
+  async chat(
+    prompt: string,
+    systemPrompt?: string,
+    maxTokens = 800,
+  ): Promise<Result<{ answer: string }>> {
+    const target = await this.prisma.sysAiModel.findFirst({ where: { status: 1 } });
+    if (!target) return { ok: false, message: '未启用 AI 模型，请联系管理员在系统设置中配置' };
+
+    const provider = target.provider as Provider;
+    if (provider !== 'OpenAI' && provider !== 'Anthropic') {
+      return { ok: false, message: `暂不支持的服务商「${target.provider}」` };
+    }
+    if (!target.apiKey) return { ok: false, message: 'AI 模型未配置密钥' };
+
+    const base = normalizeBaseUrl(target.apiUrl);
+    const headers = this.buildHeaders(provider, target.apiKey);
+    const url = provider === 'Anthropic' ? `${base}/messages` : `${base}/chat/completions`;
+
+    // 两家协议对 system 提示词的位置不同：Anthropic 是顶层 system 字段，
+    // OpenAI 是 messages 首条 role=system，不能混用
+    const body: Record<string, any> =
+      provider === 'Anthropic'
+        ? {
+            model: target.model,
+            max_tokens: maxTokens,
+            ...(systemPrompt ? { system: systemPrompt } : {}),
+            messages: [{ role: 'user', content: prompt }],
+          }
+        : {
+            model: target.model,
+            max_tokens: maxTokens,
+            messages: [
+              ...(systemPrompt ? [{ role: 'system', content: systemPrompt }] : []),
+              { role: 'user', content: prompt },
+            ],
+          };
+
+    try {
+      const res = await this.fetchWithTimeout(url, {
+        method: 'POST',
+        headers,
+        body: JSON.stringify(body),
+      });
+      if (!res.ok) return { ok: false, message: await this.extractErr(res) };
+
+      const data: any = await res.json();
+      // 回复正文的取法两家不同：Anthropic 在 content[].text，OpenAI 在 choices[].message.content
+      const answer =
+        provider === 'Anthropic'
+          ? (data?.content ?? []).map((c: any) => c?.text ?? '').join('').trim()
+          : (data?.choices?.[0]?.message?.content ?? '').trim();
+
+      if (!answer) return { ok: false, message: 'AI 未返回有效内容，请重试' };
+      return { ok: true, data: { answer } };
+    } catch (e: any) {
+      return { ok: false, message: e?.message || 'AI 服务调用失败' };
+    }
+  }
 }

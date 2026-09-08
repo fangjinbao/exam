@@ -1,0 +1,16 @@
+[
+  {
+    "id": 1,
+    "name": "【演示】特种作业操作资格认证",
+    "description": "面向特种作业人员的操作资格认证项目",
+    "examId": 1,
+    "applyCondition": "年满 18 周岁，身体健康，具备初中以上文化程度",
+    "validMonths": 36,
+    "templateId": 1,
+    "status": 1,
+    "tenantId": null,
+    "createTime": "2026-08-22T15:25:03.938Z",
+    "updateTime": "2026-08-22T15:25:03.938Z",
+    "createBy": null
+  }
+]

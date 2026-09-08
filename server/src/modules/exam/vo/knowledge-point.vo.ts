@@ -12,6 +12,9 @@ export class KnowledgePointVo {
   @ApiProperty({ description: '父级知识点 ID（顶级为 null）', nullable: true })
   parentId: number | null;
 
+  @ApiProperty({ description: '知识点编号（全局唯一）' })
+  code: string;
+
   @ApiProperty({ description: '知识点名称' })
   name: string;
 

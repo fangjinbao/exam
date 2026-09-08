@@ -5,7 +5,11 @@ FROM node:20-alpine AS builder
 
 WORKDIR /app
 
-RUN sed -i 's/dl-cdn.alpinelinux.org/mirrors.aliyun.com/g' /etc/apk/repositories
+# apk 源按可达性自动回落：阿里云 → 清华 → 中科大 → 官方 CDN。
+# 不写死单一镜像，因为部分服务器出站策略只放通其中某几个（写死阿里云时
+# 遇到过 Connection refused 直接构建失败）。全部不通才报错退出。
+COPY docker/pick-apk-mirror.sh /tmp/pick-apk-mirror.sh
+RUN sh /tmp/pick-apk-mirror.sh && rm -f /tmp/pick-apk-mirror.sh
 
 # 固定 pnpm 10：pnpm 11.6+ 要求 Node ≥22.13（依赖 node:sqlite），与基础镜像 node:20 不兼容
 RUN npm install -g pnpm@10
@@ -27,8 +31,8 @@ FROM node:20-alpine
 
 WORKDIR /app
 
-RUN sed -i 's/dl-cdn.alpinelinux.org/mirrors.aliyun.com/g' /etc/apk/repositories
-RUN apk add --no-cache tzdata
+COPY docker/pick-apk-mirror.sh /tmp/pick-apk-mirror.sh
+RUN sh /tmp/pick-apk-mirror.sh && apk add --no-cache tzdata && rm -f /tmp/pick-apk-mirror.sh
 ENV TZ="Asia/Shanghai"
 
 RUN addgroup -S appgroup && adduser -S appuser -G appgroup

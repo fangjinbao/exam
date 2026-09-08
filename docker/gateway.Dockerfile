@@ -6,7 +6,8 @@ FROM node:20-alpine AS builder
 
 WORKDIR /build
 
-RUN sed -i 's/dl-cdn.alpinelinux.org/mirrors.aliyun.com/g' /etc/apk/repositories
+# 本阶段只跑 node 构建、不装任何 apk 包，故无需配置 apk 源
+# （原先这里有一行改镜像源的 sed，属无用操作，已移除）
 
 # 仅拷贝构建所需：各前端源码 + 清单 + 构建脚本（.dockerignore 已排除 node_modules/dist/server 数据等）
 COPY . .
@@ -17,8 +18,8 @@ RUN node docker/build-frontends.mjs
 # ---------- 运行阶段：nginx 托管 + 启动时渲染各前端 server 块 ----------
 FROM nginx:1.25-alpine
 
-RUN sed -i 's/dl-cdn.alpinelinux.org/mirrors.aliyun.com/g' /etc/apk/repositories
-RUN apk add --no-cache tzdata jq
+COPY docker/pick-apk-mirror.sh /tmp/pick-apk-mirror.sh
+RUN sh /tmp/pick-apk-mirror.sh && apk add --no-cache tzdata jq && rm -f /tmp/pick-apk-mirror.sh
 ENV TZ="Asia/Shanghai"
 
 # http 级公共配置

@@ -23,7 +23,9 @@
 ```bash
 cd /Users/fangjinbao/Desktop/Micon/micon-ai/exam
 
-tar --exclude='node_modules' \
+COPYFILE_DISABLE=1 tar \
+    --exclude='exam-deploy.tar.gz' \
+    --exclude='node_modules' \
     --exclude='dist' \
     --exclude='.git' \
     --exclude='docs' \
@@ -36,13 +38,27 @@ tar --exclude='node_modules' \
     --exclude='*.log' \
     --exclude='.env' \
     --exclude='.DS_Store' \
-    -czf ../exam-deploy.tar.gz .
+    --exclude='._*' \
+    -czf exam-deploy.tar.gz .
 ```
 
-包会生成在项目上一级目录，名为 `exam-deploy.tar.gz`。检查大小：
+包生成在**项目根目录内**，IDE 左侧就能看到。检查大小：
 
 ```bash
-ls -lh ../exam-deploy.tar.gz
+ls -lh exam-deploy.tar.gz
+```
+
+### 两个 macOS 专属的坑
+
+**`COPYFILE_DISABLE=1` 必须加。** macOS 的 tar 会把目录的扩展属性（`com.apple.quarantine` 等）单独打成 `._admin`、`._server` 这类 AppleDouble 文件。解压到 Linux 后它们会以垃圾文件形式出现在项目根目录，还会被 Docker 当成构建上下文的一部分。加上这个环境变量就不会产生。
+
+**`--exclude='exam-deploy.tar.gz'` 必须加。** 包生成在项目内，不排除自己的话，下次打包会把上一次的包也装进去，越打越大。
+
+如果你已经解压过带 `._` 垃圾文件的包，在服务器上清掉：
+
+```bash
+cd /opt/exam    # 或你的实际目录
+find . -name '._*' -delete
 ```
 
 **实测 3.9M**。如果你的包超过 50M，说明有大目录没排除干净，用这条查是谁占的：
@@ -372,6 +388,68 @@ docker compose exec mysql mysql -uroot -p
 ---
 
 ## 排错
+
+### 构建报 `tzdata (no such package)` / `Connection refused`
+
+完整报错长这样：
+
+```
+WARNING: fetching https://mirrors.aliyun.com/alpine/v3.23/main/x86_64/APKINDEX.tar.gz: Connection refused
+ERROR: unable to select packages:  tzdata (no such package)
+failed to solve: process "/bin/sh -c apk add --no-cache tzdata" did not complete successfully
+```
+
+原因是服务器连不上 Alpine 的镜像源。**现在的 Dockerfile 已内置自动回落**（阿里云 → 清华 → 中科大 → 官方 CDN，见 `docker/pick-apk-mirror.sh`），正常不该再出现。
+
+如果四个源全都不通，会看到：
+
+```
+[pick-apk-mirror] 错误：所有镜像源都不可达。
+```
+
+说明服务器没有公网出站或 443 被拦。在宿主机上确认：
+
+```bash
+curl -I -m 10 https://dl-cdn.alpinelinux.org/alpine/
+curl -I -m 10 https://registry.npmmirror.com/
+```
+
+两条都失败就是网络策略问题，要先放通出站 HTTPS。如果公司网络走代理，给 Docker 配代理：
+
+```bash
+mkdir -p /etc/systemd/system/docker.service.d
+cat > /etc/systemd/system/docker.service.d/proxy.conf <<'EOF'
+[Service]
+Environment="HTTP_PROXY=http://代理地址:端口"
+Environment="HTTPS_PROXY=http://代理地址:端口"
+EOF
+systemctl daemon-reload && systemctl restart docker
+```
+
+### 构建报 `ERR_PNPM_OUTDATED_LOCKFILE`
+
+```
+ERR_PNPM_OUTDATED_LOCKFILE  Cannot install with "frozen-lockfile" because
+pnpm-lock.yaml is not up to date with <ROOT>/package.json
+```
+
+`server/package.json` 改过依赖但 `pnpm-lock.yaml` 没同步。**在本地（不是服务器）**修，然后重新打包上传：
+
+```bash
+cd server
+pnpm install --lockfile-only
+git add pnpm-lock.yaml && git commit -m "chore: 同步 pnpm-lock.yaml"
+```
+
+不要改成 `--no-frozen-lockfile` 绕过 —— `--frozen-lockfile` 保证的是每次构建装到完全相同的依赖版本，绕过它就等于放弃可复现性，线上线下可能装出不同版本。
+
+### 解压后项目根目录出现一堆 `._admin`、`._server` 文件
+
+macOS 打包时带上了扩展属性。打包命令加 `COPYFILE_DISABLE=1`（见第一步），已解压的直接清掉：
+
+```bash
+cd /opt/exam && find . -name '._*' -delete
+```
 
 ### 构建时报 `ENOSPC` 或磁盘满
 

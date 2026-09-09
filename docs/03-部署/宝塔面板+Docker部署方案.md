@@ -1,7 +1,7 @@
 # 宝塔面板 + Docker 部署方案
 
 > 后端 + 所有前端 + MySQL + Redis 全部跑在 Docker 里，宝塔只负责域名反代和 HTTPS。
-> 所有前端由**一个网关容器**统一托管，每个前端占一个本机端口：管理后台 → `8080`，移动端 H5 → `8081`。宝塔把子域名反代到对应端口即可。
+> 所有前端由**一个网关容器**统一托管，每个前端占一个本机端口：管理后台 → `9080`，移动端 H5 → `9081`。宝塔把子域名反代到对应端口即可。
 
 本文档面向第一次部署的同学。**先在下面选一种方式，然后直接跳到对应章节，从头到尾走一遍即可，不用来回跳。**
 
@@ -27,18 +27,20 @@
    │  admin.xxx.com / m.xxx.com（HTTPS）
    ▼
 宝塔 Nginx（80/443，负责域名 + 证书）
-   │  admin.xxx.com 反代到 127.0.0.1:8080 ─┐
-   │  m.xxx.com     反代到 127.0.0.1:8081 ─┤
+   │  admin.xxx.com 反代到 127.0.0.1:9080 ─┐
+   │  m.xxx.com     反代到 127.0.0.1:9081 ─┤
    ▼                                        ▼
 gateway 容器（一个 nginx，每个前端一个端口）
-   │                 ├─ :8080 → 管理后台静态页
-   │                 └─ :8081 → 移动端静态页
+   │  宿主 9080 → 容器 8080 ├─ 管理后台静态页
+   │  宿主 9081 → 容器 8081 └─ 移动端静态页
    │  接口请求 ▼
 backend 容器（NestJS，9001） ── MySQL 容器 + Redis 容器
 ```
 
 一共 **4 个容器**：`mysql`、`redis`、`backend`、`gateway`。
-关键点：**所有前端只有 1 个网关容器**，每个前端占一个本机端口（管理后台 8080、移动端 8081）。宝塔按域名反代到对应端口，网关**不需要知道你的真实域名**——以后换域名只改宝塔，容器和 `.env` 都不用动。
+关键点：**所有前端只有 1 个网关容器**，每个前端占一个本机端口（管理后台 9080、移动端 9081）。宝塔按域名反代到对应端口，网关**不需要知道你的真实域名**——以后换域名只改宝塔，容器和 `.env` 都不用动。
+
+> 宿主机端口用 9080/9081，容器内仍是 8080/8081（`docker/frontends.json` 定义，改动需重新构建镜像）。不用 8080 是因为它常被宝塔、Jenkins、Tomcat 占用，实际部署时遇到过端口已被占、容器起不来。
 容器只绑 `127.0.0.1`（不对公网开放），外部流量统一走宝塔反代进来；数据存在 Docker 命名卷里，容器重建不丢。
 
 ---
@@ -148,9 +150,9 @@ docker compose up -d         # 启动（不构建，秒级完成）
 
 ```bash
 docker compose ps                          # 应有 4 个容器，backend 显示 (healthy)
-curl -I http://127.0.0.1:8080/                    # 管理后台，返回 200
-curl -i http://127.0.0.1:8080/admin/open/health   # 反代到后端，返回 200
-curl -I http://127.0.0.1:8081/                    # 移动端，返回 200
+curl -I http://127.0.0.1:9080/                    # 管理后台，返回 200
+curl -i http://127.0.0.1:9080/admin/open/health   # 反代到后端，返回 200
+curl -I http://127.0.0.1:9081/                    # 移动端，返回 200
 ```
 
 看到 200 就说明容器内部正常，接下来交给宝塔对外暴露。
@@ -165,10 +167,10 @@ curl -I http://127.0.0.1:8081/                    # 移动端，返回 200
 
 | 站点 | 目标 URL |
 |------|----------|
-| `admin.xxx.com` | `http://127.0.0.1:8080` |
-| `m.xxx.com` | `http://127.0.0.1:8081` |
+| `admin.xxx.com` | `http://127.0.0.1:9080` |
+| `m.xxx.com` | `http://127.0.0.1:9081` |
 
-> 关键：**管理后台反代到 8080，移动端反代到 8081**，端口别填反了。端口对应关系见 `docker/frontends.json`。
+> 关键：**管理后台反代到 9080，移动端反代到 9081**，端口别填反了。端口对应关系见 `docker/frontends.json`。
 
 ### 第 7 步：开启 HTTPS
 
@@ -269,9 +271,9 @@ docker compose up -d --build
 
 ```bash
 docker compose ps                          # 应有 4 个容器，backend 显示 (healthy)
-curl -I http://127.0.0.1:8080/                    # 管理后台，返回 200
-curl -i http://127.0.0.1:8080/admin/open/health   # 反代到后端，返回 200
-curl -I http://127.0.0.1:8081/                    # 移动端，返回 200
+curl -I http://127.0.0.1:9080/                    # 管理后台，返回 200
+curl -i http://127.0.0.1:9080/admin/open/health   # 反代到后端，返回 200
+curl -I http://127.0.0.1:9081/                    # 移动端，返回 200
 ```
 
 看到 200 就说明容器内部正常，接下来交给宝塔对外暴露。
@@ -286,10 +288,10 @@ curl -I http://127.0.0.1:8081/                    # 移动端，返回 200
 
 | 站点 | 目标 URL |
 |------|----------|
-| `admin.xxx.com` | `http://127.0.0.1:8080` |
-| `m.xxx.com` | `http://127.0.0.1:8081` |
+| `admin.xxx.com` | `http://127.0.0.1:9080` |
+| `m.xxx.com` | `http://127.0.0.1:9081` |
 
-> 关键：**管理后台反代到 8080，移动端反代到 8081**，端口别填反了。端口对应关系见 `docker/frontends.json`。
+> 关键：**管理后台反代到 9080，移动端反代到 9081**，端口别填反了。端口对应关系见 `docker/frontends.json`。
 
 ### 第 6 步：开启 HTTPS
 
@@ -393,10 +395,12 @@ docker compose down -v               # 停止并删数据卷（会删库，谨�
 |------|------|
 | 下载镜像报 `denied`/`401` | （方式一）包还是私有：按「二、第 2 步」把 `agentpm-server`/`agentpm-gateway` 两个包都设为 Public |
 | `manifest unknown` | （方式一）CI 还没构建出镜像，去 GitHub Actions 页确认变绿 |
-| 打开域名显示错前端（后台开成移动端等） | 宝塔反代端口填反了：管理后台应对 8080、移动端应对 8081，照第 6/5 步表格改 |
+| 打开域名显示错前端（后台开成移动端等） | 宝塔反代端口填反了：管理后台应对 9080、移动端应对 9081，照第 6/5 步表格改 |
 | 打开域名 502 | 后端没起好或反代端口错；`docker compose ps` 看 backend 是否 healthy |
 | 容器名冲突 `already in use` | `docker compose down` 后重启；仍冲突 `docker rm -f agentpm-mysql agentpm-redis agentpm-backend agentpm-gateway` 再启（不丢数据卷） |
-| 端口冲突 `port is already allocated` | 8080/8081 被占：改 `docker/frontends.json` 里该前端的 `port` + `docker-compose.yaml` 对应端口映射，宝塔反代目标同步改 |
+| 端口冲突 `port is already allocated` | 宿主机 9080/9081 被占：只改 `docker-compose.yaml` 里端口映射**冒号左边**的宿主机端口（如 `127.0.0.1:9090:8080`），宝塔反代目标同步改。右边的容器内端口不要动，改了要重新构建镜像 |
+| gateway 一直是 `Created` 状态、日志为空 | 它配了 `depends_on: backend 健康才起`。backend 不 healthy 时 compose 只创建不启动。先修 backend，`docker inspect agentpm-backend --format '{{.State.Health.Status}}'` 确认 healthy 后再 `docker compose up -d` |
+| 访问网关端口返回 500 且 `Server:` 头版本不对 | 应答的不是本项目容器。本项目 gateway 是 `nginx/1.25.x`，若显示其他版本说明该端口被宿主机上别的服务占用。`ss -tlnp \| grep :端口` 查占用，然后换宿主机端口 |
 | （方式二）构建 OOM / 被 Killed | 内存不足：加 swap 或升配 |
 | `redis is unhealthy` | `.env` 的 `REDIS_PASSWORD` 不能留空 |
 | 改了 `.env` 不生效 | 要重建容器：方式一 `docker compose up -d`；方式二 `docker compose up -d --build` |

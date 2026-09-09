@@ -53,7 +53,7 @@ docker compose down             # 停止全部服务（数据卷保留）
 
 > 数据库迁移由后端镜像的 entrypoint 在启动时执行（`prisma migrate deploy`，幂等），无需手动操作。
 >
-> 宝塔各子域名（admin.xxx / m.xxx）反向代理均指向同一网关端口（默认 `127.0.0.1:8080`），配 `*.xxx.com` 泛域名证书即可。完整步骤见 [`docs/03-部署/宝塔面板+Docker部署方案.md`](docs/03-部署/宝塔面板+Docker部署方案.md)。
+> 各子域名反向代理指向对应网关端口（admin.xxx → `127.0.0.1:9080`，m.xxx → `127.0.0.1:9081`），配 `*.xxx.com` 泛域名证书即可。完整步骤见 [`docs/03-部署/宝塔面板+Docker部署方案.md`](docs/03-部署/宝塔面板+Docker部署方案.md)。
 
 ### 新增一个前端子项目
 

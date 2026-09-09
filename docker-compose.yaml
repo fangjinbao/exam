@@ -90,7 +90,10 @@ services:
     networks:
       - agentpm
     healthcheck:
-      test: ["CMD-SHELL", "wget -qO- http://localhost:9001/admin/open/health || exit 1"]
+      # 用 127.0.0.1 而非 localhost：部分服务器的 DNS 会把 localhost 解析到宿主机
+      # 局域网 IP（见过解析成 192.168.x.x 导致探活一直 Connection refused），
+      # 直接写 IP 可完全绕开 DNS 解析。
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:9001/admin/open/health || exit 1"]
       interval: 15s
       timeout: 10s
       retries: 5

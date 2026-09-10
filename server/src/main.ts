@@ -93,9 +93,6 @@ async function bootstrap() {
 
   await app.listen(port);
 
-  // 框架版权横幅
-  printBanner();
-
   const logger = new Logger('Bootstrap');
   assertExpectedTimeZone(logger);
   logger.log(`服务已启动: http://localhost:${port}`);
@@ -107,31 +104,6 @@ async function bootstrap() {
       logger.log(`数据库 GUI: http://localhost:${studioPort}`);
     }
   }
-}
-
-/**
- * 打印 AgentPM 框架版权横幅
- * 官网：https://www.axuremart.com/
- */
-function printBanner(): void {
-  const cyan = '\x1b[36m';
-  const gray = '\x1b[90m';
-  const reset = '\x1b[0m';
-  const lines = [
-    '',
-    `${cyan}    ___                    __  ____  ___${reset}`,
-    `${cyan}   /   |  ____ ____  ____  / /_/ __ \\/ |/ /${reset}`,
-    `${cyan}  / /| | / __ \`/ _ \\/ __ \\/ __/ /_/ /|   / ${reset}`,
-    `${cyan} / ___ |/ /_/ /  __/ / / / /_/ ____/   |  ${reset}`,
-    `${cyan}/_/  |_|\\__, /\\___/_/ /_/\\__/_/   /_/|_|  ${reset}`,
-    `${cyan}       /____/                             ${reset}`,
-    '',
-    `${gray}  AgentPM 通用后端 AI 开发框架${reset}`,
-    `${gray}  © ${new Date().getFullYear()} AgentPM  ·  官网 https://www.axuremart.com/${reset}`,
-    '',
-  ];
-  // 直接写 stdout，保持横幅整洁（不加 Logger 的时间戳/级别前缀，也不触发 no-console 门禁）
-  process.stdout.write(`${lines.join('\n')}\n`);
 }
 
 bootstrap();
